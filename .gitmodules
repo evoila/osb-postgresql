@@ -1,0 +1,6 @@
+[submodule "docker-volume-service"]
+	path = docker-volume-service
+	url = https://github.com/evoila/cf-service-broker-docker-volume-service
+[submodule "docker-java"]
+	path = docker-java
+	url = https://github.com/evoila/docker-java
