@@ -9,9 +9,9 @@
 		<relativePath>../</relativePath>
 		<version>0.1-RC</version>
 	</parent>
-	<artifactId>persistence</artifactId>
+	<artifactId>persistence-redis</artifactId>
 	<packaging>jar</packaging>
-	<name>persistence</name>
+	<name>persistence-redis</name>
 
 	<dependencies>
 		<dependency>
