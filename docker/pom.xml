@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>de.evoila.cf.broker</groupId>
-		<artifactId>parent</artifactId>
+		<artifactId>deployment-parent</artifactId>
 		<version>0.1-RC</version>
 		<relativePath>../</relativePath>
 	</parent>
