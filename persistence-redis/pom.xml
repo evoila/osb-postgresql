@@ -5,9 +5,9 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>de.evoila.cf.broker</groupId>
-		<artifactId>parent</artifactId>
-		<version>0.1-RC</version>
+		<artifactId>persistence-parent</artifactId>
 		<relativePath>../</relativePath>
+		<version>0.1-RC</version>
 	</parent>
 	<artifactId>persistence</artifactId>
 	<packaging>jar</packaging>
@@ -27,7 +27,6 @@
 		<dependency>
 			<groupId>de.evoila.cf.broker</groupId>
 			<artifactId>core</artifactId>
-			<version>0.1-RC</version>
 		</dependency>
 	</dependencies>
 
