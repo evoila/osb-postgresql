@@ -48,22 +48,6 @@
 			<version>1.0.1.RELEASE</version>
 		</dependency>
 
-		<dependency>
-			<groupId>de.evoila.cf.broker</groupId>
-			<artifactId>docker</artifactId>
-			<version>0.1-RC</version>
-		</dependency>
-		<dependency>
-			<groupId>de.evoila.cf.broker</groupId>
-			<artifactId>openstack</artifactId>
-			<version>0.1-RC</version>
-		</dependency>
-		<dependency>
-			<groupId>de.evoila.cf.broker</groupId>
-			<artifactId>persistence</artifactId>
-			<version>0.1-RC</version>
-		</dependency>
-
 		<!-- Testing -->
 		<dependency>
 			<groupId>junit</groupId>
