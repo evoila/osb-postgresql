@@ -6,151 +6,72 @@
 	<parent>
 		<groupId>de.evoila.cf.broker</groupId>
 		<artifactId>parent</artifactId>
-		<version>1.0</version>
+		<version>0.1-RC</version>
 		<relativePath>../</relativePath>
 	</parent>
-	<groupId>de.evoila.cf.broker</groupId>
 	<artifactId>custom-parent</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>parent</name>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
-		<org.springframework>4.0.1.RELEASE</org.springframework>
-		<org.springframework.security>3.2.0.RELEASE</org.springframework.security>
-		<org.springframework.mongodb>1.4.0.M1</org.springframework.mongodb>
-
-		<org.hibernate.validator>5.0.2.Final</org.hibernate.validator>
-		<org.javax.validation>1.1.0.Final</org.javax.validation>
-
-		<org.slf4j>1.6.6</org.slf4j>
-		<org.logback>1.0.7</org.logback>
-		<org.jackson>2.3.0</org.jackson>
-
-		<servlet.api.version>3.0.1</servlet.api.version>
-
-		<junit.version>4.11</junit.version>
-		<mockito.version>1.9.5</mockito.version>
-	</properties>
+	<name>custom-parent</name>
 
 	<dependencies>
+		<!-- Spring Framework -->
 		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-web</artifactId>
-			<version>${org.springframework}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-webmvc</artifactId>
-			<version>${org.springframework}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-test</artifactId>
-			<version>${org.springframework}</version>
-			<scope>test</scope>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
-		<!-- Spring Security -->
 		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-core</artifactId>
-			<version>${org.springframework.security}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-web</artifactId>
-			<version>${org.springframework.security}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-config</artifactId>
-			<version>${org.springframework.security}</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 
-		<!-- Spring Data MongoDB -->
 		<dependency>
-			<groupId>org.springframework.data</groupId>
-			<artifactId>spring-data-mongodb</artifactId>
-			<version>${org.springframework.mongodb}</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.glassfish.jersey.core</groupId>
+			<artifactId>jersey-client</artifactId>
+			<version>2.11</version>
 		</dependency>
 
-		<!-- Hibernate 5 Validator -->
 		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-validator</artifactId>
-			<version>${org.hibernate.validator}</version>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-config</artifactId>
+			<version>1.0.3.RELEASE</version>
 		</dependency>
 
-		<!-- Java Validation JSR 303 -->
 		<dependency>
-			<groupId>javax.validation</groupId>
-			<artifactId>validation-api</artifactId>
-			<version>${org.javax.validation}</version>
+			<groupId>io.pivotal.spring.cloud</groupId>
+			<artifactId>cloudfoundry-certificate-truster</artifactId>
+			<version>1.0.1.RELEASE</version>
 		</dependency>
 
-		<!-- Servlet API -->
 		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-			<version>${servlet.api.version}</version>
-		</dependency>
-
-		<!-- Jackson Mapper -->
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-core</artifactId>
-			<version>${org.jackson}</version>
+			<groupId>de.evoila.cf.broker</groupId>
+			<artifactId>docker</artifactId>
+			<version>0.1-RC</version>
 		</dependency>
 		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-annotations</artifactId>
-			<version>${org.jackson}</version>
+			<groupId>de.evoila.cf.broker</groupId>
+			<artifactId>openstack</artifactId>
+			<version>0.1-RC</version>
 		</dependency>
 		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>${org.jackson}</version>
-		</dependency>
-
-		<!-- Jackson Jaway -->
-		<dependency>
-			<groupId>com.jayway.jsonpath</groupId>
-			<artifactId>json-path</artifactId>
-			<version>0.9.1</version>
-		</dependency>
-
-
-		<!-- Logging -->
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-core</artifactId>
-			<version>${org.logback}</version>
-		</dependency>
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-			<version>${org.logback}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${org.slf4j}</version>
+			<groupId>de.evoila.cf.broker</groupId>
+			<artifactId>persistence</artifactId>
+			<version>0.1-RC</version>
 		</dependency>
 
 		<!-- Testing -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>${mockito.version}</version>
 		</dependency>
 
 		<dependency>
@@ -175,5 +96,41 @@
 			<url>http://repo.springsource.org/libs-snapshot</url>
 		</repository>
 	</repositories>
+
+	<build>
+		<finalName>${name}</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<executable>true</executable>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>
