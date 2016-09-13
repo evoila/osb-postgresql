@@ -19,18 +19,6 @@
 	<modules>
 		<module>core</module>
 		<module>model</module>
-		<module>docker</module>
-		<module>openstack</module>
-		<module>custom-elasticsearch</module>
-		<module>custom-logstash</module>
-		<module>custom-mongodb</module>
-		<module>custom-mysql</module>
-		<module>custom-postgresql</module>
-		<module>custom-rabbitmq</module>
-		<module>custom-redis</module>
-		<module>persistence</module>
-		<module>registry</module>
-		<module>config</module>
 	</modules>
 
 	<properties>
@@ -96,12 +84,6 @@
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-devtools</artifactId>
-				<version>${org.springframework.boot}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-starter-redis</artifactId>
 				<version>${org.springframework.boot}</version>
 			</dependency>
 
