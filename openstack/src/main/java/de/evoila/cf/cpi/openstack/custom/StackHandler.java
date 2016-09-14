@@ -47,6 +47,10 @@ public class StackHandler {
 	public static final String AVAILABILITY_ZONE = "availability_zone";
 	public static final String LOG_PORT = "log_port";
 	public static final String LOG_HOST = "log_host";
+	
+	public static final String SCRIPT_REPO_MAIN = "repo_main";
+	public static final String SCRIPT_REPO_MONIT = "repo_monit";
+	public static final String SCRIPT_REPO_SERVICE = "repo_service";
 
 	private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -63,6 +67,15 @@ public class StackHandler {
 
 	@Value("${openstack.cinder.az}")
 	private String availabilityZone;
+	
+	@Value("${deployment.repo.main}")
+	private String scriptRepoMain;
+
+	@Value("${deployment.repo.monit}")
+	private String scriptRepoMonit;
+
+	@Value("${deployment.repo.service}")
+	private String scriptRepoService;
 
 	@Autowired
 	protected HeatFluent heatFluent;
@@ -135,6 +148,10 @@ public class StackHandler {
 		defaultParameters.put(KEYPAIR, keypair);
 		defaultParameters.put(NETWORK_ID, networkId);
 		defaultParameters.put(AVAILABILITY_ZONE, availabilityZone);
+		
+		defaultParameters.put(SCRIPT_REPO_MAIN, scriptRepoMain);
+		defaultParameters.put(SCRIPT_REPO_MONIT, scriptRepoMonit);
+		defaultParameters.put(SCRIPT_REPO_SERVICE, scriptRepoService);
 
 		return defaultParameters;
 	}

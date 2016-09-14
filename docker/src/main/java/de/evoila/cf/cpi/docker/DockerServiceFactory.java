@@ -57,6 +57,12 @@ public abstract class DockerServiceFactory implements PlatformService {
 	private final static String DEFAULT_ENCODING = "UTF-8";
 
 	private static final long MEMORY_LIMIT = 536870912;
+	
+	private static final String SCRIPT_REPO_MAIN = "repo_main";
+	
+	private static final String SCRIPT_REPO_MONIT = "repo_monit";
+	
+	private static final String SCRIPT_REPO_SERVICE = "repo_service";
 
 	Logger log = LoggerFactory.getLogger(getClass());
 
@@ -85,6 +91,15 @@ public abstract class DockerServiceFactory implements PlatformService {
 
 	@Value("${docker.syslogAddress}")
 	private String syslogAddress;
+	
+	@Value("${deployment.repo.main}")
+	private String scriptRepoMain;
+
+	@Value("${deployment.repo.monit}")
+	private String scriptRepoMonit;
+
+	@Value("${deployment.repo.service}")
+	private String scriptRepoService;
 
 	private Map<String, Integer> ports;
 
@@ -308,6 +323,10 @@ public abstract class DockerServiceFactory implements PlatformService {
 	public CreateContainerResponse createDockerContainer(String instanceId, int volumeSize,
 			Map<String, String> customProperties) throws PlatformException {
 		log.info("Creating container for {} with volume size {}", instanceId, volumeSize);
+		
+		customProperties.put(SCRIPT_REPO_MAIN, scriptRepoMain);
+		customProperties.put(SCRIPT_REPO_MONIT, scriptRepoMonit);
+		customProperties.put(SCRIPT_REPO_SERVICE, scriptRepoService);
 
 		CreateContainerResponse container;
 		try {
