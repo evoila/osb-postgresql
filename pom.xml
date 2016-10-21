@@ -120,7 +120,21 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ftp</artifactId>
+				<version>1.0-beta-6</version>
+			</extension>
+		</extensions>
 	</build>
+
+	<distributionManagement>
+		<repository>
+			<id>ftp-meshstack</id>
+			<url>ftp://maven.meshstack.io</url>
+		</repository>
+	</distributionManagement>
 
 	<repositories>
 		<repository>
@@ -137,9 +151,9 @@
 			<url>http://repo.springsource.org/libs-snapshot</url>
 		</repository>
 		<repository>
-            <id>spring-repository</id>
-            <url>https://repo.spring.io/libs-release</url>
-        </repository>
+      <id>spring-repository</id>
+      <url>https://repo.spring.io/libs-release</url>
+    </repository>
 	</repositories>
 
 	<pluginRepositories>
