@@ -4,6 +4,3 @@
 [submodule "docker-java"]
 	path = docker-java
 	url = https://github.com/evoila/docker-java
-[submodule "core"]
-	path = core
-	url = https://github.com/evoila/cf-service-broker-core
