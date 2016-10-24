@@ -41,4 +41,21 @@
 
 		</dependencies>
 	</dependencyManagement>
+
+	<build>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ftp</artifactId>
+				<version>1.0-beta-6</version>
+			</extension>
+		</extensions>
+	</build>
+
+	<distributionManagement>
+		<repository>
+			<id>ftp-meshstack</id>
+			<url>ftp://maven.meshstack.io</url>
+		</repository>
+	</distributionManagement>
 </project>
