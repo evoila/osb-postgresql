@@ -11,11 +11,9 @@
 		<groupId>de.evoila.cf.broker</groupId>
 		<artifactId>parent</artifactId>
 		<version>0.1-RC</version>
-		<relativePath>core/</relativePath>
 	</parent>
 
 	<modules>
-		<module>core/core</module>
 		<module>persistence-redis</module>
 	</modules>
 
