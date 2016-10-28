@@ -89,6 +89,10 @@ public class DeploymentServiceImpl implements DeploymentService {
 
 		PlatformService platformService = platformRepository.getPlatformService(plan.getPlatform());
 
+		if(platformService == null) {
+			throw new ServiceDefinitionDoesNotExistException(planId);
+		}
+		
 		if (platformService.isSyncPossibleOnCreate(plan)) {
 			return syncCreateInstance(serviceInstance, parameters, plan, platformService);
 		} else {
