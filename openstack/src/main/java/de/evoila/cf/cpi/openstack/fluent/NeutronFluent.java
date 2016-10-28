@@ -8,6 +8,7 @@ import java.util.List;
 import org.openstack4j.api.OSClient;
 import org.openstack4j.model.network.Network;
 import org.openstack4j.model.network.Subnet;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import de.evoila.cf.cpi.openstack.fluent.connection.OpenstackConnectionFactory;
@@ -18,6 +19,7 @@ import de.evoila.cf.cpi.openstack.fluent.connection.OpenstackConnectionFactory;
  *
  */
 @Component
+@ConditionalOnProperty(prefix="openstack", name={"endpoint"},havingValue="")
 public class NeutronFluent {
 	
 	private OSClient client() {

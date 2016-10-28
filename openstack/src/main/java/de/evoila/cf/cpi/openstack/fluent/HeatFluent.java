@@ -13,6 +13,7 @@ import org.openstack4j.api.heat.StackService;
 import org.openstack4j.model.compute.Server;
 import org.openstack4j.model.heat.Resource;
 import org.openstack4j.model.heat.Stack;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import de.evoila.cf.broker.exception.PlatformException;
@@ -23,6 +24,7 @@ import de.evoila.cf.cpi.openstack.fluent.connection.OpenstackConnectionFactory;
  *
  */
 @Component
+@ConditionalOnProperty(prefix="openstack", name={"endpoint"},havingValue="")
 public class HeatFluent {
 
 	public static String NOVA_INSTANCE_TYPE = "OS::Nova::Server";

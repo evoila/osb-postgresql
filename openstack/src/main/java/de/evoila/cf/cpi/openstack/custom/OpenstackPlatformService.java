@@ -14,6 +14,7 @@ import javax.ws.rs.NotSupportedException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
 @Service
 @EnableConfigurationProperties
 @ConfigurationProperties(prefix = "backend")
+@ConditionalOnProperty(prefix="openstack", name={"endpoint","tenantId","username","password"},havingValue="")
 public class OpenstackPlatformService extends OpenstackServiceFactory {
 
 	private static final String VOLUME_SIZE = "volume_size";

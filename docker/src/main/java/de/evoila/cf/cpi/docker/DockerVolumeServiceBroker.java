@@ -16,6 +16,7 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import de.evoila.cf.broker.cpi.endpoint.EndpointAvailabilityService;
@@ -26,6 +27,7 @@ import de.evoila.cf.broker.model.cpi.EndpointServiceState;
  * @author Dennis Mueller Johannes Hiemer
  */
 @Service
+@ConditionalOnProperty(prefix="docker", name={"host"},havingValue="")
 public class DockerVolumeServiceBroker {
 
 	Logger log = LoggerFactory.getLogger(getClass());

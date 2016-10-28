@@ -5,6 +5,7 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
 @Service
 @EnableConfigurationProperties
 @ConfigurationProperties(prefix = "backend")
+@ConditionalOnProperty(prefix="docker", name={"host","port","imageName","offset","portRange.start","portRange.end","syslogAddress"},havingValue="")
 public class DockerPlatformService extends DockerServiceFactory {
 
 	@Autowired
