@@ -15,6 +15,7 @@
 
 	<modules>
 		<module>persistence-redis</module>
+		<module>persistence-mongo</module>
 	</modules>
 
 	<properties>
