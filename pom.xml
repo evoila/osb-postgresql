@@ -16,6 +16,7 @@
 	<modules>
 		<module>openstack</module>
 		<module>docker</module>
+		<module>docker-java</module>
 		<module>existing-service</module>
 	</modules>
 
