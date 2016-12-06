@@ -23,10 +23,6 @@ public class RouteBindingRepositoryImpl implements RouteBindingRepository {
 	
 	private static final String PREFIX = "route-binding-";
 
-	
-	protected String getPrefix() {
-		return PREFIX;
-	}
 
 	/*
 	 * (non-Javadoc)

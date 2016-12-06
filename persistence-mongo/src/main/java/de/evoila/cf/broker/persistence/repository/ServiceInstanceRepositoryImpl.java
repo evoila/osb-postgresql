@@ -21,12 +21,6 @@ public class ServiceInstanceRepositoryImpl
 	@Autowired
 	MongoRepository<ServiceInstance, String> serviceInstanceRepository;
 
-	private static final String PREFIX = "instance-";
-
-	protected String getPrefix() {
-		return PREFIX;
-	}
-
 	@Override
 	public ServiceInstance getServiceInstance(String instanceId) {
 		return serviceInstanceRepository.findOne(instanceId);

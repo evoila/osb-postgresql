@@ -20,12 +20,6 @@ public class JobRepositoryImpl  implements JobRepository {
 	@Autowired
 	MongoRepository<JobProgress, String> jobRepository;
 	
-	private static final String PREFIX = "job-progress-";
-
-	
-	protected String getPrefix() {
-		return PREFIX;
-	}
 
 	/* (non-Javadoc)
 	 * @see de.evoila.cf.broker.persistence.repository.JobRepository#getJobProgress(java.lang.String)

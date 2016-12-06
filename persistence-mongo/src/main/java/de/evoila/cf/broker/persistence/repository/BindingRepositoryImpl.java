@@ -20,12 +20,6 @@ public class BindingRepositoryImpl implements BindingRepository {
 
 	@Autowired
 	MongoRepository<ServiceInstanceBinding, String> bindingRepository;
-	
-	private static final String PREFIX = "binding-";
-
-	protected String getPrefix() {
-		return PREFIX;
-	}
 
 	/*
 	 * (non-Javadoc)
