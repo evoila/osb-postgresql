@@ -19,7 +19,7 @@ public class ServiceInstanceData {
 	public static Plan createDockerPlanData() {
 		Plan dockerPlan = new Plan("docker", "50 MB PostgreSQL DB Basic Instance",
 				"The most basic PostgreSQL plan currently available. Providing"
-			+ "50 MB of capcity in a PostgreSQL DB.", Platform.DOCKER, 25, VolumeUnit.M, "3", 100);
+			+ "50 MB of capcity in a PostgreSQL DB.", Platform.DOCKER, 25, VolumeUnit.M, "3", true, 100);
 		return dockerPlan;
 	}
 	
@@ -36,7 +36,7 @@ public class ServiceInstanceData {
 	public static Plan createOpenstackPlanData() {
 		Plan openstackPlan = new Plan("openstack", "500 MB PostgreSQL DB Basic Instance",
 				"The most basic PostgreSQL plan currently available. Providing"
-			+ "500 MB of capcity in a PostgreSQL DB.", Platform.OPENSTACK, 500, VolumeUnit.M, "3", 1000);
+			+ "500 MB of capcity in a PostgreSQL DB.", Platform.OPENSTACK, 500, VolumeUnit.M, "3", true, 1000);
 		return openstackPlan;
 	}
 	

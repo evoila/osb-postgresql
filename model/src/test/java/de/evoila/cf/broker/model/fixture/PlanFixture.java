@@ -25,11 +25,11 @@ public class PlanFixture {
 	}
 
 	public static Plan getPlanOne() {
-		return new Plan("plan-one-id", "Plan One", "Description for Plan One", Platform.DOCKER, 0, VolumeUnit.M, "1", 0);
+		return new Plan("plan-one-id", "Plan One", "Description for Plan One", Platform.DOCKER, 0, VolumeUnit.M, "1", true, 0);
 	}
 
 	public static Plan getPlanTwo() {
-		return new Plan("plan-two-id", "Plan Two", "Description for Plan Two", Platform.DOCKER, 0, VolumeUnit.M, "1", 0);
+		return new Plan("plan-two-id", "Plan Two", "Description for Plan Two", Platform.DOCKER, 0, VolumeUnit.M, "1", true, 0);
 	}
 
 }

@@ -32,6 +32,10 @@ public class Plan {
 	@JsonSerialize
 	@JsonProperty("metadata")
 	private Map<String, Object> metadata = new HashMap<String, Object>();
+	
+	@JsonSerialize
+	@JsonProperty(value="free", required=false)
+	private boolean free = true;
 
 	private int volumeSize;
 
@@ -92,7 +96,7 @@ public class Plan {
 	}
 
 	public Plan(String id, String name, String description, Platform platform, int volumeSize, VolumeUnit volumeUnit,
-			String flavorId, int connections) {
+			String flavorId, boolean free, int connections) {
 		this.id = id;
 		this.name = name;
 		this.description = description;
@@ -104,8 +108,8 @@ public class Plan {
 	}
 
 	public Plan(String id, String name, String description, Map<String, Object> metadata, Platform platform,
-			int volumeSize, VolumeUnit volumeUnit, String flavor, int connections) {
-		this(id, name, description, platform, volumeSize, volumeUnit, flavor, connections);
+			int volumeSize, VolumeUnit volumeUnit, String flavor, boolean free, int connections) {
+		this(id, name, description, platform, volumeSize, volumeUnit, flavor, free, connections);
 		setMetadata(metadata);
 	}
 
@@ -143,6 +147,18 @@ public class Plan {
 		} else {
 			this.metadata = metadata;
 		}
+	}
+
+	public boolean isFree() {
+		return free;
+	}
+	
+	public boolean getFree() {
+		return free;
+	}
+
+	public void setFree(boolean free) {
+		this.free = free;
 	}
 
 }
