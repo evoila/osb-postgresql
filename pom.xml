@@ -19,6 +19,8 @@
 	<modules>
 		<module>core</module>
 		<module>model</module>
+		<module>custom-parent</module>
+		
 	</modules>
 
 	<properties>
