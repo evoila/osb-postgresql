@@ -19,7 +19,7 @@ public class ServiceInstanceRepositoryImpl
 		implements ServiceInstanceRepository {
 	
 	@Autowired
-	MongoRepository<ServiceInstance, String> serviceInstanceRepository;
+	de.evoila.cf.broker.persistence.mongodb.repository.ServiceInstanceRepository serviceInstanceRepository;
 
 	@Override
 	public ServiceInstance getServiceInstance(String instanceId) {

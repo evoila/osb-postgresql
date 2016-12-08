@@ -19,7 +19,7 @@ import de.evoila.cf.broker.repository.BindingRepository;
 public class BindingRepositoryImpl implements BindingRepository {
 
 	@Autowired
-	MongoRepository<ServiceInstanceBinding, String> bindingRepository;
+	de.evoila.cf.broker.persistence.mongodb.repository.BindingRepository bindingRepository;
 
 	/*
 	 * (non-Javadoc)

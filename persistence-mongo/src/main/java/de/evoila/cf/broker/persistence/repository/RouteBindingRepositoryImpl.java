@@ -19,11 +19,8 @@ public class RouteBindingRepositoryImpl implements RouteBindingRepository {
 
 
 	@Autowired
-	MongoRepository<RouteBinding, String> routeBindingRepository;
+	de.evoila.cf.broker.persistence.mongodb.repository.RouteBindingRepository routeBindingRepository;
 	
-	private static final String PREFIX = "route-binding-";
-
-
 	/*
 	 * (non-Javadoc)
 	 * 

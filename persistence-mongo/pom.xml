@@ -9,9 +9,9 @@
 		<relativePath>../</relativePath>
 		<version>0.1-RC</version>
 	</parent>
-	<artifactId>persistence-mongo</artifactId>
+	<artifactId>persistence-mongodb</artifactId>
 	<packaging>jar</packaging>
-	<name>persistence-mongo</name>
+	<name>persistence-mongodb</name>
 
 	<dependencies>
 		<dependency>

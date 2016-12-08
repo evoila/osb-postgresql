@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Service;
 
 import de.evoila.cf.broker.model.JobProgress;
+import de.evoila.cf.broker.persistence.mongodb.repository.JobProgressRepository;
 import de.evoila.cf.broker.repository.JobRepository;
 
 /**
@@ -18,7 +19,7 @@ import de.evoila.cf.broker.repository.JobRepository;
 public class JobRepositoryImpl  implements JobRepository {
 	
 	@Autowired
-	MongoRepository<JobProgress, String> jobRepository;
+	JobProgressRepository jobRepository;
 	
 
 	/* (non-Javadoc)
