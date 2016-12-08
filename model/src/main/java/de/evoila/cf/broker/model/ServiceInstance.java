@@ -1,5 +1,6 @@
 package de.evoila.cf.broker.model;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,7 +47,7 @@ public class ServiceInstance implements BaseEntity<String> {
 
 	@JsonSerialize
 	@JsonProperty("parameters")
-	private ConcurrentMap<String, String> parameters = new ConcurrentHashMap<String, String>();
+	private Map<String, String> parameters = new HashMap<String, String>();
 
 	@JsonSerialize
 	@JsonProperty("internal_id")
@@ -159,7 +160,7 @@ public class ServiceInstance implements BaseEntity<String> {
 	}
 
 	private void setParameters(Map<String, String> parameters) {
-		this.parameters = new ConcurrentHashMap<>(parameters);
+		this.parameters = new HashMap<>(parameters);
 	}
 
 	public String getInternalId() {
