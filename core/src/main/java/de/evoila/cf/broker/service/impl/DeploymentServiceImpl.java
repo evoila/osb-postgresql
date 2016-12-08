@@ -22,6 +22,7 @@ import de.evoila.cf.broker.model.JobProgressResponse;
 import de.evoila.cf.broker.model.Plan;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.model.ServiceInstanceResponse;
+import de.evoila.cf.broker.repository.JobRepository;
 import de.evoila.cf.broker.repository.PlatformRepository;
 import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
 import de.evoila.cf.broker.repository.ServiceInstanceRepository;
@@ -48,6 +49,9 @@ public class DeploymentServiceImpl implements DeploymentService {
 
 	@Autowired
 	private ServiceInstanceRepository serviceInstanceRepository;
+	
+	@Autowired
+	private JobRepository jobRepository;
 
 	@Autowired(required = false)
 	private AsyncDeploymentService asyncDeploymentService;
@@ -193,5 +197,6 @@ public class DeploymentServiceImpl implements DeploymentService {
 		}
 
 		serviceInstanceRepository.deleteServiceInstance(serviceInstance.getId());
+		jobRepository.deleteJobProgress(serviceInstance.getId());
 	}
 }
