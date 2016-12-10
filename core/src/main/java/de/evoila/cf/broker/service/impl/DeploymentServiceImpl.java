@@ -3,9 +3,9 @@
  */
 package de.evoila.cf.broker.service.impl;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Resource;
 
@@ -86,8 +86,8 @@ public class DeploymentServiceImpl implements DeploymentService {
 
 		ServiceInstance serviceInstance = new ServiceInstance(serviceInstanceId,
 				serviceDefinitionRepository.getServiceDefinition().getId(), planId, organizationGuid, spaceGuid,
-				parameters == null ? new ConcurrentHashMap<String, String>()
-						: new ConcurrentHashMap<String, String>(parameters));
+				parameters == null ? new HashMap<String, String>()
+						: new HashMap<String, String>(parameters));
 
 		Plan plan = serviceDefinitionRepository.getPlan(planId);
 
