@@ -5,10 +5,10 @@ package de.evoila.cf.broker.persistence.repository;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Service;
 
 import de.evoila.cf.broker.model.ServiceInstanceBinding;
+import de.evoila.cf.broker.persistence.mongodb.repository.MongoDBBindingRepository;
 import de.evoila.cf.broker.repository.BindingRepository;
 
 /**
@@ -19,7 +19,7 @@ import de.evoila.cf.broker.repository.BindingRepository;
 public class BindingRepositoryImpl implements BindingRepository {
 
 	@Autowired
-	de.evoila.cf.broker.persistence.mongodb.repository.BindingRepository bindingRepository;
+	private MongoDBBindingRepository bindingRepository;
 
 	/*
 	 * (non-Javadoc)
@@ -70,7 +70,8 @@ public class BindingRepositoryImpl implements BindingRepository {
 
 	@Override
 	public ServiceInstanceBinding findOne(String bindingId) {
-		return bindingRepository.findOne(bindingId);
+		ServiceInstanceBinding findOne = bindingRepository.findOne(bindingId);
+		return findOne;
 	}
 
 }

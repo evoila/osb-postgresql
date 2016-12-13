@@ -11,6 +11,6 @@ import de.evoila.cf.broker.model.ServiceInstanceBinding;
  * @author Christian Brinker, evoila.
  *
  */
-public interface BindingRepository extends MongoRepository<ServiceInstanceBinding, String> {
+public interface MongoDBBindingRepository extends MongoRepository<ServiceInstanceBinding, String> {
 
 }
