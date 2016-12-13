@@ -17,11 +17,13 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.evoila.cf.cpi.existing.CustomExistingServiceConnection;
+
 /**
  * @author Johannes Hiemer
  *
  */
-public class PostgresDbService {
+public class PostgresDbService implements CustomExistingServiceConnection {
 
 	private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -31,13 +33,13 @@ public class PostgresDbService {
 
 	private int port;
 
-	public boolean createConnection(String instanceId, String host, int port) {
+	public boolean createConnection(String host, int port, String database, String username, String password) {
 		this.host = host;
 		this.port = port;
 		try {
 			Class.forName("org.postgresql.Driver");
-			String url = "jdbc:postgresql://" + host + ":" + port + "/" + instanceId;
-			connection = DriverManager.getConnection(url, instanceId, instanceId);
+			String url = "jdbc:postgresql://" + host + ":" + port + "/" + database;
+			connection = DriverManager.getConnection(url, username, password);
 		} catch (ClassNotFoundException | SQLException e) {
 			log.info("Could not establish connection", e);
 			return false;
@@ -49,11 +51,11 @@ public class PostgresDbService {
 		return connection != null && !connection.isClosed();
 	}
 
-	public void checkValidUUID(String instanceId) throws SQLException {
-		UUID uuid = UUID.fromString(instanceId);
+	public void checkValidUUID(String uuidToTest) throws SQLException {
+		UUID uuid = UUID.fromString(uuidToTest);
 
-		if (!instanceId.equals(uuid.toString())) {
-			throw new SQLException("UUID '" + instanceId + "' is not an UUID.");
+		if (!uuidToTest.equals(uuid.toString())) {
+			throw new SQLException("UUID '" + uuid + "' is not an UUID.");
 		}
 	}
 

@@ -37,12 +37,13 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
 	private PostgresDbService connection(ServiceInstance serviceInstance) throws SQLException {
 		Assert.notNull(serviceInstance, "ServiceInstance may not be null");
-		Assert.notNull(serviceInstance.getId(), "Id of ServiceInstance may not be null");
+		String serviceInstanceId = serviceInstance.getId();
+		Assert.notNull(serviceInstanceId, "Id of ServiceInstance may not be null");
 		Assert.notNull(serviceInstance.getHosts(), "Host of ServiceInstance may not be null");
 
 		ServerAddress host = serviceInstance.getHosts().get(0);
 		PostgresDbService jdbcService = new PostgresDbService();
-		jdbcService.createConnection(serviceInstance.getId(), host.getIp(), host.getPort());
+		jdbcService.createConnection(host.getIp(), host.getPort(), serviceInstanceId, serviceInstanceId, serviceInstanceId);
 		return jdbcService;
 	}
 
@@ -77,8 +78,9 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		String instanceId = serviceInstance.getId();
 
 		try {
-			jdbcService.executeUpdate("REVOKE all on database \"" + instanceId + "\" from public");
+//			jdbcService.executeUpdate("REVOKE all on database \"" + instanceId + "\" from public");
 			jdbcService.executeUpdate("DROP DATABASE \"" + instanceId + "\"");
+			jdbcService.executeUpdate("DROP ROLE \"" + instanceId + "\"");
 		} catch (SQLException e) {
 			log.error(e.toString());
 			throw new ServiceBrokerException("Could not remove from database");
@@ -105,7 +107,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
 		String password = "";
 		try {
-			password = postgresCustomImplementation.bindRoleToDatabase(jdbcService, serviceInstance.getId(), bindingId);
+			password = postgresCustomImplementation.bindRoleToDatabaseAndGeneratePassword(jdbcService, serviceInstance.getId(), bindingId);
 		} catch (SQLException e) {
 			log.error(e.toString());
 			throw new ServiceBrokerException("Could not update database");
@@ -130,7 +132,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		}
 
 		try {
-			postgresCustomImplementation.unbindRoleFromDatabase(jdbcService, bindingId);
+			postgresCustomImplementation.unbindRoleFromDatabase(jdbcService, bindingId, serviceInstance.getId());
 		} catch (SQLException e) {
 			log.error(e.toString());
 			throw new ServiceBrokerException("Could not remove from database");
