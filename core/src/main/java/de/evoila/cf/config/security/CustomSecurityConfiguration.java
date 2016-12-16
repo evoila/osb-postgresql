@@ -1,6 +1,7 @@
 package de.evoila.cf.config.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -19,6 +20,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @EnableWebSecurity
 public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
 
+	@Value("${login.username}")
+	private String username;
+	
+	@Value("${login.password}")
+	private String password;
+	
+	@Value("${login.role}")
+	private String role;
+	
 	@Bean
 	public BCryptPasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
@@ -28,7 +38,7 @@ public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
     protected void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
         auth
             .inMemoryAuthentication()
-            	.withUser("admin").password("cloudfoundry").roles("USER");
+            	.withUser(username).password(password).roles(role);
     }
 
     @Bean 
