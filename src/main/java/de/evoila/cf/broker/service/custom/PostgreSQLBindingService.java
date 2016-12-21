@@ -64,11 +64,14 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		} catch (SQLException e) {
 			log.error(e.toString());
 			throw new ServiceBrokerException("Could not add to database");
-		}
+		} finally {
+            jdbcService.closeIfConnected();
+        }
 	}
 
 	public void delete(ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
 		PostgresDbService jdbcService;
+		
 		try {
 			jdbcService = connection(serviceInstance);
 		} catch (SQLException e1) {
@@ -84,7 +87,11 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		} catch (SQLException e) {
 			log.error(e.toString());
 			throw new ServiceBrokerException("Could not remove from database");
-		}
+		} finally {
+            jdbcService.closeIfConnected();
+        }
+		
+		
 	}
 
 	/*
@@ -111,7 +118,9 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		} catch (SQLException e) {
 			log.error(e.toString());
 			throw new ServiceBrokerException("Could not update database");
-		}
+		} finally {
+            jdbcService.closeIfConnected();
+        }
 
 		String dbURL = String.format("postgres://%s:%s@%s:%d/%s", bindingId, password, host.getIp(), host.getPort(),
 				serviceInstance.getId());
@@ -136,7 +145,9 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		} catch (SQLException e) {
 			log.error(e.toString());
 			throw new ServiceBrokerException("Could not remove from database");
-		}
+		} finally {
+            jdbcService.closeIfConnected();
+        }
 	}
 
 	@Override

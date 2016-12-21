@@ -50,7 +50,17 @@ public class PostgresDbService implements CustomExistingServiceConnection {
 	public boolean isConnected() throws SQLException {
 		return connection != null && !connection.isClosed();
 	}
-
+	
+    public void closeIfConnected() {
+        try {
+            if(isConnected()) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            log.info("Could not close connection", e);
+        }
+    }
+	
 	public void checkValidUUID(String uuidToTest) throws SQLException {
 		UUID uuid = UUID.fromString(uuidToTest);
 
