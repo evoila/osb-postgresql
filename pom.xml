@@ -1,11 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+ 
+ 	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<org.springframework.boot>1.3.0.RELEASE</org.springframework.boot>
+		<java.version>1.8</java.version>
+		<core.version>0.1-RC</core.version>
+		<parent.version>0.1-RC</parent.version>
+		<deployment.version>0.1-RC</deployment.version>
+	</properties>
+ 
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>deployment-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>deployment-parent</name>
+	<version>0.1-RC</version>
 
 	<parent>
 		<groupId>de.evoila.cf.broker</groupId>
@@ -13,19 +24,12 @@
 		<version>0.1-RC</version>
 	</parent>
 
+	
 	<modules>
 		<module>openstack</module>
 		<module>docker</module>
-		<module>docker-java</module>
 		<module>existing-service</module>
 	</modules>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<org.springframework.boot>1.3.0.RELEASE</org.springframework.boot>
-		<java.version>1.8</java.version>
-	</properties>
 
 	<dependencyManagement>
 		<dependencies>
@@ -33,7 +37,7 @@
 			<dependency>
 				<groupId>de.evoila.cf.broker</groupId>
 				<artifactId>core</artifactId>
-				<version>0.1-RC</version>
+				<version>${parent.version}</version>
 			</dependency>
 
 		</dependencies>
@@ -48,11 +52,4 @@
 			</extension>
 		</extensions>
 	</build>
-
-	<distributionManagement>
-		<repository>
-			<id>ftp-meshstack</id>
-			<url>ftp://maven.meshstack.io</url>
-		</repository>
-	</distributionManagement>
 </project>
