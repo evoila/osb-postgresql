@@ -12,6 +12,7 @@
 	<artifactId>cf-service-broker-postgresql</artifactId>
 	<packaging>jar</packaging>
 	<name>ssb-postgresql</name>
+	<version>0.1-RC</version>
 
 	<properties>
         	<core.version>0.1-RC</core.version>
