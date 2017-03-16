@@ -4,14 +4,13 @@
 package de.evoila.cf.config.security;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 /**
  * @author René Schollmeyer
  *
  */
 
-@Component
+
 @ConfigurationProperties(prefix="login")
 public class AuthenticationProperties {
 
