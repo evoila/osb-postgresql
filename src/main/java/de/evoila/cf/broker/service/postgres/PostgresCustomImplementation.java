@@ -6,6 +6,7 @@ package de.evoila.cf.broker.service.postgres;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.sql.SQLException;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 
@@ -53,34 +54,58 @@ public class PostgresCustomImplementation implements CustomExistingService {
 		return passwd;
 	}
 	
+	public void setUpBindingUserPrivileges(PostgresDbService jdbcService, String database, String userId, String password) throws SQLException {
+		
+		jdbcService.checkValidUUID(userId);
+		
+		//jdbcService.executeUpdate("GRANT \"" + database + "\" TO \"" + userId + "\"");	
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + userId +"\" IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO \""+ database + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + userId +"\" IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO \""+ database + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + userId +"\" IN SCHEMA public GRANT ALL PRIVILEGES ON FUNCTIONS TO \""+ database + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + userId +"\" IN SCHEMA public GRANT ALL PRIVILEGES ON TYPES TO \""+ database + "\"");
+	}
+	
 	public void bindRoleToDatabase(PostgresDbService jdbcService, String database, String userId, String password, boolean isAdmin)
 			throws SQLException {
 		jdbcService.checkValidUUID(userId);
-
-		jdbcService.executeUpdate("CREATE ROLE \"" + userId + "\"");
+		
+		if (isAdmin){
+			jdbcService.executeUpdate("CREATE ROLE \"" + userId + "\"");
+		} else {
+			jdbcService.executeUpdate("CREATE ROLE \"" + userId + "\" WITH INHERIT");
+		}
+				
 		jdbcService.executeUpdate("ALTER ROLE \"" + userId + "\" LOGIN password '" + password + "'");
-//		jdbcService.executeUpdate("GRANT \"" + database + "\" TO \"" + userId + "\"");
+		
+		if (isAdmin){
+			jdbcService.executeUpdate("ALTER DATABASE \"" + database + "\" OWNER TO \"" + userId + "\"");
+			jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON SCHEMA public TO \""+ userId + "\"");
+			jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO \""+ userId + "\"");
+			jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public To \""+ userId + "\"");
+			jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public To \""+ userId + "\"");
 
-		jdbcService
-				.executeUpdate("GRANT ALL PRIVILEGES ON DATABASE \"" + database + "\" TO \"" + userId + "\"" + ((isAdmin)?" WITH GRANT OPTION":""));
-//		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + database
-//				+ "\" IN SCHEMA public GRANT ALL ON TABLES TO \"" + database + "\"");
-//		jdbcService.executeUpdate(
-//				"GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO \"" + database + "\"");
-//		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + database
-//				+ "\" IN SCHEMA public GRANT ALL ON SEQUENCES TO \"" + database + "\"");
+			
+		} else {
+			jdbcService.executeUpdate("GRANT \"" + database + "\" TO \"" + userId + "\"");	
+		}
 	}
 
 	public void unbindRoleFromDatabase(PostgresDbService jdbcService, String roleName, String fallBackRoleName) throws SQLException {
 		jdbcService.checkValidUUID(roleName);
 		jdbcService.checkValidUUID(fallBackRoleName);
+		//jdbcService.getHost()
+		//jdbcService.closeIfConnected();
+		//jdbcService.createConnection(host, port, database, username, password)
+		jdbcService.executeUpdate("REVOKE \""+ fallBackRoleName + "\" FROM \"" + roleName + "\"");
 		jdbcService.executeUpdate("REASSIGN OWNED BY \"" + roleName + "\" TO \"" + fallBackRoleName + "\"");
+		jdbcService.executeUpdate("DROP OWNED BY \"" + roleName + "\"");
 		jdbcService.executeUpdate("DROP ROLE \"" + roleName + "\"");
 	}
 
 	@Override
-	public CustomExistingServiceConnection connection(String host, int port, String database, String username,
+	public CustomExistingServiceConnection connection(List<String> hosts, int port, String database, String username,
 			String password) throws Exception {
+		String host = hosts.get(0);
 		PostgresDbService jdbcService = new PostgresDbService();
 		jdbcService.createConnection(host, port, database, username, password);
 		return jdbcService;
