@@ -1,6 +1,7 @@
 package de.evoila.cf.cpi.existing;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.google.common.collect.Lists;
 
@@ -27,21 +29,17 @@ import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
  * @author Christian Brinker, evoila.
  *
  */
+@ConfigurationProperties(prefix="existing.endpoint")
 public abstract class ExistingServiceFactory implements PlatformService {
 
-	@Value("${existing.endpoint.host}")
-	private String host;
+	private List<String> hosts = new ArrayList<String>();
 
-	@Value("${existing.endpoint.port}")
 	private int port;
 
-	@Value("${existing.endpoint.username}")
 	private String username;
 
-	@Value("${existing.endpoint.password}")
 	private String password;
 
-	@Value("${existing.endpoint.database}")
 	private String database;
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
@@ -55,7 +53,9 @@ public abstract class ExistingServiceFactory implements PlatformService {
 	@Override
 	@PostConstruct
 	public void registerCustomPlatformServie() {
+		
 		platformRepository.addPlatform(Platform.EXISTING_SERVICE, this);
+		log.info("Added Platform-Service " + this.getClass().toString() + " of type " + Platform.EXISTING_SERVICE + " with host: " + getHosts().stream().reduce((l,r) -> (l + ", " + r)).orElse("none") + " and port: " + getPort());
 	}
 
 	@Override
@@ -77,7 +77,7 @@ public abstract class ExistingServiceFactory implements PlatformService {
 	public ServiceInstance postProvisioning(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
 		boolean available = false;
 		try {
-			available = portAvailabilityVerifier.verifyServiceAvailability(serviceInstance.getHosts());
+			available = portAvailabilityVerifier.verifyServiceAvailability(serviceInstance.getHosts(), false);
 		} catch (Exception e) {
 			throw new PlatformException("Service instance is not reachable. Service may not be started on instance.",
 					e);
@@ -131,13 +131,18 @@ public abstract class ExistingServiceFactory implements PlatformService {
 	 * )
 	 */
 	protected List<ServerAddress> getExistingServiceHosts() {
-		ServerAddress serverAddress = new ServerAddress("existing_cluster", getHost(), getPort());
-		return Lists.newArrayList(serverAddress);
+		List<String> hosts = getHosts();
+		List<ServerAddress> serverAddresses = new ArrayList<ServerAddress>();
+		for (String host: hosts) {
+			ServerAddress serverAddress = new ServerAddress("existing_cluster", host, getPort());
+			serverAddresses.add(serverAddress);
+		}
+		return serverAddresses;
 	}
 
 	public void deleteServiceInstance(ServiceInstance serviceInstance) throws PlatformException {
 		try {
-			CustomExistingServiceConnection connection = getCustomExistingService().connection(getHost(), getPort(),
+			CustomExistingServiceConnection connection = getCustomExistingService().connection(getHosts(), getPort(),
 					getDatabase(), getUsername(), getPassword());
 
 			String instanceId = serviceInstance.getId();
@@ -155,7 +160,7 @@ public abstract class ExistingServiceFactory implements PlatformService {
 	protected void provisionServiceInstance(ServiceInstance serviceInstance, Plan plan,
 			Map<String, String> customProperties) throws PlatformException {
 		try {
-			CustomExistingServiceConnection connection = getCustomExistingService().connection(getHost(), getPort(),
+			CustomExistingServiceConnection connection = getCustomExistingService().connection(getHosts(), getPort(),
 					getDatabase(), getUsername(), getPassword());
 
 			String instanceId = serviceInstance.getId();
@@ -169,12 +174,12 @@ public abstract class ExistingServiceFactory implements PlatformService {
 
 	protected abstract void createInstance(CustomExistingServiceConnection connection, String instanceId)  throws PlatformException;;
 
-	public String getHost() {
-		return host;
+	public List<String> getHosts() {
+		return hosts;
 	}
 
-	public void setHost(String host) {
-		this.host = host;
+	public void setHosts(List<String> hosts) {
+		this.hosts = hosts;
 	}
 
 	public int getPort() {
