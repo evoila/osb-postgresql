@@ -80,12 +80,11 @@ public class DeploymentServiceImpl implements DeploymentService {
 		serviceDefinitionRepository.validateServiceId(serviceDefinitionId);
 
 		if (serviceInstanceRepository.containsServiceInstanceId(serviceInstanceId)) {
-			throw new ServiceInstanceExistsException(serviceInstanceId,
-					serviceDefinitionRepository.getServiceDefinition().getId());
+			throw new ServiceInstanceExistsException(serviceInstanceId, serviceDefinitionId);
 		}
 
-		ServiceInstance serviceInstance = new ServiceInstance(serviceInstanceId,
-				serviceDefinitionRepository.getServiceDefinition().getId(), planId, organizationGuid, spaceGuid,
+		ServiceInstance serviceInstance = new ServiceInstance(serviceInstanceId, serviceDefinitionId,
+				planId, organizationGuid, spaceGuid,
 				parameters == null ? new HashMap<String, String>()
 						: new HashMap<String, String>(parameters));
 

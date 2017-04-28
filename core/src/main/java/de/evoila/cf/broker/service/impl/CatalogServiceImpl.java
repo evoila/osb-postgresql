@@ -31,7 +31,7 @@ public class CatalogServiceImpl implements CatalogService {
 	}
 
 	private void initializeMap() {
-		for (ServiceDefinition def : catalog.getServiceDefinitions()) {
+		for (ServiceDefinition def : catalog.getServices()) {
 			serviceDefs.put(def.getId(), def);
 		}
 	}
