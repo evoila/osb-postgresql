@@ -3,11 +3,14 @@
  */
 package de.evoila.cf.broker.persistence.repository;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.exception.ServiceDefinitionDoesNotExistException;
+import de.evoila.cf.broker.model.Catalog;
 import de.evoila.cf.broker.model.Plan;
 import de.evoila.cf.broker.model.ServiceDefinition;
 import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
@@ -20,7 +23,7 @@ import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
 public class ServiceDefinitionRepositoryImpl implements ServiceDefinitionRepository {
 
 	@Autowired
-	private ServiceDefinition serviceDefinition;
+	private Catalog catalog;
 
 	// Depl
 	/*
@@ -30,8 +33,8 @@ public class ServiceDefinitionRepositoryImpl implements ServiceDefinitionReposit
 	 * getServiceDefinition()
 	 */
 	@Override
-	public ServiceDefinition getServiceDefinition() {
-		return serviceDefinition;
+	public List<ServiceDefinition> getServiceDefinition() {
+		return catalog.getServices();
 	}
 
 	// public Map<String, ServiceInstance> getServiceInstances() {
@@ -47,8 +50,10 @@ public class ServiceDefinitionRepositoryImpl implements ServiceDefinitionReposit
 	 */
 	@Override
 	public void validateServiceId(String serviceDefinitionId) throws ServiceDefinitionDoesNotExistException {
-		if (!serviceDefinitionId.equals(serviceDefinition.getId())) {
-			throw new ServiceDefinitionDoesNotExistException(serviceDefinitionId);
+		for(ServiceDefinition serviceDefinition : catalog.getServices()) {
+			if (!serviceDefinitionId.equals(serviceDefinition.getId())) {
+				throw new ServiceDefinitionDoesNotExistException(serviceDefinitionId);
+			}
 		}
 	}
 
@@ -62,9 +67,11 @@ public class ServiceDefinitionRepositoryImpl implements ServiceDefinitionReposit
 	 */
 	@Override
 	public Plan getPlan(String planId) throws ServiceBrokerException {
-		for (Plan currentPlan : serviceDefinition.getPlans()) {
-			if (currentPlan.getId().equals(planId)) {
-				return currentPlan;
+		for(ServiceDefinition serviceDefinition : catalog.getServices()) {
+			for (Plan currentPlan : serviceDefinition.getPlans()) {
+				if (currentPlan.getId().equals(planId)) {
+					return currentPlan;
+				}
 			}
 		}
 		throw new ServiceBrokerException("Missing plan for id: " + planId);
