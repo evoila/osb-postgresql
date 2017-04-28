@@ -3,12 +3,14 @@
  */
 package de.evoila.cf.broker.service;
 
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
 import org.apache.catalina.Server;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.HttpEntity;
@@ -17,6 +19,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+
+
 
 import de.evoila.cf.broker.bean.HAProxyBean;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
@@ -29,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author Christian Brinker, evoila.
+ * @author Christian Brinker, Sebastian Boeing, evoila.
  *
  */
 
@@ -69,8 +73,8 @@ public abstract class HAProxyService {
 		restTemplate.setRequestFactory(requestFactory);
 	}
 
-	public List<ServerAddress> appendAgent(List<ServerAddress> internalAddresses) throws ServiceBrokerException {
-		List<ServerAddress> externalAddresses = internalAddresses.stream().map(in -> new HAProxyServerAddress(in, getMode(in), getOptions(in))).map(in -> appendSingleAgent(in))
+	public List<ServerAddress> appendAgent(List<ServerAddress> internalAddresses, String bindingId, String instanceId) throws ServiceBrokerException {
+		List<ServerAddress> externalAddresses = internalAddresses.stream().map(in -> new HAProxyServerAddress(in, getMode(in), getOptions(in))).map(in -> appendSingleAgent(in, bindingId, instanceId))
 				.filter(in -> in != null).collect(Collectors.toList());
 
 		if (externalAddresses.size() < internalAddresses.size())
@@ -79,14 +83,10 @@ public abstract class HAProxyService {
 		return externalAddresses;
 	}
 
-	private ServerAddress appendSingleAgent(HAProxyServerAddress internalAddress) {
-		log.info("Headers are Content-Type:" + headers.getContentType() + " and Token: " +  headers.getFirst(X_AUTH_TOKEN_HEADER));
-		log.info("URI is: " + haProxy);
-		log.info("Name of Internal Adress is: " + internalAddress.getName());
+	private ServerAddress appendSingleAgent(HAProxyServerAddress internalAddress, String bindingId, String instanceId) {
+		HAProxyServerAddress bindingAddress = new HAProxyServerAddress(internalAddress, bindingId);
 		
-		HttpEntity<HAProxyServerAddress> entity = new HttpEntity<>(internalAddress, headers);
-		log.info("Body Values are Internal IP is:" + entity.getBody().getIp() + " Port: " +  entity.getBody().getPort() + " Mode: " + entity.getBody().getMode() + " Options: " + entity.getBody().getOptions());
-		log.info("Body is: " + entity.getBody());
+		HttpEntity<HAProxyServerAddress> entity = new HttpEntity<>(bindingAddress, headers);
 		try {
 			HABackendResponse response = restTemplate.exchange(haProxy, HttpMethod.PUT, entity, HABackendResponse.class)
 					.getBody();
@@ -106,14 +106,15 @@ public abstract class HAProxyService {
 		return null;
 	}
 
-	public void removeAgent(List<ServerAddress> internalAddresses) throws ServiceBrokerException {
+	public void removeAgent(List<ServerAddress> internalAddresses, String bindingId) throws ServiceBrokerException {
 		for (ServerAddress internalAddress : internalAddresses) {
-			removeSingleAgent(internalAddress);
+			removeSingleAgent(internalAddress, bindingId);
 		}
 	}
 
-	private void removeSingleAgent(ServerAddress internalAddress) throws ServiceBrokerException {
-		HttpEntity<ServerAddress> entity = new HttpEntity<>(internalAddress, headers);
+	private void removeSingleAgent(ServerAddress internalAddress, String bindingId) throws ServiceBrokerException {
+		ServerAddress bindingAddress = new ServerAddress(bindingId, internalAddress.getIp(), internalAddress.getPort());
+		HttpEntity<ServerAddress> entity = new HttpEntity<>(bindingAddress, headers);
 		try {
 			HttpStatus statusCode = restTemplate.exchange(haProxy, HttpMethod.DELETE, entity, Object.class)
 					.getStatusCode();

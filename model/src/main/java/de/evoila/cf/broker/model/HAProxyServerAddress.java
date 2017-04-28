@@ -6,7 +6,7 @@ package de.evoila.cf.broker.model;
 import java.util.List;
 
 /**
- * @author Rene Schollmeyer
+ * @author Rene Schollmeyer, Sebastian Boeing, evoila
  *
  */
 public class HAProxyServerAddress extends ServerAddress {
@@ -23,6 +23,14 @@ public class HAProxyServerAddress extends ServerAddress {
 		super(serverAddress);
 		this.mode = mode.toString();
 		this.options= options;
+	}
+	
+	public HAProxyServerAddress(HAProxyServerAddress haProxyServerAddress, String name) {
+		this.setIp(haProxyServerAddress.getIp());
+		this.setPort(haProxyServerAddress.getPort());
+		this.setName(name); 
+		this.setMode(haProxyServerAddress.getMode());
+		this.setOptions(haProxyServerAddress.getOptions());
 	}
 	
 	public HAProxyServerAddress(String name) {
