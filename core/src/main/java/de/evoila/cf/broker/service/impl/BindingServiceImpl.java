@@ -84,7 +84,7 @@ public abstract class BindingServiceImpl implements BindingService {
 
 		ServiceInstanceBinding binding;
 		if (generateServiceKey) {
-			List<ServerAddress> externalServerAddresses = haProxyService.appendAgent(serviceInstance.getHosts());
+			List<ServerAddress> externalServerAddresses = haProxyService.appendAgent(serviceInstance.getHosts(), bindingId, instanceId);
 
 			binding = bindServiceKey(bindingId, serviceInstance, plan, externalServerAddresses);
 		} else {
@@ -120,7 +120,7 @@ public abstract class BindingServiceImpl implements BindingService {
 			ServiceInstanceBinding binding = bindingRepository.findOne(bindingId);
 			List<ServerAddress> externalServerAddresses = binding.getExternalServerAddresses();
 			if (externalServerAddresses != null) {
-				haProxyService.removeAgent(serviceInstance.getHosts());
+				haProxyService.removeAgent(serviceInstance.getHosts(), bindingId);
 			}
 
 			deleteBinding(bindingId, serviceInstance);

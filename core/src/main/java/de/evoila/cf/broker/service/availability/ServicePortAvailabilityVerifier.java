@@ -66,10 +66,12 @@ public class ServicePortAvailabilityVerifier {
 		return available;
 	}
 
-	public boolean verifyServiceAvailability(String ip, int port) throws PlatformException {
+	public boolean verifyServiceAvailability(String ip, int port, boolean useInitialTimeout) throws PlatformException {
 		boolean available = false;
-
-		this.timeout(INITIAL_TIMEOUT);
+		
+		if (useInitialTimeout) 
+			this.timeout(INITIAL_TIMEOUT);
+		
 		for (int i = 0; i < connectionTimeouts; i++) {
 			available = this.execute(ip, port);
 
@@ -83,9 +85,9 @@ public class ServicePortAvailabilityVerifier {
 		return available;
 	}
 
-	public boolean verifyServiceAvailability(List<ServerAddress> serverAddresses) throws PlatformException {
+	public boolean verifyServiceAvailability(List<ServerAddress> serverAddresses, boolean useInitialTimeout) throws PlatformException {
 		for (ServerAddress serverAddress : serverAddresses) {
-			if (!verifyServiceAvailability(serverAddress.getIp(), serverAddress.getPort())) {
+			if (!verifyServiceAvailability(serverAddress.getIp(), serverAddress.getPort(), useInitialTimeout)) {
 				return false;
 			}
 		}

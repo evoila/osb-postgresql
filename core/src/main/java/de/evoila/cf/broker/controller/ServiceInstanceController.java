@@ -50,7 +50,6 @@ public class ServiceInstanceController extends BaseController {
 	private CatalogService catalogService;
 
 	public ServiceInstanceController() {
-		log.info("was here");
 	}
 
 	@RequestMapping(value = "/service_instances/{instanceId}", method = RequestMethod.PUT)
