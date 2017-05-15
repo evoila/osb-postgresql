@@ -2,6 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
+    <properties>
+        <parent.version>0.1-RC</parent.version>
+    </properties>
+
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>de.evoila.cf.broker</groupId>
