@@ -34,6 +34,10 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
 	@Autowired
 	private PostgresCustomImplementation postgresCustomImplementation;
+	
+	@Autowired
+	private PostgreSQLExistingServiceFactory existingServiceFactory;
+	
 
 	private PostgresDbService connection(ServiceInstance serviceInstance) throws SQLException {
 		Assert.notNull(serviceInstance, "ServiceInstance may not be null");
@@ -44,6 +48,12 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		ServerAddress host = serviceInstance.getHosts().get(0);
 		PostgresDbService jdbcService = new PostgresDbService();
 		jdbcService.createConnection(host.getIp(), host.getPort(), serviceInstanceId, serviceInstanceId, serviceInstanceId);
+		return jdbcService;
+	}
+	
+	private PostgresDbService setUpAdminConnection(String database) throws SQLException {
+		PostgresDbService jdbcService = new PostgresDbService();
+		jdbcService.createConnection(existingServiceFactory.getHosts().get(0), existingServiceFactory.getPort(), database, existingServiceFactory.getUsername(), existingServiceFactory.getPassword());
 		return jdbcService;
 	}
 
@@ -115,6 +125,9 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		String password = "";
 		try {
 			password = postgresCustomImplementation.bindRoleToDatabaseAndGeneratePassword(jdbcService, serviceInstance.getId(), bindingId);
+			jdbcService.closeIfConnected();
+			jdbcService.createConnection(serviceInstance.getHosts().get(0).getIp(), serviceInstance.getHosts().get(0).getPort(), serviceInstance.getId(), bindingId, password);
+			postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, serviceInstance.getId(), bindingId, password);
 		} catch (SQLException e) {
 			log.error(e.toString());
 			throw new ServiceBrokerException("Could not update database");
@@ -135,7 +148,8 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 	protected void deleteBinding(String bindingId, ServiceInstance serviceInstance) throws ServiceBrokerException {
 		PostgresDbService jdbcService;
 		try {
-			jdbcService = connection(serviceInstance);
+			jdbcService = setUpAdminConnection(serviceInstance.getId()); 
+					//connection(serviceInstance);
 		} catch (SQLException e1) {
 			throw new ServiceBrokerException("Could not connect to database");
 		}
