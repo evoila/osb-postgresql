@@ -38,11 +38,12 @@ import jersey.repackaged.com.google.common.collect.Lists;
 @Service
 @EnableConfigurationProperties
 @ConfigurationProperties(prefix = "backend")
-@ConditionalOnProperty(prefix="openstack", name={"endpoint","tenantId","username","password"},havingValue="")
+@ConditionalOnProperty(prefix="openstack", name={"endpoint"} ,havingValue="")
 public class OpenstackPlatformService extends OpenstackServiceFactory {
 
 	private static final String VOLUME_SIZE = "volume_size";
 	private static final String FLAVOR = "flavor";
+	private final Logger log = LoggerFactory.getLogger(OpenstackPlatformService.class);
 
 	private StackHandler stackHandler;
 
