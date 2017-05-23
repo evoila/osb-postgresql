@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.util.Assert;
 
 import de.evoila.cf.cpi.custom.props.DefaultDatabaseCustomPropertyHandler;
@@ -23,7 +24,7 @@ import de.evoila.cf.cpi.custom.props.DomainBasedCustomPropertyHandler;
  *
  */
 @SpringBootApplication
-@EnableAutoConfiguration
+@EnableMongoRepositories(basePackages={"de.evoila.cf.cpi.openstack.custom", "de.evoila.cf.broker.persistence.mongodb.repository"})
 public class Application {
 
 	@Bean(name = "customProperties")

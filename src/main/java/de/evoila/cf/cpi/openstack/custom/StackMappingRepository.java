@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
  * @author Christian Brinker, evoila.
  *
  */
-@ConditionalOnProperty(prefix = "openstack", name = { "log_host", "log_port"}, havingValue = "")
+@ConditionalOnProperty(prefix = "openstack", name = { "endpoint" }, havingValue = "")
 public interface StackMappingRepository extends MongoRepository<PostgreSqlStackMapping, String> {
 
 }
