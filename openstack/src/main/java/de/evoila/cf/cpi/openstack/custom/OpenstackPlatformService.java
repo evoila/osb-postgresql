@@ -12,6 +12,8 @@ import javax.annotation.PostConstruct;
 import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.NotSupportedException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -19,6 +21,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
+import de.evoila.cf.broker.controller.ServiceInstanceController;
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.Plan;
 import de.evoila.cf.broker.model.Platform;
@@ -38,11 +41,15 @@ import jersey.repackaged.com.google.common.collect.Lists;
 @Service
 @EnableConfigurationProperties
 @ConfigurationProperties(prefix = "backend")
-@ConditionalOnProperty(prefix="openstack", name={"endpoint","tenantId","username","password"},havingValue="")
+@ConditionalOnProperty(prefix="openstack", name={"endpoint"} ,havingValue="")
 public class OpenstackPlatformService extends OpenstackServiceFactory {
 
 	private static final String VOLUME_SIZE = "volume_size";
 	private static final String FLAVOR = "flavor";
+	private static final String CLUSTER = "cluster";
+	private static final String SECURITY_GROUPS = "security_groups";
+	
+	private final Logger log = LoggerFactory.getLogger(OpenstackPlatformService.class);
 
 	private StackHandler stackHandler;
 
@@ -55,6 +62,7 @@ public class OpenstackPlatformService extends OpenstackServiceFactory {
 
 	@Autowired
 	private ServicePortAvailabilityVerifier portAvailabilityVerifier;
+	
 
 	@Autowired
 	private IpAccessor ipAccessor;
@@ -116,10 +124,14 @@ public class OpenstackPlatformService extends OpenstackServiceFactory {
 	public ServiceInstance createInstance(ServiceInstance serviceInstance, Plan plan,
 			Map<String, String> customProperties) throws PlatformException {
 		String instanceId = serviceInstance.getId();
-
+			
 		Map<String, String> platformParameters = new HashMap<String, String>();
 		platformParameters.put(FLAVOR, plan.getFlavorId());
 		platformParameters.put(VOLUME_SIZE, volumeSize(plan.getVolumeSize(), plan.getVolumeUnit()));
+		platformParameters.put(SECURITY_GROUPS, plan.getMetadata().get(SECURITY_GROUPS).toString());
+		if(plan.getMetadata().containsKey(CLUSTER)) {
+			platformParameters.put(CLUSTER, plan.getMetadata().get(CLUSTER).toString());
+		}
 
 		platformParameters.putAll(customProperties);
 
@@ -128,22 +140,26 @@ public class OpenstackPlatformService extends OpenstackServiceFactory {
 
 			List<ServerAddress> tmpAddresses = ipAccessor.getIpAddresses(instanceId);
 			List<ServerAddress> serverAddresses = Lists.newArrayList();
-			for (Entry<String, Integer> port : this.ports.entrySet()) {
-				for (ServerAddress tmpAddress : tmpAddresses) {
-					ServerAddress serverAddress = new ServerAddress(tmpAddress);
-					serverAddress.setName(port.getKey());
-					serverAddress.setPort(port.getValue());
-
-					serverAddresses.add(serverAddress);
+			
+			if(this.ports != null && !plan.getMetadata().containsKey(CLUSTER)) {
+				for (Entry<String, Integer> port : this.ports.entrySet()) {
+					for (ServerAddress tmpAddress : tmpAddresses) {
+						ServerAddress serverAddress = new ServerAddress(tmpAddress);
+						serverAddress.setName(port.getKey());
+						if(port.getValue() != null)
+							serverAddress.setPort(port.getValue());
+						serverAddresses.add(serverAddress);
+					}
 				}
+			} else {
+				serverAddresses = tmpAddresses;
 			}
-
+			
 			serviceInstance = new ServiceInstance(serviceInstance, "http://currently.not/available", internalId,
 					serverAddresses);
 		} catch (Exception e) {
 			throw new PlatformException(e);
 		}
-
 		return serviceInstance;
 	}
 
