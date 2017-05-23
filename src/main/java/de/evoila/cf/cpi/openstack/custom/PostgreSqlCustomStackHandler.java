@@ -3,37 +3,50 @@
  */
 package de.evoila.cf.cpi.openstack.custom;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bouncycastle.jcajce.provider.digest.GOST3411.HashMac;
 import org.openstack4j.model.heat.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.util.PrimitiveArrayBuilder;
 
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.ServerAddress;
+import de.evoila.cf.cpi.openstack.OpenstackServiceFactory;
 
 /**
- * @author Christian Mueller, evoila
+ * @author Yannic Remmet, evoila
  *
  */
 @Service
-@ConditionalOnProperty(prefix = "openstack", name = { "log_host", "log_port"}, havingValue = "")
+@ConditionalOnProperty(prefix = "openstack", name = { "keypair" }, havingValue = "")
 public class PostgreSqlCustomStackHandler extends CustomStackHandler {
 	
-	private static final String PRE_IP_TEMPLATE = "/openstack/templatePreIPs.yaml";
-	private static final String PRE_VOLUME_TEMPLATE = "/openstack/templatePreIPs.yaml";
-	private static final String MAIN_TEMPLATE = "/openstack/templatePreIPs.yaml";
+	private static final String PRE_IP_TEMPLATE = "/openstack/pre-ips.yaml";
+	private static final String PRE_VOLUME_TEMPLATE = "/openstack/pre-volume.yaml";
+	
+	private static final String MAIN_TEMPLATE = "/openstack/main.yaml";
+	
+	private static final String PRIMARY_TEMPLATE = "/openstack/primary.yaml";
+	private static final String SECONDARY_TEMPLATE = "/openstack/secondaries.yaml";
 	
 	private static final String NAME_TEMPLATE = "postgresql-%s-%s";
 	
 	private static final String PORTS_KEY = "port_ids";
 	private static final String IP_ADRESS_KEY = "port_ips";
 	private static final String VOLUME_KEY = "volume_ids";
+	
+	@Value("${openstack.keypair}")
+	private String keyPair;
 	
 	private final Logger log = LoggerFactory.getLogger(PostgreSqlCustomStackHandler.class);
 	
@@ -60,13 +73,16 @@ public class PostgreSqlCustomStackHandler extends CustomStackHandler {
 		if (stackMapping == null) {
 			super.delete(internalId);
 		} else {
-			List<String> secondaryStacks = stackMapping.getSecondaryStacks();
-			for (String stackId : secondaryStacks) {
-				super.delete(stackId);
+			
+			try {
+				super.deleteAndWait(stackMapping.getPrimaryStack());
+				Thread.sleep(20000);
+			} catch (PlatformException | InterruptedException e) {
+				log.error("Could not delete Stack " + stackMapping.getPrimaryStack() + " Instance " + internalId);
+				log.error(e.getMessage());
 			}
-
-			super.delete(stackMapping.getPrimaryStack());
 			super.delete(stackMapping.getPortsStack());
+			super.delete(stackMapping.getVolumeStack());
 
 			stackMappingRepo.delete(stackMapping);
 		}
@@ -75,12 +91,15 @@ public class PostgreSqlCustomStackHandler extends CustomStackHandler {
 	@Override
 	public String create(String instanceId, Map<String, String> customParameters)
 			throws PlatformException, InterruptedException {
-		
+		log.debug(customParameters.toString());
 		if (customParameters.containsKey(ParameterManager.CLUSTER)) {
+			log.debug("Start creating cluster " + instanceId);
 			PostgreSqlStackMapping clusterStacks = createCluster(instanceId, customParameters);
+			log.debug("End creating cluster " + instanceId);
 			stackMappingRepo.save(clusterStacks);
 			return clusterStacks.getId();
 		} 
+		log.debug("Not Creating a cluster" + instanceId);
 		return super.create(instanceId, customParameters);
 	}
 
@@ -97,6 +116,7 @@ public class PostgreSqlCustomStackHandler extends CustomStackHandler {
 
 		log.debug("Start create a Postgres cluster");
 		customParameters.putAll(this.defaultParameters());
+		customParameters.putAll(this.generateValues(instanceId));
 		
 		PostgreSqlStackMapping stackMapping = new PostgreSqlStackMapping();
 		stackMapping.setId(instanceId);
@@ -114,50 +134,81 @@ public class PostgreSqlCustomStackHandler extends CustomStackHandler {
 		
 		for (int i = 0; i < ips.size(); i++) {
 			String ip = ips.get(i);
-			stackMapping.addServerAddress(new ServerAddress("node-" + i, ip));
+			stackMapping.addServerAddress(new ServerAddress("node-" + i, ip, 5432));
 		}
 		
 		ParameterManager.updatePortParameters(customParameters, ips, ports);
 		Stack preVolumeStack = preVolumeStack(instanceId, customParameters);
 		stackMapping.setVolumeStack(preVolumeStack.getId());
 		stackMappingRepo.save(stackMapping);
-		
+
 		responses = extractResponses(preVolumeStack, VOLUME_KEY);
 		List<String> volumes = responses[0];
+		ParameterManager.updateVolumeParameters(customParameters, volumes);
 		
 		Stack mainStack = mainStack(instanceId, customParameters);
-		stackMapping.setPrimaryStack(mainStack.getId());
 		
-		log.debug("Stack deployment for RabbitMQ ready - Stacks:" + stackMapping.getSecondaryStacks().size() + 2);
+		
+		stackMapping.setPrimaryStack(mainStack.getId());
+		stackMappingRepo.save(stackMapping);
 
 		return stackMapping;
 	}
 
+	private Map<? extends String, ? extends String> generateValues(String instanceId) {
+		HashMap<String, String> valueMap = new HashMap();
+		valueMap.put(ParameterManager.ADMIN_PASSWORD, instanceId);
+		valueMap.put(ParameterManager.ADMIN_USER, instanceId);
+		valueMap.put(ParameterManager.SERVICE_DB, instanceId);
+		valueMap.put(ParameterManager.KEY_NAME, keyPair);
+		valueMap.put(ParameterManager.STANDBY_HOSTNAME, instanceId);
+		return valueMap;
+	}
+	
 	private Stack mainStack(String instanceId, Map<String, String> customParameters) throws PlatformException {
-		Map<String, String> parameters = ParameterManager.copyProperties(customParameters, 
+		Map<String, String> parameters = ParameterManager.copyProperties(
+				customParameters,
 				ParameterManager.RESOURCE_NAME,
-				ParameterManager.NODE_NUMBER,
-				ParameterManager.NODE_NUMBER,
+				ParameterManager.IMAGE_ID,
+				ParameterManager.KEY_NAME,
 				ParameterManager.FLAVOUR,
-				ParameterManager.SERVICE_DB,
-				ParameterManager.ADMIN_USER,
-				ParameterManager.ADMIN_PASSWORD,
+				ParameterManager.AVAILABILITY_ZONE,
+
 				ParameterManager.PRIMARY_VOLUME_ID,
 				ParameterManager.PRIMARY_IP,
 				ParameterManager.PRIMARY_PORT,
+				
 				ParameterManager.STANDBY_VOLUME_ID,
 				ParameterManager.STANDBY_IP,
-				ParameterManager.STANDBY_PORT
+				ParameterManager.STANDBY_PORT,
+
+				ParameterManager.SERVICE_DB,
+				ParameterManager.ADMIN_USER,
+				ParameterManager.ADMIN_PASSWORD
+				
+				//ParameterManager.RESOURCE_NAME,
+				//ParameterManager.NODE_NUMBER
+
+
 				);
-		
-		parameters.putAll(this.defaultParameters());
-		
+	
 		String name = String.format(NAME_TEMPLATE, instanceId, "cl");
-		String templatePorts = accessTemplate(MAIN_TEMPLATE);
-		heatFluent.create(name, templatePorts, parameters, false, 10l);
+		parameters.put(ParameterManager.RESOURCE_NAME, name);
+		
+		String template = accessTemplate(MAIN_TEMPLATE);
+		String primary = accessTemplate(PRIMARY_TEMPLATE);
+		String secondaries = accessTemplate(SECONDARY_TEMPLATE);
+		
+		Map<String, String> files = new HashMap();
+		files.put("primary.yaml", primary);
+		files.put("secondaries.yaml", secondaries);
+		
+		heatFluent.create(name, template, parameters, false, 10l, files);
 		Stack stack = stackProgressObserver.waitForStackCompletion(name);
 		return stack;
 	}
+	
+	
 	private List<String>[] extractResponses(Stack stack, String... keys) {
 		List<String>[] response = new List[keys.length];
 		
@@ -176,13 +227,16 @@ public class PostgreSqlCustomStackHandler extends CustomStackHandler {
 	}
 	
 	private Stack preVolumeStack(String instanceId, Map<String, String> customParameters) throws PlatformException {
-		Map<String, String> parametersPreIP = ParameterManager.copyProperties(customParameters, 
+		Map<String, String> parametersPreIP = ParameterManager.copyProperties(
+				customParameters, 
 				ParameterManager.RESOURCE_NAME,
 				ParameterManager.NODE_NUMBER,
 				ParameterManager.VOLUME_SIZE
 				);
 		
 		String name = String.format(NAME_TEMPLATE, instanceId, "vol");
+		parametersPreIP.put(ParameterManager.RESOURCE_NAME, name);
+
 		String templatePorts = accessTemplate(PRE_VOLUME_TEMPLATE);
 		heatFluent.create(name, templatePorts, parametersPreIP, false, 10l);
 		Stack preVolumeStack = stackProgressObserver.waitForStackCompletion(name);
@@ -194,12 +248,16 @@ public class PostgreSqlCustomStackHandler extends CustomStackHandler {
 	private Stack createPreIp(String instanceId, Map<String, String> customParameters) throws PlatformException {
 		Map<String, String> parametersPreIP = ParameterManager.copyProperties(customParameters, 
 				ParameterManager.RESOURCE_NAME,
-				ParameterManager.NODE_NUMBER
+				ParameterManager.NODE_NUMBER,
+				ParameterManager.NETWORK_ID,
+				ParameterManager.SECURITY_GROUPS
 				);
-
 		String name = String.format(NAME_TEMPLATE, instanceId, "ip");
+		parametersPreIP.put(ParameterManager.RESOURCE_NAME, name);
+		//parametersPreIP.put(ParameterManager.SECURITY_GROUPS, "cf-private");
+		
 		String templatePorts = accessTemplate(PRE_IP_TEMPLATE);
-
+		
 		heatFluent.create(name, templatePorts, parametersPreIP, false, 10l);
 
 		Stack preIpStack = stackProgressObserver.waitForStackCompletion(name);

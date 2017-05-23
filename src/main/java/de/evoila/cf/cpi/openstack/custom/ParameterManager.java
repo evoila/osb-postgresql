@@ -3,6 +3,7 @@
  */
 package de.evoila.cf.cpi.openstack.custom;
 
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,11 @@ public class ParameterManager {
 	public static final String NODE_NUMBER = "node_number";
 	
 	public static final String VOLUME_SIZE = "volume_size";
+	public static final String KEY_NAME = "key_name";
+	public static final String IMAGE_ID = "image_id";
+	public static final String AVAILABILITY_ZONE = "availability_zone";	
+	public static final String NETWORK_ID = "network_id";
+	public static final String SECURITY_GROUPS = "security_groups";
 	
 	public static final String FLAVOUR = "flavor";
 	public static final String SERVICE_DB = "service_db";
@@ -28,9 +34,13 @@ public class ParameterManager {
 	public static final String STANDBY_VOLUME_ID = "standby_volume_id";
 	public static final String STANDBY_IP = "standby_ip";
 	public static final String STANDBY_PORT = "standby_port";	
-
 	
-	public static final String CLUSTER = "cluster"; // ??
+	public static final String CLUSTER = "cluster";
+
+
+
+	 
+	
 
 	
 	
@@ -54,16 +64,14 @@ public class ParameterManager {
 	}
 
 	static void updatePortParameters(Map<String, String> customParameters, List<String> ips, List<String> ports) {
-		String primIp = ips.get(0);
-		ips.remove(0);
-		String primPort = ports.get(0);
-		ports.remove(0);
+		String primIp = ips.remove(0);
+		String primPort = ports.remove(0);
 		
 		customParameters.put(ParameterManager.PRIMARY_PORT, primPort);
 		customParameters.put(ParameterManager.PRIMARY_IP, primIp);
 
-		customParameters.put(ParameterManager.STANDBY_PORT, primPort);
-		customParameters.put(ParameterManager.STANDBY_IP, primIp);
+		customParameters.put(ParameterManager.STANDBY_PORT, join(ports));
+		customParameters.put(ParameterManager.STANDBY_IP, join(ips));
 	}
 	
 	static void updateVolumeParameters(Map<String, String> customParameters, List<String> volumes) {
@@ -71,7 +79,22 @@ public class ParameterManager {
 		volumes.remove(0);
 		
 		customParameters.put(ParameterManager.PRIMARY_VOLUME_ID, primaryVolume);
-		customParameters.put(ParameterManager.STANDBY_VOLUME_ID, volumes);
+		customParameters.put(ParameterManager.STANDBY_VOLUME_ID, join(volumes));
+	}
+	
+	static int getSecondaryNumber(Map<String, String> customParameters) {
+		return Integer.parseInt(customParameters.get(ParameterManager.NODE_NUMBER));
+	}
+
+	public static String join(List<String> volumes) {
+		StringBuilder b = new StringBuilder();
+		for (String volume_id : volumes) {
+			b.append(volume_id);
+			if(!volumes.get(volumes.size()-1).equals(volume_id)) {
+				b.append(",");
+			}
+		}
+		return b.toString();
 	}
 
 	static Map<String, String> copyProperties(Map<String, String> completeList, String... keys) {

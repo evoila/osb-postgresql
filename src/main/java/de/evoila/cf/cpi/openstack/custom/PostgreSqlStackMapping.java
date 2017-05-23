@@ -86,7 +86,11 @@ public class PostgreSqlStackMapping implements BaseEntity<String> {
 		this.serverAddresses.remove(serverAddress);
 	}
 
-	public void setVolumeStack(String id2) {
+	public void setVolumeStack(String volumeStack) {
 		this.volumeStack = volumeStack;
+	}
+	
+	public String getVolumeStack() {
+		return volumeStack;
 	}
 }

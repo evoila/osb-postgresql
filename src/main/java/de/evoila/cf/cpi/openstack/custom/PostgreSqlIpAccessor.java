@@ -20,8 +20,8 @@ import de.evoila.cf.cpi.openstack.fluent.HeatFluent;
  */
 @Service
 @Primary
-@ConditionalOnProperty(prefix = "openstack", name = { "log_host", "log_port"}, havingValue = "")
-public class RabbitMqIpAccessor extends CustomIpAccessor {
+@ConditionalOnProperty(prefix = "openstack", name = { "endpoint" }, havingValue = "")
+public class PostgreSqlIpAccessor extends CustomIpAccessor {
 
 	@SuppressWarnings("unused")
 	private HeatFluent heatFluent;
