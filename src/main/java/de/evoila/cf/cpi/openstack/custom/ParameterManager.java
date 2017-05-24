@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 public class ParameterManager {
-	private PostgreSqlCustomStackHandler stackHandler;
 
 	public static final String RESOURCE_NAME = "resource_name";
 	public static final String NODE_NUMBER = "node_number";
@@ -21,7 +20,7 @@ public class ParameterManager {
 	public static final String NETWORK_ID = "network_id";
 	public static final String SECURITY_GROUPS = "security_groups";
 	
-	public static final String FLAVOUR = "flavor";
+	public static final String FLAVOR = "flavor";
 	public static final String SERVICE_DB = "service_db";
 	public static final String ADMIN_USER = "admin_user";
 	public static final String ADMIN_PASSWORD = "admin_password";
@@ -36,32 +35,6 @@ public class ParameterManager {
 	public static final String STANDBY_PORT = "standby_port";	
 	
 	public static final String CLUSTER = "cluster";
-
-
-
-	 
-	
-
-	
-	
-	public final String logHost;
-	public final String logPort;
-	/**
-	 * @param logPort 
-	 * @param logHost 
-	 * @param rabbitMQCustomStackHandler
-	 */
-	public ParameterManager(String logHost, String logPort) {
-		this.logHost = logHost;
-		this.logPort = logPort;
-	}
-
-	public void configureGeneralParameters(Map<String, String> customParameters) {
-		customParameters.putAll(stackHandler.defaultParameters());
-
-		customParameters.put(PostgreSqlCustomStackHandler.LOG_PORT, logPort);
-		customParameters.put(PostgreSqlCustomStackHandler.LOG_HOST, logHost);
-	}
 
 	static void updatePortParameters(Map<String, String> customParameters, List<String> ips, List<String> ports) {
 		String primIp = ips.remove(0);
