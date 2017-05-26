@@ -54,6 +54,23 @@ public class HeatFluent {
 
 		return stack;
 	}
+	
+	public Stack create(String name, String template, Map<String, String> parameters, boolean disableRollback,
+			Long timeOutMins, Map<String, String> files) {
+		Stack stack = client()
+				.heat()
+				.stacks()
+				.create(Builders.stack()
+						.name(name)
+						.template(template)
+						.files(files)
+						.parameters(parameters)
+						.disableRollback(disableRollback)
+						.timeoutMins(timeOutMins)
+						.build());
+
+		return stack;
+	}
 
 	public void delete(String stackName, String stackId) {
 		client().heat().stacks().delete(stackName, stackId);

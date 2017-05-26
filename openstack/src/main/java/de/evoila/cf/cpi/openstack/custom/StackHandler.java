@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import de.evoila.cf.broker.exception.PlatformException;
@@ -69,15 +70,6 @@ public class StackHandler {
 
 	@Value("${openstack.cinder.az}")
 	private String availabilityZone;
-	
-	@Value("${deployment.repo.main}")
-	private String scriptRepoMain;
-
-	@Value("${deployment.repo.monit}")
-	private String scriptRepoMonit;
-
-	@Value("${deployment.repo.service}")
-	private String scriptRepoService;
 
 	@Autowired
 	protected HeatFluent heatFluent;
@@ -97,7 +89,8 @@ public class StackHandler {
 	protected String accessTemplate(final String templatePath) {
 
 		try {
-			InputStream inputStream = appContext.getResource(templatePath).getInputStream();
+			//InputStream inputStream = appContext.getResource(templatePath).getInputStream();
+			InputStream inputStream = new ClassPathResource(templatePath).getInputStream();
 			return this.readTemplateFile(inputStream);
 		} catch (IOException | URISyntaxException e) {
 			log.info("Failed to load heat template", e);
@@ -117,6 +110,7 @@ public class StackHandler {
 
 	public String create(String instanceId, Map<String, String> customParameters)
 			throws PlatformException, InterruptedException {
+
 		Map<String, String> completeParameters = new HashMap<String, String>();
 		completeParameters.putAll(defaultParameters());
 		completeParameters.putAll(customParameters);
@@ -140,8 +134,13 @@ public class StackHandler {
 
 	public void delete(String internalId) {
 		Stack stack = heatFluent.get(internalId);
-
 		heatFluent.delete(stack.getName(), stack.getId());
+	}
+	
+	public void deleteAndWait(String internalId) throws PlatformException {
+		Stack stack = heatFluent.get(internalId);
+		heatFluent.delete(stack.getName(), stack.getId());
+		stackProgressObserver.waitForStackDeletion(stack.getName());
 	}
 
 	protected Map<String, String> defaultParameters() {
@@ -150,11 +149,6 @@ public class StackHandler {
 		defaultParameters.put(KEYPAIR, keypair);
 		defaultParameters.put(NETWORK_ID, networkId);
 		defaultParameters.put(AVAILABILITY_ZONE, availabilityZone);
-		
-		defaultParameters.put(SCRIPT_REPO_MAIN, scriptRepoMain);
-		defaultParameters.put(SCRIPT_REPO_MONIT, scriptRepoMonit);
-		defaultParameters.put(SCRIPT_REPO_SERVICE, scriptRepoService);
-
 		return defaultParameters;
 	}
 

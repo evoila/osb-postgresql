@@ -31,15 +31,21 @@ public abstract class OpenstackServiceFactory implements PlatformService {
 	@Value("${openstack.endpoint}")
 	private String endpoint;
 
-	@Value("${openstack.username}")
+	@Value("${openstack.user.username}")
 	private String username;
 
-	@Value("${openstack.password}")
+	@Value("${openstack.user.password}")
 	private String password;
+	
+	@Value("${openstack.user.domainName}")
+	private String userDomainName;
+	
+	@Value("${openstack.project.domainName}")
+	private String projectDomainName;
 
-	@Value("${openstack.tenantId}")
-	private String tenantId;
-
+	@Value("${openstack.project.projectName}")
+	private String projectName;
+	
 	protected Map<String, Integer> ports;
 
 	public Map<String, Integer> getPorts() {
@@ -58,8 +64,8 @@ public abstract class OpenstackServiceFactory implements PlatformService {
 		log.debug("Initializing Openstack Connection Factory");
 		try {
 			if (endpointAvailabilityService.isAvailable(OPENSTACK_SERVICE_KEY)) {
-				OpenstackConnectionFactory.getInstance().setCredential(username, password).authenticate(endpoint,
-						tenantId);
+				OpenstackConnectionFactory.getInstance().setCredential(username, password, userDomainName).authenticate(endpoint,
+						projectName, projectDomainName);
 
 				log.debug("Reading heat template definition for openstack");
 
