@@ -10,10 +10,13 @@ import java.util.Map;
 import org.openstack4j.model.heat.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import de.evoila.cf.broker.exception.PlatformException;
+import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMapping;
+import de.evoila.cf.broker.persistence.mongodb.repository.StackMappingRepository;
 import de.evoila.cf.cpi.openstack.custom.CustomStackHandler;
 import de.evoila.cf.cpi.openstack.custom.StackHandler;
 
@@ -34,7 +37,7 @@ public abstract class ClusterStackHandler extends CustomStackHandler {
 	protected static final String SECONDARY_TEMPLATE = "/openstack/secondaries.yaml";
 	
 	protected static final String PORTS_KEY = "port_ids";
-	protected static final String IP_ADRESS_KEY = "port_ips";
+	protected static final String IP_ADDRESS_KEY = "port_ips";
 	protected static final String VOLUME_KEY = "volume_ids";
 	
 	@Value("${openstack.keypair}")
@@ -47,12 +50,13 @@ public abstract class ClusterStackHandler extends CustomStackHandler {
 	private String subNetId;
 	
 	private final Logger log = LoggerFactory.getLogger(ClusterStackHandler.class);
-
 	
 	public ClusterStackHandler() {
 		super();
 	}
 	
+	
+
 
 	@Override
 	public String create(String instanceId, Map<String, String> customParameters)
@@ -83,6 +87,24 @@ public abstract class ClusterStackHandler extends CustomStackHandler {
 					if (key.equals(keys[i])) {
 						Object value = output.get("output_value");
 						response[i] = (List<String>) value;
+					}
+				}	
+			}
+		}
+		return response;
+	}
+	
+	protected String[] extractSingleValueResponses(Stack stack, String... keys) {
+		String[] response = new String[keys.length];
+		
+		for (Map<String, Object> output : stack.getOutputs()) {
+			Object outputKey = output.get("output_key");
+			if (outputKey != null && outputKey instanceof String) {
+				String key = (String) outputKey;
+				for(int i=0; i< keys.length; i++) {
+					if (key.equals(keys[i])) {
+						Object value = output.get("output_value");
+						response[i] = (String) value;
 					}
 				}	
 			}

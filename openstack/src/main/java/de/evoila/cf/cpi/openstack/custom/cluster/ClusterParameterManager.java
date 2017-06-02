@@ -19,6 +19,7 @@ public class ClusterParameterManager {
 	public static final String AVAILABILITY_ZONE = "availability_zone";	
 	public static final String NETWORK_ID = "network_id";
 	public static final String SECURITY_GROUPS = "security_groups";
+	public static final String FLAVOR = "flavor";
 	
 	public static final String FLAVOUR = "flavor";
 	public static final String SERVICE_DB = "service_db";
@@ -43,6 +44,20 @@ public class ClusterParameterManager {
 	public static final String SECONDARY_2_IP = "secondary2_ip";
 	
 	public static final String CLUSTER = "cluster";
+	
+	
+	public static final String RABBITMQ_VHOST = "rabbitmq_vhost";
+	public static final String ERLANG_KEY = "erlang_key";
+	public static final String MASTER_VOLUME_ID = "master_volume_id";
+	public static final String MASTER_PORT = "master_port";
+	public static final String MASTER_IP = "master_ip";
+	public static final String MIRROR1_VOLUME_ID = "mirror1_volume_id";
+	public static final String MIRROR1_PORT = "mirror1_port";
+	public static final String MIRROR1_IP = "mirror1_ip";
+	public static final String MIRROR2_VOLUME_ID = "mirror2_volume_id";
+	public static final String MIRROR2_PORT = "mirror2_port";
+	public static final String MIRROR2_IP = "mirror2_ip";
+	public static final String ETC_HOSTS = "etc_hosts";
 	
 	/** 
 	 * 
