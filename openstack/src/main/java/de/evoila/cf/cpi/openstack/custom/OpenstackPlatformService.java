@@ -21,7 +21,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
-import de.evoila.cf.broker.controller.ServiceInstanceController;
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.Plan;
 import de.evoila.cf.broker.model.Platform;
@@ -41,7 +40,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
 @Service
 @EnableConfigurationProperties
 @ConfigurationProperties(prefix = "backend")
-@ConditionalOnProperty(prefix="openstack", name={"endpoint"} ,havingValue="")
+@ConditionalOnProperty(prefix="openstack", name={"endpoint"}, havingValue="")
 public class OpenstackPlatformService extends OpenstackServiceFactory {
 
 	private static final String VOLUME_SIZE = "volume_size";
