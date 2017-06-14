@@ -121,8 +121,13 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		} catch (SQLException e1) {
 			throw new ServiceBrokerException("Could not connect to database");
 		}
-
+		
+		String username = bindingId;
 		String password = "";
+		String hostIp = host.getIp();
+		int hostPort = host.getPort();
+		String database = serviceInstance.getId();
+		
 		try {
 			password = postgresCustomImplementation.bindRoleToDatabaseAndGeneratePassword(jdbcService, serviceInstance.getId(), bindingId);
 			jdbcService.closeIfConnected();
@@ -135,11 +140,16 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
             jdbcService.closeIfConnected();
         }
 
-		String dbURL = String.format("postgres://%s:%s@%s:%d/%s", bindingId, password, host.getIp(), host.getPort(),
-				serviceInstance.getId());
+		String dbURL = String.format("postgres://%s:%s@%s:%d/%s", username, password, hostIp, hostPort,
+				database);
 
 		Map<String, Object> credentials = new HashMap<String, Object>();
 		credentials.put("uri", dbURL);
+		credentials.put("username", bindingId);
+		credentials.put("password", password);
+		credentials.put("host", hostIp);
+		credentials.put("port", hostPort);
+		credentials.put("database", database);
 
 		return credentials;
 	}
