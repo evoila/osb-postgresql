@@ -9,35 +9,34 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.catalina.Server;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-
-
-import de.evoila.cf.broker.bean.HAProxyBean;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.HABackendResponse;
 import de.evoila.cf.broker.model.HAProxyServerAddress;
 import de.evoila.cf.broker.model.Mode;
 import de.evoila.cf.broker.model.ServerAddress;
 import de.evoila.cf.config.security.AcceptSelfSignedClientHttpRequestFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Christian Brinker, Sebastian Boeing, evoila.
  *
  */
-
+@Service
 public abstract class HAProxyService {
+
+	private Logger log = LoggerFactory.getLogger(getClass());
 
 	private static final String APPLICATION_JSON = "application/json";
 
@@ -45,23 +44,20 @@ public abstract class HAProxyService {
 
 	private static final String X_AUTH_TOKEN_HEADER = "X-Auth-Token";
 	
-	private Logger log = LoggerFactory.getLogger(getClass());
-
-	@Autowired
-	private HAProxyBean haproxyBean;
+	@Value("${haproxy.uri}")
+	private String uri;
+	
+	@Value("${haproxy.auth.token}")
+	private String authToken;
 	
 	private String haProxy;
 	
-	private String authToken;
-
 	private RestTemplate restTemplate = new RestTemplate();
 
 	private HttpHeaders headers = new HttpHeaders();
 
 	@PostConstruct
 	private void initHeaders() {
-		haProxy = haproxyBean.getUri();
-		authToken = haproxyBean.getAuthToken();
 		headers.add(X_AUTH_TOKEN_HEADER, authToken);
 		headers.add(CONTENT_TYPE, APPLICATION_JSON);
 		
@@ -73,8 +69,12 @@ public abstract class HAProxyService {
 		restTemplate.setRequestFactory(requestFactory);
 	}
 
-	public List<ServerAddress> appendAgent(List<ServerAddress> internalAddresses, String bindingId, String instanceId) throws ServiceBrokerException {
-		List<ServerAddress> externalAddresses = internalAddresses.stream().map(in -> new HAProxyServerAddress(in, getMode(in), getOptions(in))).map(in -> appendSingleAgent(in, bindingId, instanceId))
+	public List<ServerAddress> appendAgent(List<ServerAddress> internalAddresses, String bindingId, 
+			String instanceId) throws ServiceBrokerException {
+		List<ServerAddress> externalAddresses = internalAddresses
+				.stream()
+				.map(in -> new HAProxyServerAddress(in, getMode(in), getOptions(in)))
+				.map(in -> appendSingleAgent(in, bindingId, instanceId))
 				.filter(in -> in != null).collect(Collectors.toList());
 
 		if (externalAddresses.size() < internalAddresses.size())
