@@ -8,7 +8,6 @@ import org.openstack4j.model.common.Identifier;
 import org.openstack4j.openstack.OSFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.util.Assert;
 
 /**

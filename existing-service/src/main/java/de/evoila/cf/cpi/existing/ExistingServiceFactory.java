@@ -1,6 +1,5 @@
 package de.evoila.cf.cpi.existing;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -10,10 +9,7 @@ import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import com.google.common.collect.Lists;
 
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.Plan;
@@ -53,9 +49,9 @@ public abstract class ExistingServiceFactory implements PlatformService {
 	@Override
 	@PostConstruct
 	public void registerCustomPlatformServie() {
-		
 		platformRepository.addPlatform(Platform.EXISTING_SERVICE, this);
-		log.info("Added Platform-Service " + this.getClass().toString() + " of type " + Platform.EXISTING_SERVICE + " with host: " + getHosts().stream().reduce((l,r) -> (l + ", " + r)).orElse("none") + " and port: " + getPort());
+		log.info("Added Platform-Service " + this.getClass().toString() + " of type " + Platform.EXISTING_SERVICE 
+				+ " with host: " + getHosts().stream().reduce((l,r) -> (l + ", " + r)).orElse("none") + " and port: " + getPort());
 	}
 
 	@Override
@@ -116,12 +112,6 @@ public abstract class ExistingServiceFactory implements PlatformService {
 
 		return serviceInstance;
 	}
-
-	// abstract protected void provisionServiceInstance(ServiceInstance
-	// serviceInstance, Plan plan,
-	// Map<String, String> customProperties) throws PlatformException;
-
-	// abstract protected List<ServerAddress> getExistingServiceHosts();
 
 	/*
 	 * (non-Javadoc)
