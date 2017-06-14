@@ -16,6 +16,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @JsonAutoDetect(getterVisibility = Visibility.NONE)
 public class ServiceInstanceResponse {
 
+	@JsonSerialize
+	@JsonProperty("dashboard_url")
 	private String dashboardUrl;
 	
 	private boolean isAsync;
@@ -32,10 +34,12 @@ public class ServiceInstanceResponse {
 		this.dashboardUrl = dashboardUrl;
 	}
 
-	@JsonSerialize
-	@JsonProperty("dashboard_url")
 	public String getDashboardUrl() {
 		return dashboardUrl;
+	}
+
+	public void setDashboardUrl(String dashboardUrl) {
+		this.dashboardUrl = dashboardUrl;
 	}
 
 	public boolean isAsync() {

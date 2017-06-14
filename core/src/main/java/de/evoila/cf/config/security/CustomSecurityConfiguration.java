@@ -50,6 +50,7 @@ public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
         	.authorizeRequests()
         	.antMatchers(HttpMethod.GET, "/info").permitAll()
         	.antMatchers(HttpMethod.GET, "/health").permitAll()
+        	.antMatchers(HttpMethod.GET, "/v2/dashboard/**").permitAll()
         	.antMatchers("/**").hasRole("USER")
         	.anyRequest().authenticated()
         .and()
