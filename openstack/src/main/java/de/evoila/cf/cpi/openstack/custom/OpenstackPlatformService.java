@@ -11,7 +11,6 @@ import java.util.Map.Entry;
 import javax.annotation.PostConstruct;
 import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.NotSupportedException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +21,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service;
 
 import de.evoila.cf.broker.controller.ServiceInstanceController;
+import com.google.common.collect.Lists;
+
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.Plan;
 import de.evoila.cf.broker.model.Platform;
@@ -31,7 +32,6 @@ import de.evoila.cf.broker.model.VolumeUnit;
 import de.evoila.cf.broker.repository.PlatformRepository;
 import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
 import de.evoila.cf.cpi.openstack.OpenstackServiceFactory;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * 

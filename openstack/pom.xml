@@ -23,24 +23,34 @@
 		<dependency>
 			<groupId>org.pacesys</groupId>
 			<artifactId>openstack4j</artifactId>
-			<version>2.0.9</version>
+			<version>3.0.4</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.pacesys.openstack4j.connectors</groupId>
+					<artifactId>openstack4j-resteasy</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
 			<groupId>de.evoila.cf.broker</groupId>
 			<artifactId>core</artifactId>
-			<version>1.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.neo4j</groupId>
-			<artifactId>neo4j-cypher-compiler-2.2</artifactId>
-			<version>2.2.5</version>
+			<artifactId>neo4j-cypher-compiler-3.2</artifactId>
+			<version>3.2.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
+ 		<dependency>
+		    <groupId>javax.ws.rs</groupId>
+		    <artifactId>javax.ws.rs-api</artifactId>
+		    <version>2.0.1</version>
+		</dependency> 
 	</dependencies>
 
 	<build>
@@ -84,7 +94,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-jar-plugin</artifactId>
-					<version>2.6</version>
+					<version>3.0.2</version>
 					<executions>
 						<execution>
 							<goals>
