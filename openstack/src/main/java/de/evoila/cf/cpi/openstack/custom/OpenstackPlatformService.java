@@ -40,15 +40,14 @@ import de.evoila.cf.cpi.openstack.OpenstackServiceFactory;
  */
 @Service
 @EnableConfigurationProperties
-@ConfigurationProperties(prefix = "backend")
-@ConditionalOnProperty(prefix="openstack", name={"endpoint"} ,havingValue="")
+@ConditionalOnProperty(prefix="openstack", name={"endpoint"}, havingValue= "")
 public class OpenstackPlatformService extends OpenstackServiceFactory {
 
 	private static final String VOLUME_SIZE = "volume_size";
 	private static final String FLAVOR = "flavor";
 	private static final String CLUSTER = "cluster";
 	private static final String SECURITY_GROUPS = "security_groups";
-	
+
 	private final Logger log = LoggerFactory.getLogger(OpenstackPlatformService.class);
 
 	private StackHandler stackHandler;
@@ -62,7 +61,6 @@ public class OpenstackPlatformService extends OpenstackServiceFactory {
 
 	@Autowired
 	private ServicePortAvailabilityVerifier portAvailabilityVerifier;
-	
 
 	@Autowired
 	private IpAccessor ipAccessor;

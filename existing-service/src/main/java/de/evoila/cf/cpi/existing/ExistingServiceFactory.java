@@ -29,7 +29,6 @@ import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
  * @author Christian Brinker, evoila.
  *
  */
-@ConfigurationProperties(prefix="existing.endpoint")
 public abstract class ExistingServiceFactory implements PlatformService {
 
 	private List<String> hosts = new ArrayList<String>();
@@ -53,9 +52,10 @@ public abstract class ExistingServiceFactory implements PlatformService {
 	@Override
 	@PostConstruct
 	public void registerCustomPlatformServie() {
-		
 		platformRepository.addPlatform(Platform.EXISTING_SERVICE, this);
-		log.info("Added Platform-Service " + this.getClass().toString() + " of type " + Platform.EXISTING_SERVICE + " with host: " + getHosts().stream().reduce((l,r) -> (l + ", " + r)).orElse("none") + " and port: " + getPort());
+		log.info("Added Platform-Service " + this.getClass().toString() + " of type "
+				+ Platform.EXISTING_SERVICE + " with host: "
+				+ getHosts().stream().reduce((l,r) -> (l + ", " + r)).orElse("none") + " and port: " + getPort());
 	}
 
 	@Override
