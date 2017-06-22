@@ -12,7 +12,7 @@ import de.evoila.cf.broker.model.Catalog;
 import de.evoila.cf.config.web.cors.CORSFilter;
 
 /**
- * @author johanneshiemer
+ * @author Johannes Hiemer.
  *
  */
 @Configuration

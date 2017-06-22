@@ -9,8 +9,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author René Schollmeyer
  *
  */
-
-
 @ConfigurationProperties(prefix="login")
 public class AuthenticationProperties {
 
