@@ -1,5 +1,5 @@
 # Service Broker
-This repository is part of our service broker project. For documentaion see [evoila/cf-service-broker](https://github.com/evoila/cf-service-broker)
+This repository is part of our service broker project. For documentation see [evoila/cf-service-broker](https://github.com/evoila/cf-service-broker)
 
 
 # cf-service-broker-core
