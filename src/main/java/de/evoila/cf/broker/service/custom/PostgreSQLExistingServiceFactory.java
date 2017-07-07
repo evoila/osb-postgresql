@@ -21,7 +21,7 @@ import de.evoila.cf.cpi.existing.ExistingServiceFactory;
  *
  */
 @Service
-@ConditionalOnProperty(prefix = "existing.endpoint", name = { "hosts", "port", "username", "password",
+@ConditionalOnProperty(prefix = "existing.endpoint", name = { "port", "username", "password",
 		"database" }, havingValue = "")
 public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 
