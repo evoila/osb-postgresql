@@ -1,11 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+ 
+ 	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<org.springframework.boot>1.5.2.RELEASE</org.springframework.boot>
+		<java.version>1.8</java.version>
+		<core.version>1.1.0</core.version>
+		<parent.version>1.1.0</parent.version>
+		<deployment.version>1.1.0</deployment.version>
+	</properties>
+ 
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>deployment-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>deployment-parent</name>
+	<version>1.1.0</version>
 
 	<parent>
 		<groupId>de.evoila.cf.broker</groupId>
@@ -13,19 +24,12 @@
 		<version>1.1.0</version>
 	</parent>
 
+	
 	<modules>
 		<module>openstack</module>
 		<module>docker</module>
-		<module>docker-java</module>
 		<module>existing-service</module>
 	</modules>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<org.springframework.boot>1.5.2.RELEASE</org.springframework.boot>
-		<java.version>1.8</java.version>
-	</properties>
 
 	<dependencyManagement>
 		<dependencies>
@@ -33,26 +37,9 @@
 			<dependency>
 				<groupId>de.evoila.cf.broker</groupId>
 				<artifactId>core</artifactId>
-				<version>1.1.0</version>
+				<version>${parent.version}</version>
 			</dependency>
 
 		</dependencies>
 	</dependencyManagement>
-
-	<build>
-		<extensions>
-			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-ftp</artifactId>
-				<version>2.12</version>
-			</extension>
-		</extensions>
-	</build>
-
-	<distributionManagement>
-		<repository>
-			<id>ftp-meshstack</id>
-			<url>ftp://maven.meshstack.io</url>
-		</repository>
-	</distributionManagement>
 </project>

@@ -39,6 +39,7 @@ import com.github.dockerjava.core.DockerClientConfig.DockerClientConfigBuilder;
 import com.github.dockerjava.core.LocalDirectorySSLConfig;
 import com.github.dockerjava.core.SSLConfig;
 
+import de.evoila.cf.broker.bean.DeploymentRepoBean;
 import de.evoila.cf.broker.cpi.endpoint.EndpointAvailabilityService;
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.cpi.AvailabilityState;
@@ -57,8 +58,6 @@ public abstract class DockerServiceFactory implements PlatformService {
 	private final static String DEFAULT_ENCODING = "UTF-8";
 
 	private static final long MEMORY_LIMIT = 536870912;
-	
-	private static final String SCRIPT_REPO_MAIN = "repo_main";
 	
 	private static final String SCRIPT_REPO_MONIT = "repo_monit";
 	
@@ -91,23 +90,12 @@ public abstract class DockerServiceFactory implements PlatformService {
 
 	@Value("${docker.syslogAddress}")
 	private String syslogAddress;
-	
-	@Value("${deployment.repo.main}")
-	private String scriptRepoMain;
 
-	@Value("${deployment.repo.monit}")
 	private String scriptRepoMonit;
 
-	@Value("${deployment.repo.service}")
 	private String scriptRepoService;
 
 	private Map<String, Integer> ports;
-
-	@Autowired
-	private DockerVolumeServiceBroker dockerVolumeServiceBroker;
-
-	@Autowired
-	private EndpointAvailabilityService endpointAvailabilityService;
 
 	private List<Integer> availablePorts = new ArrayList<Integer>();
 
@@ -116,12 +104,24 @@ public abstract class DockerServiceFactory implements PlatformService {
 	private String containerCmd = null;
 
 	private Map<Integer, String> reservePorts;
+	
+	@Autowired
+	private DockerVolumeServiceBroker dockerVolumeServiceBroker;
+
+	@Autowired
+	private EndpointAvailabilityService endpointAvailabilityService;
 
 	@Autowired
 	private ApplicationContext appContext;
+	
+	@Autowired
+	private DeploymentRepoBean deploymentRepoBean;
 
 	@PostConstruct
 	public void initialize() throws PlatformException {
+		scriptRepoMonit = deploymentRepoBean.getMonit();
+		scriptRepoService = deploymentRepoBean.getService();
+		
 		try {
 			if (endpointAvailabilityService.isAvailable(DOCKER_SERVICE_KEY)) {
 				endpointAvailabilityService.add(DOCKER_SERVICE_KEY,
@@ -324,7 +324,6 @@ public abstract class DockerServiceFactory implements PlatformService {
 			Map<String, String> customProperties) throws PlatformException {
 		log.info("Creating container for {} with volume size {}", instanceId, volumeSize);
 		
-		customProperties.put(SCRIPT_REPO_MAIN, scriptRepoMain);
 		customProperties.put(SCRIPT_REPO_MONIT, scriptRepoMonit);
 		customProperties.put(SCRIPT_REPO_SERVICE, scriptRepoService);
 

@@ -76,7 +76,9 @@ public class StackProgressObserver {
 		if (stack != null && stack.getStatus().equals(DELETE_FAILED))
 			throw new PlatformException(stack.getStackStatusReason());
 		
-		while (stack.getStatus().equals(DELETE_IN_PROGRESS)) {
+		while (stack != null &&
+				stack.getStatus() != null &&
+				stack.getStatus().equals(DELETE_IN_PROGRESS)) {
 			stack = heatFluent.get(name);
 
 			try {

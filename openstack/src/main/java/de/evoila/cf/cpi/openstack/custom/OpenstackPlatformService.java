@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import javax.annotation.PostConstruct;
 import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.NotSupportedException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
-import de.evoila.cf.broker.controller.ServiceInstanceController;
 import com.google.common.collect.Lists;
 
 import de.evoila.cf.broker.exception.PlatformException;
@@ -40,14 +40,14 @@ import de.evoila.cf.cpi.openstack.OpenstackServiceFactory;
  */
 @Service
 @EnableConfigurationProperties
-@ConditionalOnProperty(prefix="openstack", name={"endpoint"}, havingValue= "")
+@ConditionalOnProperty(prefix="openstack", name={"endpoint"}, havingValue="")
 public class OpenstackPlatformService extends OpenstackServiceFactory {
 
 	private static final String VOLUME_SIZE = "volume_size";
 	private static final String FLAVOR = "flavor";
 	private static final String CLUSTER = "cluster";
 	private static final String SECURITY_GROUPS = "security_groups";
-
+	
 	private final Logger log = LoggerFactory.getLogger(OpenstackPlatformService.class);
 
 	private StackHandler stackHandler;
@@ -61,6 +61,7 @@ public class OpenstackPlatformService extends OpenstackServiceFactory {
 
 	@Autowired
 	private ServicePortAvailabilityVerifier portAvailabilityVerifier;
+	
 
 	@Autowired
 	private IpAccessor ipAccessor;
@@ -126,8 +127,8 @@ public class OpenstackPlatformService extends OpenstackServiceFactory {
 		Map<String, String> platformParameters = new HashMap<String, String>();
 		platformParameters.put(FLAVOR, plan.getFlavorId());
 		platformParameters.put(VOLUME_SIZE, volumeSize(plan.getVolumeSize(), plan.getVolumeUnit()));
-		platformParameters.put(SECURITY_GROUPS, plan.getMetadata().get(SECURITY_GROUPS).toString());
 		if(plan.getMetadata().containsKey(CLUSTER)) {
+			platformParameters.put(SECURITY_GROUPS, plan.getMetadata().get(SECURITY_GROUPS).toString());
 			platformParameters.put(CLUSTER, plan.getMetadata().get(CLUSTER).toString());
 		}
 
