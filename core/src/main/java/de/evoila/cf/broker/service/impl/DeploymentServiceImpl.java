@@ -9,6 +9,8 @@ import java.util.Map.Entry;
 
 import javax.annotation.Resource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -58,6 +60,8 @@ public class DeploymentServiceImpl implements DeploymentService {
 
 	@Resource(name = "customProperties")
 	public Map<String, String> customProperties;
+	
+	Logger log = LoggerFactory.getLogger(getClass());
 
 	@Override
 	public JobProgressResponse getLastOperation(String serviceInstanceId)
@@ -173,7 +177,7 @@ public class DeploymentServiceImpl implements DeploymentService {
 		}
 
 		Plan plan = serviceDefinitionRepository.getPlan(serviceInstance.getPlanId());
-
+		
 		PlatformService platformService = platformRepository.getPlatformService(plan.getPlatform());
 
 		if (platformService.isSyncPossibleOnDelete(serviceInstance)
