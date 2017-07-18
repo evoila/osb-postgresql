@@ -1,0 +1,119 @@
+heat_template_version: 2016-04-08
+description: Deployment Description for PostgreSQL-HA Primary-Node (Script 4/5)
+
+parameters:
+
+  image_id:
+    type: string
+    description: Image used for servers
+    default: ubuntu-xenial-16.04_lastest
+  key_name:
+    type: string
+    description: SSH key to connect to the servers
+  flavor:
+    type: string
+    description: flavor used by the servers
+  availability_zone:
+    type: string
+    description: The Availability Zone to launch the instance.
+  server_group:
+    type: string
+    description: server group of the nodes.
+
+  primary_hostname:
+    type: string
+    description: Hostname of the primary node.
+  primary_volume_id:
+    type: string
+    description: ID of the pre-created volume to be attached to the primary node.
+  primary_port:
+    type: string
+    description: Port-ID of the pre-created Port for the primary node.
+  primary_ip:
+    type: string
+    description: IP of primary node.
+
+  service_db:
+    type: string
+    description: Name of the Database.
+  admin_user:
+    type: string
+    description: Admin user for the service.
+  admin_password:
+    type: string
+    hidden: true
+    description: Password for the service_user password.
+
+  standby_ip:
+    type: string
+    description: IP of standby node.
+
+resources:
+
+  volume_attachment_prim:
+    type: OS::Cinder::VolumeAttachment
+    properties:
+      volume_id: { get_param: primary_volume_id }
+      instance_uuid: { get_resource: primary_server }
+      mountpoint: /dev/vdb
+
+  primary_server:
+    type: OS::Nova::Server
+    properties:
+      flavor: { get_param: flavor }
+      image: { get_param: image_id }
+      availability_zone: { get_param: availability_zone }
+      key_name: { get_param: key_name }
+      scheduler_hints:
+        group: {get_param: server_group}
+      name: { get_param: primary_hostname }
+      networks:
+      - port: { get_param: primary_port }
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash
+            mkdir -p /data
+            echo "/dev/vdb       /data       ext4    defaults     0 0" >> /etc/fstab
+            mkfs.ext4 /dev/vdb
+            mount -a
+
+            export REPOSITORY_POSTGRESQL="https://bitbucket.org/meshstack/deployment-scripts-postgresql/raw/HEAD/postgresql"
+            export REPOSITORY_MONIT="https://bitbucket.org/meshstack/deployment-scripts-monit/raw/HEAD/monit"
+            export REPOSITORY_POSTGRESQL_HA="https://bitbucket.org/meshstack/deployment-scripts-postgresql/raw/HEAD/postgresql/cluster"
+
+
+            wget $REPOSITORY_POSTGRESQL/postgresql-template.sh --no-cache
+
+            chmod +x postgresql-template.sh
+
+            ./postgresql-template.sh -u $admin_user -p $admin_password -d $service_db -e openstack
+
+            if [ -n "$standby_ip" ]; then
+            wget $REPOSITORY_POSTGRESQL_HA/postgresql-HA-template.sh --no-cache
+            chmod +x postgresql-HA-template.sh
+            ./postgresql-HA-template.sh -u $admin_user -p $admin_password -d $service_db -e openstack -i $primary_ip -j $standby_ip -a primary
+            fi
+            wc_notify --data-binary '{"status": "SUCCESS"}'
+
+          params:
+            $service_db: {get_param: service_db}
+            $admin_user: {get_param: admin_user}
+            $admin_password: {get_param: admin_password}
+            $primary_ip: {get_param: primary_ip}
+            $standby_ip: {get_param: standby_ip}
+            wc_notify: { get_attr: [  'wait_handle', 'curl_cli'] }
+
+
+  wait_handle:
+    type: OS::Heat::WaitConditionHandle
+  wait_condition:
+    type: OS::Heat::WaitCondition
+    properties:
+      handle: { get_resource: wait_handle }
+      count: 1
+      timeout: 600
+  wait_for_it:
+    type: OS::Heat::None
+    depends_on: wait_condition
