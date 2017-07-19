@@ -16,12 +16,12 @@ import org.openstack4j.model.heat.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import de.evoila.cf.broker.bean.OpenstackBean;
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.cpi.openstack.fluent.HeatFluent;
 import de.evoila.cf.cpi.openstack.util.StackProgressObserver;
@@ -31,7 +31,7 @@ import de.evoila.cf.cpi.openstack.util.StackProgressObserver;
  *
  */
 @Service(value = "defaultStackHandler")
-@ConditionalOnProperty(prefix="openstack", name={"networkId","imageId","keypair","cinder.az"},havingValue="")
+@ConditionalOnBean(OpenstackBean.class)
 public class StackHandler {
 	/**
 	 * 
@@ -59,16 +59,12 @@ public class StackHandler {
 
 	private String defaultHeatTemplate;
 
-	@Value("${openstack.networkId}")
 	private String networkId;
 
-	@Value("${openstack.imageId}")
 	private String imageId;
 
-	@Value("${openstack.keypair}")
 	private String keypair;
-
-	@Value("${openstack.cinder.az}")
+	
 	private String availabilityZone;
 
 	@Autowired
@@ -79,10 +75,18 @@ public class StackHandler {
 
 	@Autowired
 	private ApplicationContext appContext;
+	
+	@Autowired
+	private OpenstackBean openstackBean;
 
 	@PostConstruct
 	public void initialize() {
-		final String templatePath = "classpath:openstack/template.yml";
+		networkId = openstackBean.getNetworkId();
+		imageId = openstackBean.getImageId();
+		keypair = openstackBean.getKeypair();
+		availabilityZone = openstackBean.getCinder().getAz();
+		
+		final String templatePath = "openstack/template.yml";
 		defaultHeatTemplate = accessTemplate(templatePath);
 	}
 

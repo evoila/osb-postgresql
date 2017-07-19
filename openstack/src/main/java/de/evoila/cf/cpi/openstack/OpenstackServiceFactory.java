@@ -10,8 +10,8 @@ import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
+import de.evoila.cf.broker.bean.OpenstackBean;
 import de.evoila.cf.broker.cpi.endpoint.EndpointAvailabilityService;
 import de.evoila.cf.broker.model.cpi.AvailabilityState;
 import de.evoila.cf.broker.model.cpi.EndpointServiceState;
@@ -28,39 +28,35 @@ public abstract class OpenstackServiceFactory implements PlatformService {
 
 	private Logger log = LoggerFactory.getLogger(getClass());
 
-	@Value("${openstack.endpoint}")
 	private String endpoint;
 
-	@Value("${openstack.user.username}")
 	private String username;
 
-	@Value("${openstack.user.password}")
 	private String password;
-	
-	@Value("${openstack.user.domainName}")
+
 	private String userDomainName;
-	
-	@Value("${openstack.project.domainName}")
+
 	private String projectDomainName;
 
-	@Value("${openstack.project.projectName}")
 	private String projectName;
 	
 	protected Map<String, Integer> ports;
 
-	public Map<String, Integer> getPorts() {
-		return ports;
-	}
-
-	public void setPorts(Map<String, Integer> ports) {
-		this.ports = ports;
-	}
-
 	@Autowired
 	private EndpointAvailabilityService endpointAvailabilityService;
+	
+	@Autowired
+	private OpenstackBean openstackBean;
 
 	@PostConstruct
 	public void initialize() {
+		endpoint = openstackBean.getEndpoint();
+		username = openstackBean.getUser().getUsername();
+		password = openstackBean.getUser().getPassword();
+		userDomainName = openstackBean.getUser().getDomainName();
+		projectDomainName = openstackBean.getProject().getDomainName();
+		projectName = openstackBean.getProject().getProjectName();
+		
 		log.debug("Initializing Openstack Connection Factory");
 		try {
 			if (endpointAvailabilityService.isAvailable(OPENSTACK_SERVICE_KEY)) {
@@ -76,6 +72,14 @@ public abstract class OpenstackServiceFactory implements PlatformService {
 			endpointAvailabilityService.add(OPENSTACK_SERVICE_KEY,
 					new EndpointServiceState(OPENSTACK_SERVICE_KEY, AvailabilityState.ERROR, ex.toString()));
 		}
+	}
+
+	public Map<String, Integer> getPorts() {
+		return ports;
+	}
+
+	public void setPorts(Map<String, Integer> ports) {
+		this.ports = ports;
 	}
 
 }

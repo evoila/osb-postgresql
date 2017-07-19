@@ -10,10 +10,11 @@ import org.openstack4j.model.compute.Flavor;
 import org.openstack4j.model.compute.Keypair;
 import org.openstack4j.model.compute.Server;
 import org.openstack4j.model.compute.ServerCreate;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import de.evoila.cf.broker.bean.OpenstackBean;
 import de.evoila.cf.cpi.openstack.fluent.connection.OpenstackConnectionFactory;
 
 
@@ -22,7 +23,7 @@ import de.evoila.cf.cpi.openstack.fluent.connection.OpenstackConnectionFactory;
  *
  */
 @Component
-@ConditionalOnProperty(prefix="openstack", name={"endpoint"},havingValue="")
+@ConditionalOnBean(OpenstackBean.class)
 public class NovaFluent {
 	
 	private OSClient client() {

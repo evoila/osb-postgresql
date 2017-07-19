@@ -16,11 +16,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.Lists;
+
+import de.evoila.cf.broker.bean.OpenstackBean;
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.Plan;
 import de.evoila.cf.broker.model.Platform;
@@ -30,7 +32,6 @@ import de.evoila.cf.broker.model.VolumeUnit;
 import de.evoila.cf.broker.repository.PlatformRepository;
 import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
 import de.evoila.cf.cpi.openstack.OpenstackServiceFactory;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * 
@@ -39,8 +40,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
  */
 @Service
 @EnableConfigurationProperties
-@ConfigurationProperties(prefix = "backend")
-@ConditionalOnProperty(prefix="openstack", name={"endpoint"}, havingValue="")
+@ConditionalOnBean(OpenstackBean.class)
 public class OpenstackPlatformService extends OpenstackServiceFactory {
 
 	private static final String VOLUME_SIZE = "volume_size";
