@@ -6,8 +6,8 @@ package de.evoila.cf.cpi.openstack.custom.conf;
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -23,7 +23,7 @@ import de.evoila.cf.cpi.openstack.custom.StackHandler;
  *
  */
 @Configuration
-@ConditionalOnProperty(prefix="openstack", name={"networkId"},havingValue="")
+@ConditionalOnBean(OpenstackBean.class)
 public class OpenstackPlatformServiceConfig {
 
 	private String networkId;
