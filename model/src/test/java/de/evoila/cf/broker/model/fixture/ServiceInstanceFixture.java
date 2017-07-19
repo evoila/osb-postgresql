@@ -49,7 +49,7 @@ public class ServiceInstanceFixture {
 	public static ServiceInstanceRequest getCreateServiceInstanceRequest() {
 		ServiceDefinition service = ServiceFixture.getService();
 		return new ServiceInstanceRequest(service.getId(), service.getPlans().get(0).getId(),
-				DataFixture.getOrgOneGuid(), DataFixture.getSpaceOneGuid());
+				DataFixture.getOrgOneGuid(), DataFixture.getSpaceOneGuid(), DataFixture.getContextOne());
 	}
 
 	public static String getCreateServiceInstanceRequestJson()
