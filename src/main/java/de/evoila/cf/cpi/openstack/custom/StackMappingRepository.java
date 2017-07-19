@@ -1,14 +1,16 @@
 package de.evoila.cf.cpi.openstack.custom;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.data.mongodb.repository.MongoRepository;
+
+import de.evoila.cf.broker.bean.OpenstackBean;
 
 
 /**
  * @author Christian Brinker, evoila.
  *
  */
-@ConditionalOnProperty(prefix = "openstack", name = { "endpoint" }, havingValue = "")
+@ConditionalOnBean(OpenstackBean.class)
 public interface StackMappingRepository extends MongoRepository<PostgreSqlStackMapping, String> {
 
 }

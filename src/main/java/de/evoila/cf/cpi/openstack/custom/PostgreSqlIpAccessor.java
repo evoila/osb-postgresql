@@ -6,10 +6,11 @@ package de.evoila.cf.cpi.openstack.custom;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
+import de.evoila.cf.broker.bean.OpenstackBean;
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.ServerAddress;
 import de.evoila.cf.cpi.openstack.fluent.HeatFluent;
@@ -20,7 +21,7 @@ import de.evoila.cf.cpi.openstack.fluent.HeatFluent;
  */
 @Service
 @Primary
-@ConditionalOnProperty(prefix = "openstack", name = { "endpoint" }, havingValue = "")
+@ConditionalOnBean(OpenstackBean.class)
 public class PostgreSqlIpAccessor extends CustomIpAccessor {
 
 	@SuppressWarnings("unused")

@@ -6,9 +6,10 @@ package de.evoila.cf.broker.service.custom;
 import java.sql.SQLException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
+import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.service.postgres.PostgresCustomImplementation;
 import de.evoila.cf.broker.service.postgres.jdbc.PostgresDbService;
@@ -21,8 +22,7 @@ import de.evoila.cf.cpi.existing.ExistingServiceFactory;
  *
  */
 @Service
-@ConditionalOnProperty(prefix = "existing.endpoint", name = { "port", "username", "password",
-		"database" }, havingValue = "")
+@ConditionalOnBean(ExistingEndpointBean.class)
 public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 
 	@Autowired
