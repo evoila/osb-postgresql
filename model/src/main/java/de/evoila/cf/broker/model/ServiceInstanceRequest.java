@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @JsonAutoDetect(getterVisibility = Visibility.NONE)
 public class ServiceInstanceRequest {
 
-	@NotEmpty
 	@JsonSerialize
 	@JsonProperty("context")
 	private Map<String, String> context;
