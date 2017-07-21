@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ParameterManager {
+public class PostgreSqlParameterManager {
 
 	public static final String RESOURCE_NAME = "resource_name";
 	public static final String NODE_NUMBER = "node_number";
@@ -40,23 +40,23 @@ public class ParameterManager {
 		String primIp = ips.remove(0);
 		String primPort = ports.remove(0);
 		
-		customParameters.put(ParameterManager.PRIMARY_PORT, primPort);
-		customParameters.put(ParameterManager.PRIMARY_IP, primIp);
+		customParameters.put(PostgreSqlParameterManager.PRIMARY_PORT, primPort);
+		customParameters.put(PostgreSqlParameterManager.PRIMARY_IP, primIp);
 
-		customParameters.put(ParameterManager.STANDBY_PORT, join(ports));
-		customParameters.put(ParameterManager.STANDBY_IP, join(ips));
+		customParameters.put(PostgreSqlParameterManager.STANDBY_PORT, join(ports));
+		customParameters.put(PostgreSqlParameterManager.STANDBY_IP, join(ips));
 	}
 	
 	static void updateVolumeParameters(Map<String, String> customParameters, List<String> volumes) {
 		String primaryVolume = volumes.get(0);
 		volumes.remove(0);
 		
-		customParameters.put(ParameterManager.PRIMARY_VOLUME_ID, primaryVolume);
-		customParameters.put(ParameterManager.STANDBY_VOLUME_ID, join(volumes));
+		customParameters.put(PostgreSqlParameterManager.PRIMARY_VOLUME_ID, primaryVolume);
+		customParameters.put(PostgreSqlParameterManager.STANDBY_VOLUME_ID, join(volumes));
 	}
 	
 	static int getSecondaryNumber(Map<String, String> customParameters) {
-		return Integer.parseInt(customParameters.get(ParameterManager.NODE_NUMBER));
+		return Integer.parseInt(customParameters.get(PostgreSqlParameterManager.NODE_NUMBER));
 	}
 
 	public static String join(List<String> volumes) {

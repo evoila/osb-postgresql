@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import de.evoila.cf.broker.bean.OpenstackBean;
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.ServerAddress;
+import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMapping;
+import de.evoila.cf.broker.persistence.mongodb.repository.StackMappingRepository;
 import de.evoila.cf.cpi.openstack.fluent.HeatFluent;
 
 /**
@@ -35,7 +37,7 @@ public class PostgreSqlIpAccessor extends CustomIpAccessor {
 
 	@Override
 	public List<ServerAddress> getIpAddresses(String instanceId) throws PlatformException {
-		PostgreSqlStackMapping stackMapping = stackMappingRepo.findOne(instanceId);
+		ClusterStackMapping stackMapping = stackMappingRepo.findOne(instanceId);
 
 		if (stackMapping != null) {
 			return stackMapping.getServerAddresses();
