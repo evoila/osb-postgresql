@@ -45,7 +45,7 @@ public class Application {
 		springApplication.addListeners(new ApplicationPidFileWriter());
 		ApplicationContext ctx = springApplication.run(args);
 
-		Assert.notNull(ctx);
+		Assert.notNull(ctx, "ApplicationContext must not be null.");
 		
 	}
 
