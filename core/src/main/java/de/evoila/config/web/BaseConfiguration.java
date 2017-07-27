@@ -3,8 +3,8 @@
  */
 package de.evoila.config.web;
 
-import org.springframework.boot.context.embedded.FilterRegistrationBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,7 +12,7 @@ import de.evoila.cf.broker.model.Catalog;
 import de.evoila.cf.config.web.cors.CORSFilter;
 
 /**
- * @author johanneshiemer
+ * @author Johannes Hiemer.
  *
  */
 @Configuration

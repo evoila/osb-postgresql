@@ -1,5 +1,6 @@
 package de.evoila.cf.config.security;
 
+import de.evoila.cf.broker.bean.AuthenticationPropertiesBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -22,11 +23,11 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
  */
 @Configuration
 @EnableWebSecurity
-@EnableConfigurationProperties(AuthenticationProperties.class)
+@EnableConfigurationProperties(AuthenticationPropertiesBean.class)
 public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
 
 	@Autowired
-	private AuthenticationProperties authentication;
+	private AuthenticationPropertiesBean authentication;
 	
 	@Bean
 	public BCryptPasswordEncoder passwordEncoder() {

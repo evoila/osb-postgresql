@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import de.evoila.cf.broker.controller.utils.DashboardUtils;
 import de.evoila.cf.broker.exception.AsyncRequiredException;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.exception.ServiceDefinitionDoesNotExistException;
@@ -29,7 +28,7 @@ import de.evoila.cf.broker.model.ServiceDefinition;
 import de.evoila.cf.broker.model.ServiceInstanceRequest;
 import de.evoila.cf.broker.model.ServiceInstanceResponse;
 import de.evoila.cf.broker.service.CatalogService;
-import de.evoila.cf.broker.service.DeploymentService;
+import de.evoila.cf.broker.service.impl.DeploymentServiceImpl;
 
 /**
  * 
@@ -45,7 +44,7 @@ public class ServiceInstanceController extends BaseController {
 	public static final String SERVICE_INSTANCE_BASE_PATH = "/v2/service_instances";
 
 	@Autowired
-	private DeploymentService deploymentService;
+	private DeploymentServiceImpl deploymentService;
 
 	@Autowired
 	private CatalogService catalogService;
@@ -75,11 +74,8 @@ public class ServiceInstanceController extends BaseController {
 
 		ServiceInstanceResponse response = deploymentService.createServiceInstance(serviceInstanceId,
 				request.getServiceDefinitionId(), request.getPlanId(), request.getOrganizationGuid(),
-				request.getSpaceGuid(), request.getParameters());
-		
-		if (DashboardUtils.hasDashboard(svc))
-			response.setDashboardUrl(DashboardUtils.dashboard(svc, serviceInstanceId));
-		
+				request.getSpaceGuid(), request.getParameters(), request.getContext());
+
 		log.debug("ServiceInstance Created: " + serviceInstanceId);
 
 		if (response.isAsync())
@@ -113,7 +109,7 @@ public class ServiceInstanceController extends BaseController {
 
 		return new ResponseEntity<String>("{}", HttpStatus.OK);
 	}
-	
+
 	@Override
 	@ExceptionHandler({ ServiceDefinitionDoesNotExistException.class, AsyncRequiredException.class })
 	@ResponseBody

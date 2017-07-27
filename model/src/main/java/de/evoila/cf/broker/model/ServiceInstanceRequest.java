@@ -1,5 +1,6 @@
 package de.evoila.cf.broker.model;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -19,6 +20,10 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @JsonAutoDetect(getterVisibility = Visibility.NONE)
 public class ServiceInstanceRequest {
 
+	@JsonSerialize
+	@JsonProperty("context")
+	private Map<String, String> context;
+	
 	@NotEmpty
 	@JsonSerialize
 	@JsonProperty("service_id")
@@ -45,11 +50,12 @@ public class ServiceInstanceRequest {
 	
 	public ServiceInstanceRequest() {}
 	
-	public ServiceInstanceRequest(String serviceDefinitionId, String planId, String organizationGuid, String spaceGuid) {
+	public ServiceInstanceRequest(String serviceDefinitionId, String planId, String organizationGuid, String spaceGuid, Map<String, String> context) {
 		this.serviceDefinitionId = serviceDefinitionId;
 		this.planId = planId;
 		this.organizationGuid = organizationGuid;
 		this.spaceGuid = spaceGuid;
+		setContext(context);
 	}
 	
 	public String getServiceDefinitionId() {
@@ -91,5 +97,12 @@ public class ServiceInstanceRequest {
 	public void setParameters(Map<String, String> parameters) {
 		this.parameters = parameters;
 	}
-	
+
+	public Map<String, String> getContext() {
+		return context;
+	}
+
+	public void setContext(Map<String, String> context) {
+		this.context = new HashMap<String, String>(context);
+	}
 }

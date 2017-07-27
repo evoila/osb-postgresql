@@ -9,6 +9,8 @@ import java.util.Map.Entry;
 
 import javax.annotation.Resource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -58,6 +60,8 @@ public class DeploymentServiceImpl implements DeploymentService {
 
 	@Resource(name = "customProperties")
 	public Map<String, String> customProperties;
+	
+	Logger log = LoggerFactory.getLogger(getClass());
 
 	@Override
 	public JobProgressResponse getLastOperation(String serviceInstanceId)
@@ -73,7 +77,8 @@ public class DeploymentServiceImpl implements DeploymentService {
 
 	@Override
 	public ServiceInstanceResponse createServiceInstance(String serviceInstanceId, String serviceDefinitionId,
-			String planId, String organizationGuid, String spaceGuid, Map<String, String> parameters)
+			String planId, String organizationGuid, String spaceGuid, Map<String, String> parameters,
+			Map<String, String> context)
 					throws ServiceInstanceExistsException, ServiceBrokerException,
 					ServiceDefinitionDoesNotExistException {
 
@@ -86,7 +91,9 @@ public class DeploymentServiceImpl implements DeploymentService {
 		ServiceInstance serviceInstance = new ServiceInstance(serviceInstanceId, serviceDefinitionId,
 				planId, organizationGuid, spaceGuid,
 				parameters == null ? new HashMap<String, String>()
-						: new HashMap<String, String>(parameters));
+						: new HashMap<String, String>(parameters),
+				context == null ? new HashMap<String, String>() 
+						: new HashMap<String, String>(context));
 
 		Plan plan = serviceDefinitionRepository.getPlan(planId);
 
@@ -173,7 +180,7 @@ public class DeploymentServiceImpl implements DeploymentService {
 		}
 
 		Plan plan = serviceDefinitionRepository.getPlan(serviceInstance.getPlanId());
-
+		
 		PlatformService platformService = platformRepository.getPlatformService(plan.getPlatform());
 
 		if (platformService.isSyncPossibleOnDelete(serviceInstance)
