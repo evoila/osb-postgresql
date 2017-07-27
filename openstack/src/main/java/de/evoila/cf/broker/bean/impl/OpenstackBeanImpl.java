@@ -1,5 +1,6 @@
 package de.evoila.cf.broker.bean.impl;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
@@ -7,6 +8,13 @@ import de.evoila.cf.broker.bean.OpenstackBean;
 
 @Service
 @ConfigurationProperties(prefix="openstack")
+@ConditionalOnProperty(prefix="openstack",
+		name = {"endpoint",
+				"user.username", "user.password", "user.domainName",
+				"project.domainName", "project.projectName",
+				"networkId", "subnetId", "imageId", "keypair",
+				"cinder.az"
+		}, havingValue="")
 public class OpenstackBeanImpl implements OpenstackBean {
 
 	private String endpoint;
