@@ -23,7 +23,6 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
  */
 @Configuration
 @EnableWebSecurity
-@EnableConfigurationProperties(AuthenticationPropertiesBean.class)
 public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
 
 	@Autowired
