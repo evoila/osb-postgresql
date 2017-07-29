@@ -131,13 +131,13 @@ public class DashboardController extends BaseController {
 			}
 
 			if (token != null) {
+				this.createTokenAuthenticationContext(token.getAccessToken(), request);
 				log.info("Creating User Session for Dashboard after successful authentication...");
-
 			} else {
 				log.info("Did not receive a valid token, had to abort authentication...");
 			}
 		}
-		return "redirect:/v2/dashboard/manage/" +serviceInstanceId;
+		return "redirect:/v2/dashboard/manage/" + serviceInstanceId;
 	}
 
 	@RequestMapping(value = "/manage/{serviceInstanceId}")
