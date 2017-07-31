@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import de.evoila.cf.broker.controller.utils.DashboardUtils;
 import de.evoila.cf.broker.exception.AsyncRequiredException;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.exception.ServiceDefinitionDoesNotExistException;
@@ -77,9 +76,6 @@ public class ServiceInstanceController extends BaseController {
 				request.getServiceDefinitionId(), request.getPlanId(), request.getOrganizationGuid(),
 				request.getSpaceGuid(), request.getParameters(), request.getContext());
 
-		if (DashboardUtils.hasDashboard(svc)) {
-			response.setDashboardUrl(DashboardUtils.dashboard(svc, serviceInstanceId));
-		}
 
 		log.debug("ServiceInstance Created: " + serviceInstanceId);
 

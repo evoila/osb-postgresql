@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import evoila.cf.broker.openid.OpenIdAuthenticationUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
@@ -23,7 +24,13 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.codec.Base64;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -54,8 +61,6 @@ public class DashboardController extends BaseController {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	private final static String REQUIRED_SCOPES = "cloud_controller_service_permissions.read openid";
-	
-	private final static String AUTH_CODE = "code";
 
 	private static final String IS_AUTHENTICATED = "dashboard_is_authenticated";
 	
@@ -69,6 +74,9 @@ public class DashboardController extends BaseController {
 	
 	@Autowired
 	private HttpSession httpSession;
+
+	@Autowired
+	private AuthenticationManager authenticationManager;
 
     @RequestMapping(value = "/{serviceInstanceId}")
     public void authRedirect(@PathVariable String serviceInstanceId,
@@ -101,111 +109,57 @@ public class DashboardController extends BaseController {
     	} else 
     		return null;
     }
-    
-    @RequestMapping(value = "/manage/{serviceInstanceId}")
-    public Object manage(@PathVariable String serviceInstanceId,
-    		@RequestParam(value = "code", required = true) String authCode,
-    		HttpServletRequest request) throws URISyntaxException {
-    	if (authCode == null)
-    		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-    	else {
-    		ServiceDefinition serviceDefinition = resolveServiceDefinitionByServiceInstanceId(serviceInstanceId);
-        	if (serviceDefinition != null) {
-        		Dashboard dashboard = serviceDefinition.getDashboard();
-        		DashboardClient dashboardClient = serviceDefinition.getDashboardClient();
 
-        		if (!isAuthenticatedSession()) {
-        			String redirectUri = DashboardUtils.appendSegmentToPath(dashboardClient.getRedirectUri(), serviceInstanceId);
-        			CompositeAccessToken token = null;
-        			try {
-        				token = this.getAccessAndRefreshToken(dashboard.getAuthEndpoint(), authCode,
-        						dashboardClient, redirectUri);
-        			} catch (RestClientException ex) {
-        				log.info("Token could not be used for Dashboard please reauthenticate...");
-        				setAuthenticatedSession(false);
-        			}
-            		
-            		if (token != null) {
-            			log.info("Creating User Session for Dashboard after successful authentication...");
-            			setAuthenticatedSession(true);
-            		} else {
-            			log.info("Did not receive a valid token, had to abort authentication...");
-            			setAuthenticatedSession(false);
-            		}
-        		} else if (isAuthenticatedSession()) {
-        			setAuthenticatedSession(true);
-        		}
-        		
-        		if (isAuthenticatedSession())
-        			return "manage";
-        		else
-        			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        		
-        	} else
-        		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-    	}	    	    	
+	@RequestMapping(value = "/{serviceInstanceId}/confirm")
+    public Object confirm(@PathVariable String serviceInstanceId, @RequestParam(value = "code", required = true) String authCode,
+						  HttpServletRequest request) throws URISyntaxException {
+		if (authCode == null)
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+
+		ServiceDefinition serviceDefinition = resolveServiceDefinitionByServiceInstanceId(serviceInstanceId);
+		if (serviceDefinition != null) {
+			Dashboard dashboard = serviceDefinition.getDashboard();
+			DashboardClient dashboardClient = serviceDefinition.getDashboardClient();
+
+			String redirectUri = DashboardUtils.appendSegmentToPath(dashboardClient.getRedirectUri(), serviceInstanceId);
+			CompositeAccessToken token = null;
+			try {
+				token = OpenIdAuthenticationUtils.getAccessAndRefreshToken(dashboard.getAuthEndpoint(), authCode,
+							dashboardClient, redirectUri);
+			} catch (RestClientException ex) {
+				log.info("Token could not be used for Dashboard please reauthenticate...");
+			}
+
+			if (token != null) {
+				this.createTokenAuthenticationContext(token.getAccessToken(), request);
+				log.info("Creating User Session for Dashboard after successful authentication...");
+			} else {
+				log.info("Did not receive a valid token, had to abort authentication...");
+			}
+		}
+		return "redirect:/v2/dashboard/manage/" + serviceInstanceId;
+	}
+
+	@RequestMapping(value = "/manage/{serviceInstanceId}")
+    public Object manage(@PathVariable String serviceInstanceId,
+    		HttpServletRequest request) throws URISyntaxException {
+
+		return "manage";
     }
+
+	private void createTokenAuthenticationContext(String token, HttpServletRequest request) {
+		UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(token, token);
+		Authentication authentication = authenticationManager.authenticate(authRequest);
+		SecurityContext securityContext = SecurityContextHolder.getContext();
+		securityContext.setAuthentication(authentication);
+
+		this.setAuthenticatedSession(securityContext, true);
+	}
     
-    private void setAuthenticatedSession(boolean isAuthenticated) {
+    private void setAuthenticatedSession(SecurityContext securityContext, boolean isAuthenticated) {
     	httpSession.setAttribute(IS_AUTHENTICATED, isAuthenticated);
     	httpSession.setMaxInactiveInterval(SESSION_TIMEOUT);
+		httpSession.setAttribute("SPRING_SECURITY_CONTEXT", securityContext);
     }
-    
-    private boolean isAuthenticatedSession() {
-    	boolean authenticated = false;
-    	if (httpSession.getAttribute(IS_AUTHENTICATED) != null) { 
-    		if (httpSession.getAttribute(IS_AUTHENTICATED).equals(false))
-    			authenticated = false;
-    		if (httpSession.getAttribute(IS_AUTHENTICATED).equals(true))
-    			authenticated = true;
-    	}
-		return authenticated;
-    }
-    
-    @SuppressWarnings("unused")
-	private String getAuthCode(String location) throws URISyntaxException {
-    	URIBuilder uriBuilder = new URIBuilder(location);
-    	String authCode = null;
-    	for (NameValuePair queryParam : uriBuilder.getQueryParams())
-    		if (queryParam.getName().equals(AUTH_CODE))
-    			authCode = queryParam.getValue();
-    	
-    	return authCode;
-    }
-    
-    private CompositeAccessToken getAccessAndRefreshToken(String oauthEndpoint, String code, DashboardClient dashboardClient,
-    		String redirectUri) throws RestClientException {
-    	String clientBasicAuth = getClientBasicAuthHeader(dashboardClient.getId(),  dashboardClient.getSecret());
-    	RestTemplate template = new RestTemplate();
 
-    	HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.AUTHORIZATION, clientBasicAuth);
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        MultiValueMap<String,String> form = new LinkedMultiValueMap<>();
-        form.add("response_type", "token");
-        form.add("grant_type", "authorization_code");
-        form.add("client_id", dashboardClient.getId());
-        form.add("client_secret", dashboardClient.getSecret());
-        form.add("redirect_uri", redirectUri);
-        form.add("code", code);
-
-        ResponseEntity<CompositeAccessToken> token = template.exchange(oauthEndpoint + "/token", 
-        		HttpMethod.POST, new HttpEntity<>(form, headers), CompositeAccessToken.class);
-        
-        if (token != null)
-        	return token.getBody();
-        else
-        	return null;
-    }
-    
-    protected String getClientBasicAuthHeader(String clientId, String clientSecret) {
-        try {
-            byte[] autbytes = Base64.encode(String.format("%s:%s", clientId, clientSecret).getBytes("UTF-8"));
-            String base64 = new String(autbytes);
-            return String.format("Basic %s", base64);
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalArgumentException(e);
-        }
-    }
 }
