@@ -1,9 +1,9 @@
 package de.evoila.cf.config.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -12,17 +12,18 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import de.evoila.cf.broker.bean.AuthenticationPropertiesBean;
+
 /**
  * @author Johannes Hiemer, cloudscale.
  * 
  */
 @Configuration
 @EnableWebSecurity
-@EnableConfigurationProperties(AuthenticationProperties.class)
 public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
 
 	@Autowired
-	private AuthenticationProperties authentication;
+	private AuthenticationPropertiesBean authentication;
 	
 	@Bean
 	public BCryptPasswordEncoder passwordEncoder() {
@@ -30,8 +31,8 @@ public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
 	}
 	
 	@Autowired
-    protected void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth
+    protected void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {		
+		auth
             .inMemoryAuthentication()
             	.withUser(authentication.getUsername())
             		.password(authentication.getPassword())
