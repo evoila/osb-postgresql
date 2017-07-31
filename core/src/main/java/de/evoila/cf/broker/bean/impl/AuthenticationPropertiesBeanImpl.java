@@ -12,7 +12,6 @@ import de.evoila.cf.broker.bean.AuthenticationPropertiesBean;
  * @author René Schollmeyer
  *
  */
-
 @Service
 @ConfigurationProperties(prefix="login")
 public class AuthenticationPropertiesBeanImpl implements AuthenticationPropertiesBean {

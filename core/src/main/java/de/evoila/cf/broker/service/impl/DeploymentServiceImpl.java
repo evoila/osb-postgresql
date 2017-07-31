@@ -47,7 +47,7 @@ public class DeploymentServiceImpl implements DeploymentService {
 	private PlatformRepository platformRepository;
 
 	@Autowired
-	private ServiceDefinitionRepository serviceDefinitionRepository;
+	ServiceDefinitionRepository serviceDefinitionRepository;
 
 	@Autowired
 	private ServiceInstanceRepository serviceInstanceRepository;
@@ -75,12 +75,14 @@ public class DeploymentServiceImpl implements DeploymentService {
 		return new JobProgressResponse(progress);
 	}
 
+
 	@Override
 	public ServiceInstanceResponse createServiceInstance(String serviceInstanceId, String serviceDefinitionId,
 			String planId, String organizationGuid, String spaceGuid, Map<String, String> parameters,
 			Map<String, String> context)
 					throws ServiceInstanceExistsException, ServiceBrokerException,
 					ServiceDefinitionDoesNotExistException {
+
 
 		serviceDefinitionRepository.validateServiceId(serviceDefinitionId);
 

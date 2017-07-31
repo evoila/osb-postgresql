@@ -12,7 +12,6 @@ import de.evoila.cf.broker.bean.HAProxyBean;
  * @author Rene Schollmeyer
  *
  */
-
 @Service
 @ConfigurationProperties(prefix="haproxy")
 public class HAProxyBeanImpl implements HAProxyBean {

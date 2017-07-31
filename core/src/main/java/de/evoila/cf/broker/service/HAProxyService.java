@@ -32,7 +32,6 @@ import de.evoila.cf.config.security.AcceptSelfSignedClientHttpRequestFactory;
  * @author Christian Brinker, Sebastian Boeing, evoila.
  *
  */
-
 public abstract class HAProxyService {
 
 	private static final String APPLICATION_JSON = "application/json";
