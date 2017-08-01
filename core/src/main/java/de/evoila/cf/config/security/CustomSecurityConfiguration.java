@@ -52,19 +52,23 @@ public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
     protected void configure(HttpSecurity http) throws Exception {
         http
         	.authorizeRequests()
-        	.antMatchers("/v2/endpoint").authenticated()
-				.antMatchers("/v2/catalog").authenticated()
+        		.antMatchers(HttpMethod.GET,"/v2/endpoint").authenticated()
+				.antMatchers(HttpMethod.GET,"/v2/catalog").authenticated()
 				.antMatchers("/v2/service_instance/**").authenticated()
-        	.antMatchers(HttpMethod.GET, "/info").authenticated()
-        	.antMatchers(HttpMethod.GET, "/health").authenticated()
+        		.antMatchers(HttpMethod.GET, "/info").authenticated()
+        		.antMatchers(HttpMethod.GET, "/health").authenticated()
 				.antMatchers(HttpMethod.GET, "/error").authenticated()
-        	.anyRequest().authenticated()
+				.antMatchers(HttpMethod.GET,"/v2/dashboard/{serviceInstanceId}").permitAll()
+				.antMatchers(HttpMethod.GET,"/v2/dashboard/{serviceInstanceId}/confirm").permitAll()
+				.antMatchers("/v2/backup/**").permitAll()
+				.antMatchers("/v2/dashboard/manage/**").authenticated()
         .and()
         	.httpBasic()
         .and()
         	.csrf().disable();
     }
 
+	/**
 	@Configuration
 	@Order(1)
 	public static class ApiWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
@@ -81,13 +85,7 @@ public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
 
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			http.authorizeRequests()
-					.antMatchers("/v2/dashboard/{serviceInstanceId}").permitAll()
-					.antMatchers("/v2/dashboard/{serviceInstanceId}/confirm").permitAll()
-					.antMatchers("/v2/dashboard/manage/**").authenticated()
-					.and()
-						.sessionManagement()
-						.maximumSessions(1);
 		}
 	}
+	**/
 }
