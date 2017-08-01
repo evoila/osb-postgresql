@@ -4,7 +4,9 @@ import de.evoila.cf.broker.bean.impl.BackupConfiguration;
 import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
 import de.evoila.cf.broker.service.BackupService;
 import de.evoila.cf.broker.service.InstanceCredentialService;
+import org.codehaus.groovy.util.ListHashMap;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -12,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 
 @Service
 @ConditionalOnBean(BackupConfiguration.class)
@@ -69,8 +72,8 @@ public class BackupServiceImpl implements BackupService{
         queryParams.put("page", page);
         queryParams.put("page_size", pageSize);
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity response = rest.exchange(config.getUri()+"/jobs/byInstance/"+serviceInstanceId,
-                                                HttpMethod.GET, entity, HashMap.class, queryParams);
+        ResponseEntity<HashMap> response = rest.exchange(config.getUri() + "/jobs/byInstance/" + serviceInstanceId,
+                HttpMethod.GET, entity, new ParameterizedTypeReference<List<HashMap>>() {}, queryParams);
 
         return response;
     }
@@ -79,7 +82,7 @@ public class BackupServiceImpl implements BackupService{
     public ResponseEntity<HashMap> getPlans (String serviceInstanceId) {
         HttpEntity entity = new HttpEntity(headers);
         ResponseEntity response = rest.exchange(config.getUri()+"/plans/byInstance/"+serviceInstanceId,
-                                                HttpMethod.GET, entity, HashMap.class);
+                                                HttpMethod.GET, entity, new ParameterizedTypeReference<List<HashMap>>() {});
         return response;
     }
 
