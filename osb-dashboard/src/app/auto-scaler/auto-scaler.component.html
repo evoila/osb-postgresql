@@ -1,0 +1,113 @@
+<div class="container" style="padding: 40px 0 40px 0">
+  <form #form="ngForm" action="#">
+    <div class="form-group row">
+      <label class="col-sm-2">Scaling Enabled</label>
+      <div class="col-sm-10">
+        <div class="form-check">
+          <label class="form-check-label">
+            <input class="form-check-input" type="checkbox" name="scalingEnabled" [(ngModel)]="configuration.scalingEnabled" #scalingEnabled="ngModel">
+          </label>
+        </div>
+      </div>
+    </div>            
+    <div class="form-group">
+      <label for="scalingIntervalMultiplier">Scaling Interval</label>
+      <input type="number" class="form-control" name="scalingIntervalMultiplier" #scalingIntervalMultiplier="ngModel" [(ngModel)]="configuration.scalingIntervalMultiplier">
+      <small id="scalingIntervalMultiplierHelp" class="form-text text-muted">Scaling Interval muliplied with 30s.</small>
+      <div [hidden]="scalingIntervalMultiplier.valid || scalingIntervalMultiplier.pristine" class="alert alert-danger">
+          Scaling Interval is required
+        </div>
+    </div>
+    <div class="form-group" style="padding-bottom: 25px">
+      <label for="minInstances">Minimum/Maximum Instances:</label>
+      <nouislider [config]="minMaxConfig" name="minMaxRange" [(ngModel)]="configuration.minMaxRange" #minMaxRange="ngModel"></nouislider>
+    </div>    
+    <div class="form-group">
+      <label for="learningTimeMultiplier">Cool Down Period</label>
+      <input type="number" class="form-control" name="cooldownTime" #cooldownTime="ngModel" [(ngModel)]="configuration.cooldownTime">
+      <small id="cooldownTime" class="form-text text-muted">Threshold time, the scaler is not allowed to scale.</small>
+      <div [hidden]="cooldownTime.valid || cooldownTime.pristine" class="alert alert-danger">
+          Cool Down Period
+        </div>
+    </div>
+    <div class="form-group row">
+      <label class="col-sm-2">Learning Enabled</label>
+      <div class="col-sm-10">
+        <div class="form-check">
+          <label class="form-check-label">
+            <input class="form-check-input" type="checkbox" name="learningEnabled" [(ngModel)]="configuration.learningEnabled" #learningEnabled="ngModel">
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="learningTimeMultiplier">Learning Time</label>
+      <input type="number" class="form-control" name="learningTimeMultiplier" #learningTimeMultiplier="ngModel" [(ngModel)]="configuration.learningTimeMultiplier">
+      <small id="learningTimeMultiplierHelp" class="form-text text-muted">Timeout until learned behaviour shall be applied.</small>
+      <div [hidden]="learningTimeMultiplier.valid || learningTimeMultiplier.pristine" class="alert alert-danger">
+          Learning Time is required
+        </div>
+    </div>
+    <div class="form-group">
+      <label for="cpuThresholdPolicy">CPU Threshold Policy</label>
+      <select class="form-control" id="cpuThresholdPolicy" name="cpuThresholdPolicy" [(ngModel)]="configuration.cpuThresholdPolicy" #cpuThresholdPolicy="ngModel">
+        <option value="max">Maximum</option>
+        <option value="min">Minimum</option>        
+        <option value="mean">Mean</option>
+      </select>
+    </div>
+    <div class="form-group" style="padding-bottom: 25px">
+      <label for="cpuLowerUpperLimit">CPU Lower/Upper Limit</label>
+      <nouislider [config]="lowerUpperConfig" name="cpuLowerUpperLimit" [(ngModel)]="configuration.cpuLowerUpperLimit" #cpuLowerUpperLimit="ngModel"></nouislider>
+    </div>
+    <div class="form-group row">
+      <label class="col-sm-3">Quotient Based Scaling Enabled</label>
+      <div class="col-sm-9">
+        <div class="form-check">
+          <label class="form-check-label">
+            <input class="form-check-input" type="checkbox" name="quotientBasedScalingEnabled" [(ngModel)]="configuration.quotientBasedScalingEnabled" #quotientBasedScalingEnabled="ngModel">
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="learningTimeMultiplier">Min Quotient</label>
+      <input type="number" class="form-control" name="minQuotient" #minQuotient="ngModel" [(ngModel)]="configuration.minQuotient">
+      <small id="minQuotient" class="form-text text-muted">DON'T KNOW.</small>
+      <div [hidden]="minQuotient.valid || minQuotient.pristine" class="alert alert-danger">
+          Minimum Quotient is required
+        </div>
+    </div>
+    <div class="form-group">
+      <label for="ramThresholdPolicy">RAM Threshold Policy</label>
+      <select class="form-control" id="ramThresholdPolicy" name="ramThresholdPolicy" [(ngModel)]="configuration.ramThresholdPolicy" #ramThresholdPolicy="ngModel">
+        <option value="max">Maximum</option>
+        <option value="min">Minimum</option>        
+        <option value="mean">Mean</option>
+      </select>
+    </div>
+    <div class="form-group" style="padding-bottom: 25px">
+      <label for="ramLowerUpperLimit">RAM Lower/Upper Limit</label>
+      <nouislider [config]="lowerUpperConfig" name="ramLowerUpperLimit" [(ngModel)]="configuration.ramLowerUpperLimit" #ramLowerUpperLimit="ngModel"></nouislider>
+    </div>
+    <div class="form-group row">
+      <label class="col-sm-3">Consider Billing Interval</label>
+      <div class="col-sm-9">
+        <div class="form-check">
+          <label class="form-check-label">
+            <input class="form-check-input" type="checkbox" name="billingIntervalConsidered" [(ngModel)]="configuration.billingIntervalConsidered" #billingIntervalConsidered="ngModel">
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="requestThresholdPolicy">Request Threshold Policy</label>
+      <select class="form-control" id="requestThresholdPolicy" name="requestThresholdPolicy" [(ngModel)]="configuration.requestThresholdPolicy" #requestThresholdPolicy="ngModel">
+        <option value="max">Maximum</option>
+        <option value="min">Minimum</option>        
+        <option value="mean">Mean</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+</div>
