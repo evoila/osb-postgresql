@@ -45,7 +45,7 @@ class BackupController extends BaseController {
         return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
     }
 
-    @RequestMapping(value = "/{serviceInstanceId}/plans/", method = RequestMethod.GET)
+    @RequestMapping(value = "/{serviceInstanceId}/plans", method = RequestMethod.GET)
     public ResponseEntity<HashMap> getJobs (@PathVariable String serviceInstanceId) {
         ResponseEntity<HashMap> response = backupService.getPlans(serviceInstanceId);
         return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
