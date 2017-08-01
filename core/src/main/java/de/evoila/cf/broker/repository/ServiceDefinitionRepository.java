@@ -1,5 +1,7 @@
 package de.evoila.cf.broker.repository;
 
+import java.util.List;
+
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.exception.ServiceDefinitionDoesNotExistException;
 import de.evoila.cf.broker.model.Plan;
@@ -18,7 +20,7 @@ public interface ServiceDefinitionRepository {
 	 * @see de.evoila.cf.broker.service.impl.ServiceDefinitionRepository#
 	 * getServiceDefinition()
 	 */
-	ServiceDefinition getServiceDefinition();
+	List<ServiceDefinition> getServiceDefinition();
 
 	// Depl
 	/*

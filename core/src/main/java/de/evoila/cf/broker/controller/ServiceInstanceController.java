@@ -74,7 +74,8 @@ public class ServiceInstanceController extends BaseController {
 
 		ServiceInstanceResponse response = deploymentService.createServiceInstance(serviceInstanceId,
 				request.getServiceDefinitionId(), request.getPlanId(), request.getOrganizationGuid(),
-				request.getSpaceGuid(), request.getParameters());
+				request.getSpaceGuid(), request.getParameters(), request.getContext());
+
 
 		log.debug("ServiceInstance Created: " + serviceInstanceId);
 

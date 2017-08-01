@@ -3,7 +3,7 @@
  */
 package de.evoila.cf.broker.bean.impl;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 import de.evoila.cf.broker.bean.HAProxyBean;
@@ -12,15 +12,25 @@ import de.evoila.cf.broker.bean.HAProxyBean;
  * @author Rene Schollmeyer
  *
  */
-
 @Service
-public class HAProxyBeanImpl extends HAProxyBean {
-	
-	@Value("${haproxy.uri}")
+@ConfigurationProperties(prefix="haproxy")
+public class HAProxyBeanImpl implements HAProxyBean {
+
 	private String uri;
 	
-	@Value("${haproxy.auth.token}")
-	private String authToken;
+	private Auth auth;
+	
+	public static class Auth {
+		private String token;
+
+		public String getToken() {
+			return token;
+		}
+
+		public void setToken(String token) {
+			this.token = token;
+		}
+	}
 
 	public String getUri() {
 		return uri;
@@ -29,12 +39,16 @@ public class HAProxyBeanImpl extends HAProxyBean {
 	public void setUri(String uri) {
 		this.uri = uri;
 	}
-
-	public String getAuthToken() {
-		return authToken;
+	
+	public Auth getAuth() {
+		return auth;
 	}
 
-	public void setAuthToken(String authToken) {
-		this.authToken = authToken;
+	public void setAuth(Auth auth) {
+		this.auth = auth;
+	}
+
+	public String getAuthToken() {
+		return auth.getToken();
 	}
 }

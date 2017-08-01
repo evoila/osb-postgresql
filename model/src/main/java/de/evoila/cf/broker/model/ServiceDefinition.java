@@ -51,6 +51,14 @@ public class ServiceDefinition {
 	@JsonSerialize
 	@JsonProperty("requires")
 	private List<String> requires = new ArrayList<String>();
+	
+	@JsonSerialize
+	@JsonProperty("dashboard")
+	private Dashboard dashboard;
+	
+	@JsonSerialize
+	@JsonProperty("dashboard_client")
+	private DashboardClient dashboardClient;
 
 	public ServiceDefinition() {
 		super();
@@ -161,6 +169,22 @@ public class ServiceDefinition {
 		} else {
 			this.metadata = metadata;
 		}
+	}
+	
+	public Dashboard getDashboard() {
+		return dashboard;
+	}
+
+	public void setDashboard(Dashboard dashboard) {
+		this.dashboard = dashboard;
+	}
+
+	public DashboardClient getDashboardClient() {
+		return dashboardClient;
+	}
+
+	public void setDashboardClient(DashboardClient dashboardClient) {
+		this.dashboardClient = dashboardClient;
 	}
 
 }

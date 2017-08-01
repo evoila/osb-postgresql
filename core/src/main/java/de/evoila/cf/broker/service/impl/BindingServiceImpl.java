@@ -9,7 +9,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import de.evoila.cf.broker.exception.ServerviceInstanceBindingDoesNotExistsException;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
@@ -33,7 +32,6 @@ import de.evoila.cf.broker.service.HAProxyService;
  * @author Johannes Hiemer.
  *
  */
-@Service
 public abstract class BindingServiceImpl implements BindingService {
 
 	private final Logger log = LoggerFactory.getLogger(BindingServiceImpl.class);
@@ -51,7 +49,7 @@ public abstract class BindingServiceImpl implements BindingService {
 	protected RouteBindingRepository routeBindingRepository;
 
 	@Autowired
-	private HAProxyService haProxyService;
+	protected HAProxyService haProxyService;
 
 	protected abstract void deleteBinding(String bindingId, ServiceInstance serviceInstance)
 			throws ServiceBrokerException;

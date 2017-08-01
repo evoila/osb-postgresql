@@ -7,10 +7,9 @@ package de.evoila.cf.broker.bean;
  * @author Rene Schollmeyer
  *
  */
+public interface HAProxyBean {
 
-public abstract class HAProxyBean {
-
-	public abstract String getUri();
-	public abstract String getAuthToken();
+	public String getUri();
+	public  String getAuthToken();
 	
 }

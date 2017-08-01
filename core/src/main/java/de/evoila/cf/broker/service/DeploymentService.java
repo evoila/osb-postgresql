@@ -45,7 +45,8 @@ public abstract interface DeploymentService {
 	 * @return new ServiceInstance with updated fields
 	 */
 	public ServiceInstanceResponse createServiceInstance(String serviceInstanceId, String serviceDefinitionId,
-			String planId, String organizationGuid, String spaceGuid, Map<String, String> parameters)
+			String planId, String organizationGuid, String spaceGuid, Map<String, String> parameters,
+			Map<String, String> context)
 					throws ServiceInstanceExistsException, ServiceBrokerException,
 					ServiceDefinitionDoesNotExistException;
 

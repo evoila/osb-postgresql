@@ -1,18 +1,20 @@
 /**
  * 
  */
-package de.evoila.cf.config.security;
+package de.evoila.cf.broker.bean.impl;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Service;
+
+import de.evoila.cf.broker.bean.AuthenticationPropertiesBean;
 
 /**
  * @author René Schollmeyer
  *
  */
-
-
+@Service
 @ConfigurationProperties(prefix="login")
-public class AuthenticationProperties {
+public class AuthenticationPropertiesBeanImpl implements AuthenticationPropertiesBean {
 
 	private String username;
 	private String password;

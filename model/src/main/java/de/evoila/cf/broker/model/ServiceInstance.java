@@ -3,8 +3,6 @@ package de.evoila.cf.broker.model;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -56,6 +54,10 @@ public class ServiceInstance implements BaseEntity<String> {
 	@JsonSerialize
 	@JsonProperty("hosts")
 	private List<ServerAddress> hosts;
+	
+	@JsonSerialize
+	@JsonProperty("context")
+	private Map<String, String> context;
 
 	@SuppressWarnings("unused")
 	private ServiceInstance() {
@@ -102,8 +104,10 @@ public class ServiceInstance implements BaseEntity<String> {
 	}
 
 	public ServiceInstance(String serviceInstanceId, String serviceDefinitionId, String planId, String organizationGuid,
-			String spaceGuid, Map<String, String> parameters) {
+			String spaceGuid, Map<String, String> parameters, Map<String, String> context) {
 		initialize(serviceInstanceId, serviceDefinitionId, planId, organizationGuid, spaceGuid, parameters);
+		if(context != null)
+			setContext(context);
 	}
 
 	@Override
@@ -179,4 +183,11 @@ public class ServiceInstance implements BaseEntity<String> {
 		this.hosts = hosts;
 	}
 
+	public Map<String, String> getContext() {
+		return context;
+	}
+
+	public void setContext(Map<String, String> context) {
+		this.context = new HashMap<String, String>(context);
+	}
 }
