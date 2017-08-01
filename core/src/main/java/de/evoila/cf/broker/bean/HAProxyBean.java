@@ -1,6 +1,4 @@
-/**
- * 
- */
+
 package de.evoila.cf.broker.bean;
 
 /**
@@ -11,5 +9,5 @@ public interface HAProxyBean {
 
 	public String getUri();
 	public  String getAuthToken();
-	
+
 }

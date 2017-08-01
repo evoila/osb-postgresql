@@ -28,7 +28,7 @@ import de.evoila.cf.broker.model.ServiceDefinition;
 import de.evoila.cf.broker.model.ServiceInstanceRequest;
 import de.evoila.cf.broker.model.ServiceInstanceResponse;
 import de.evoila.cf.broker.service.CatalogService;
-import de.evoila.cf.broker.service.impl.DeploymentServiceImpl;
+import de.evoila.cf.broker.service.DeploymentServiceImpl;
 
 /**
  * 
