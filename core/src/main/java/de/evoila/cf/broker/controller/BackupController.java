@@ -18,19 +18,19 @@ class BackupController extends BaseController {
     @Autowired
     BackupService backupService;
 
-    @RequestMapping(value = "/{serviceInstanceId}/backup/now/")
+    @RequestMapping(value = "/{serviceInstanceId}/backup")
     public ResponseEntity<HashMap> backupNow (@PathVariable String serviceInstanceId, @RequestBody HashMap fileDestination) throws ServiceInstanceDoesNotExistException {
         ResponseEntity<HashMap> response = backupService.backupNow(serviceInstanceId, fileDestination);
         return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
     }
 
-    @RequestMapping(value = "/{serviceInstanceId}/restore/now/")
+    @RequestMapping(value = "/{serviceInstanceId}/restore")
     public ResponseEntity<HashMap> restoreNow (@PathVariable String serviceInstanceId, @RequestBody HashMap fileDestination) throws ServiceInstanceDoesNotExistException {
         ResponseEntity<HashMap> response = backupService.restoreNow(serviceInstanceId, fileDestination);
         return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
     }
 
-    @RequestMapping(value = "/{serviceInstanceId}/jobs/")
+    @RequestMapping(value = {"/{serviceInstanceId}/jobs/", "/{serviceInstanceId}/jobs"})
     public ResponseEntity<HashMap> getJobs (@PathVariable String serviceInstanceId,
                                             @RequestParam(value = "page_size", defaultValue = "25") int pageSize,
                                             @RequestParam(value = "page", defaultValue = "0") int page) {
