@@ -4,20 +4,20 @@ import de.evoila.cf.broker.bean.impl.BackupConfiguration;
 import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
 import de.evoila.cf.broker.service.BackupService;
 import de.evoila.cf.broker.service.InstanceCredentialService;
-import org.codehaus.groovy.util.ListHashMap;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 
 @Service
 @ConditionalOnBean(BackupConfiguration.class)
+
 public class BackupServiceImpl implements BackupService {
     private final RestTemplate rest;
     private final HttpHeaders headers;
@@ -36,7 +36,7 @@ public class BackupServiceImpl implements BackupService {
     }
 
     private String encodeCredentials () {
-        String str = config.getUser()+":"+config.getPassword();
+        String str = config.getUser() + ":" + config.getPassword();
         return "Basic " + Base64.getEncoder().encodeToString(str.getBytes());
     }
 
@@ -47,9 +47,11 @@ public class BackupServiceImpl implements BackupService {
         body.put("source", credentials);
         body.put("destination", fileDestination);
 
-        RequestEntity e  = new RequestEntity(body, headers, HttpMethod.PUT,
-                                             URI.create(config.getUri()+"/backup"));
-        ResponseEntity response = rest.exchange(e,HashMap.class);
+        RequestEntity e = new RequestEntity(body, headers,
+                                            HttpMethod.POST,
+                                            URI.create(config.getUri() + "/backup")
+        );
+        ResponseEntity response = rest.exchange(e, HashMap.class);
         return response;
     }
 
@@ -60,37 +62,32 @@ public class BackupServiceImpl implements BackupService {
         body.put("destination", credentials);
         body.put("source", fileDestination);
 
-        RequestEntity e  = new RequestEntity(body, headers, HttpMethod.PUT,
-                                             URI.create(config.getUri()+"/restore"));
-        ResponseEntity response = rest.exchange(e,HashMap.class);
+        RequestEntity e = new RequestEntity(body, headers, HttpMethod.POST,
+                                            URI.create(config.getUri() + "/restore")
+        );
+        ResponseEntity response = rest.exchange(e, HashMap.class);
         return response;
     }
 
     @Override
-    public ResponseEntity<List<HashMap>> getJobs (String serviceInstanceId, int page, int pageSize) {
-        HashMap queryParams = new HashMap();
-        queryParams.put("page", page);
-        queryParams.put("page_size", pageSize);
+    public ResponseEntity<HashMap> getPlans (String serviceInstanceId, Map<String, String> urlParams) {
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<List<HashMap>> response = rest.exchange(config.getUri() + "/jobs/byInstance/" + serviceInstanceId,
-                HttpMethod.GET, entity, new ParameterizedTypeReference<List<HashMap>>() {}, queryParams);
-
-        return response;
-    }
-
-    @Override
-    public ResponseEntity<List<HashMap>> getPlans (String serviceInstanceId) {
-        HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<List<HashMap>> response = rest.exchange(config.getUri()+"/plans/byInstance/"+serviceInstanceId,
-                                                HttpMethod.GET, entity, new ParameterizedTypeReference<List<HashMap>>() {});
+        final UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(config.getUri() + "/plans/byInstance/" + serviceInstanceId);
+        urlParams.forEach((k, v) -> builder.queryParam(k, v));
+        ResponseEntity<HashMap> response = rest.exchange(builder.build().toUri(),
+                                                         HttpMethod.GET,
+                                                         entity,
+                                                         HashMap.class
+        );
         return response;
     }
 
     @Override
     public ResponseEntity<HashMap> deleteJob (String serviceInstanceId, String jobid) {
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity response = rest.exchange(config.getUri()+"/plans",
-                                                HttpMethod.POST, entity, HashMap.class);
+        ResponseEntity response = rest.exchange(config.getUri() + "/plans",
+                                                HttpMethod.POST, entity, HashMap.class
+        );
         return response;
     }
 
@@ -98,17 +95,19 @@ public class BackupServiceImpl implements BackupService {
     public ResponseEntity<HashMap> postPlan (String serviceInstanceId, HashMap plan) throws ServiceInstanceDoesNotExistException {
         HashMap credentials = credentialService.getCredentialsForInstanceId(serviceInstanceId);
         plan.put("source", credentials);
-        HttpEntity entity = new HttpEntity(credentials, headers);
-        ResponseEntity response = rest.exchange(config.getUri()+"/plans",
-                                                HttpMethod.POST, entity, HashMap.class);
+        HttpEntity entity = new HttpEntity(plan, headers);
+        ResponseEntity response = rest.exchange(config.getUri() + "/plans",
+                                                HttpMethod.POST, entity, HashMap.class
+        );
         return response;
     }
 
     @Override
     public ResponseEntity<HashMap> deletePlan (String serviceInstanceId, String planid) {
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity response = rest.exchange(config.getUri()+"/plan"+planid,
-                                                HttpMethod.DELETE, entity, HashMap.class);
+        ResponseEntity response = rest.exchange(config.getUri() + "/plans/" + planid,
+                                                HttpMethod.DELETE, entity, HashMap.class
+        );
         return response;
     }
 
@@ -116,9 +115,23 @@ public class BackupServiceImpl implements BackupService {
     public ResponseEntity<HashMap> updatePlan (String serviceInstanceId, String planId, HashMap plan) throws ServiceInstanceDoesNotExistException {
         HashMap credentials = credentialService.getCredentialsForInstanceId(serviceInstanceId);
         plan.put("source", credentials);
-        HttpEntity entity = new HttpEntity(credentials, headers);
-        ResponseEntity response = rest.exchange(config.getUri()+"/plan"+planId,
-                                                HttpMethod.PATCH, entity, HashMap.class);
-        return null;
+        HttpEntity entity = new HttpEntity(plan, headers);
+        ResponseEntity response = rest.exchange(config.getUri() + "/plans/" + planId,
+                                                HttpMethod.PUT, entity, HashMap.class
+        );
+        return response;
+    }
+
+    @Override
+    public ResponseEntity<HashMap> getJobs (String serviceInstanceId, Map<String, String> urlParams) {
+        HttpEntity entity = new HttpEntity(headers);
+        final UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(config.getUri() + "/jobs/byInstance/" + serviceInstanceId);
+        urlParams.forEach((k, v) -> builder.queryParam(k, v));
+        ResponseEntity<HashMap> response = rest.exchange(builder.build().toUri(),
+                                                         HttpMethod.GET,
+                                                         entity,
+                                                         HashMap.class
+        );
+        return response;
     }
 }

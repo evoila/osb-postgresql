@@ -3,16 +3,17 @@ package de.evoila.cf.broker.service.impl;
 import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.repository.ServiceInstanceRepository;
+import de.evoila.cf.broker.service.BackupTypeService;
 import de.evoila.cf.broker.service.InstanceCredentialService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.management.ServiceNotFoundException;
 import java.util.HashMap;
 
 @Service
 public class InstanceCredentialServiceImpl implements InstanceCredentialService {
-
+    @Autowired
+    BackupTypeService backupTypeService;
     @Autowired
     ServiceInstanceRepository repository;
 
@@ -28,6 +29,7 @@ public class InstanceCredentialServiceImpl implements InstanceCredentialService 
         credentials.put("hostname", instance.getHosts().get(0).getIp());
         credentials.put("port", instance.getHosts().get(0).getPort());
         credentials.put("context", serviceInstanceId);
+        credentials.put("type", backupTypeService.getType());
         return credentials;
     }
 }

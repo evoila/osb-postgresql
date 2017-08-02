@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 
 /**
  * @author Yannic Remmet.
@@ -32,11 +32,10 @@ class BackupController extends BaseController {
     }
 
     @RequestMapping(value = "/{serviceInstanceId}/jobs", method = RequestMethod.GET)
-    public ResponseEntity<List<HashMap>> getJobs (@PathVariable String serviceInstanceId,
-                                            @RequestParam(value = "page_size", defaultValue = "25") int pageSize,
-                                            @RequestParam(value = "page", defaultValue = "0") int page) {
-        ResponseEntity<List<HashMap>> response = backupService.getJobs(serviceInstanceId, page, pageSize);
-        return new ResponseEntity<List<HashMap>>(response.getBody(), response.getStatusCode());
+    public ResponseEntity<HashMap> getJobs (@PathVariable String serviceInstanceId,
+                                            @RequestParam Map<String, String> urlParams) {
+        ResponseEntity<HashMap> response = backupService.getJobs(serviceInstanceId, urlParams);
+        return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
     }
 
     @RequestMapping(value = "/{serviceInstanceId}/jobs/{jobid}", method = RequestMethod.DELETE)
@@ -47,9 +46,10 @@ class BackupController extends BaseController {
     }
 
     @RequestMapping(value = "/{serviceInstanceId}/plans", method = RequestMethod.GET)
-    public ResponseEntity<List<HashMap>> getJobs (@PathVariable String serviceInstanceId) {
-        ResponseEntity<List<HashMap>> response = backupService.getPlans(serviceInstanceId);
-        return new ResponseEntity<List<HashMap>>(response.getBody(), response.getStatusCode());
+    public ResponseEntity<HashMap> getPlans (@PathVariable String serviceInstanceId,
+                                            @RequestParam Map<String, String> urlParams) {
+        ResponseEntity<HashMap> response = backupService.getPlans(serviceInstanceId, urlParams);
+        return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
     }
 
     @RequestMapping(value = "/{serviceInstanceId}/plans", method = RequestMethod.POST)
