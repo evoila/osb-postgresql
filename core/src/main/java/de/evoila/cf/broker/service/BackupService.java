@@ -4,6 +4,7 @@ import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
 import org.springframework.http.ResponseEntity;
 
 import java.util.HashMap;
+import java.util.List;
 
 public interface BackupService {
 
@@ -11,9 +12,9 @@ public interface BackupService {
 
     ResponseEntity<HashMap> restoreNow (String serviceInstanceId, HashMap fileDestination) throws ServiceInstanceDoesNotExistException;
 
-    ResponseEntity<HashMap> getJobs (String serviceInstanceId, int page, int pageSize);
+    ResponseEntity<List<HashMap>> getJobs (String serviceInstanceId, int page, int pageSize);
 
-    ResponseEntity<HashMap> getPlans (String serviceInstanceId);
+    ResponseEntity<List<HashMap>> getPlans (String serviceInstanceId);
 
     ResponseEntity<HashMap> deleteJob (String serviceInstanceId, String jobid);
 

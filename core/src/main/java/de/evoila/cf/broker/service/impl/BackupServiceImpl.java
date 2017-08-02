@@ -18,7 +18,7 @@ import java.util.List;
 
 @Service
 @ConditionalOnBean(BackupConfiguration.class)
-public class BackupServiceImpl implements BackupService{
+public class BackupServiceImpl implements BackupService {
     private final RestTemplate rest;
     private final HttpHeaders headers;
     InstanceCredentialService credentialService;
@@ -67,21 +67,21 @@ public class BackupServiceImpl implements BackupService{
     }
 
     @Override
-    public ResponseEntity<HashMap> getJobs (String serviceInstanceId, int page, int pageSize) {
+    public ResponseEntity<List<HashMap>> getJobs (String serviceInstanceId, int page, int pageSize) {
         HashMap queryParams = new HashMap();
         queryParams.put("page", page);
         queryParams.put("page_size", pageSize);
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<HashMap> response = rest.exchange(config.getUri() + "/jobs/byInstance/" + serviceInstanceId,
+        ResponseEntity<List<HashMap>> response = rest.exchange(config.getUri() + "/jobs/byInstance/" + serviceInstanceId,
                 HttpMethod.GET, entity, new ParameterizedTypeReference<List<HashMap>>() {}, queryParams);
 
         return response;
     }
 
     @Override
-    public ResponseEntity<HashMap> getPlans (String serviceInstanceId) {
+    public ResponseEntity<List<HashMap>> getPlans (String serviceInstanceId) {
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity response = rest.exchange(config.getUri()+"/plans/byInstance/"+serviceInstanceId,
+        ResponseEntity<List<HashMap>> response = rest.exchange(config.getUri()+"/plans/byInstance/"+serviceInstanceId,
                                                 HttpMethod.GET, entity, new ParameterizedTypeReference<List<HashMap>>() {});
         return response;
     }

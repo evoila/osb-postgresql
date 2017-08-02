@@ -10,12 +10,12 @@ import org.springframework.stereotype.Service;
 import javax.management.ServiceNotFoundException;
 import java.util.HashMap;
 
-
 @Service
 public class InstanceCredentialServiceImpl implements InstanceCredentialService {
 
     @Autowired
     ServiceInstanceRepository repository;
+
     @Override
     public HashMap getCredentialsForInstanceId (String serviceInstanceId) throws ServiceInstanceDoesNotExistException{
         ServiceInstance instance = repository.getServiceInstance(serviceInstanceId);
