@@ -58,7 +58,7 @@ class BackupController extends BaseController {
         return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
     }
 
-    @RequestMapping(value = "/{serviceInstanceId}/plans/{planid}", method = RequestMethod.PATCH)
+    @RequestMapping(value = "/{serviceInstanceId}/plans/{planId}", method = RequestMethod.PATCH)
     public ResponseEntity<HashMap> patchPlan (@PathVariable String serviceInstanceId,
                                              @PathVariable String planId,
                                              @RequestBody HashMap plan) throws ServiceInstanceDoesNotExistException {
@@ -66,10 +66,10 @@ class BackupController extends BaseController {
         return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
     }
 
-    @RequestMapping(value = "/{serviceInstanceId}/plans/{planid}", method = RequestMethod.DELETE)
+    @RequestMapping(value = "/{serviceInstanceId}/plans/{planId}", method = RequestMethod.DELETE)
     public ResponseEntity<HashMap> deleteJob (@PathVariable String serviceInstanceId,
-                                              @PathVariable String planid) {
-        ResponseEntity<HashMap> response = backupService.deletePlan(serviceInstanceId, planid);
+                                              @PathVariable String planId) {
+        ResponseEntity<HashMap> response = backupService.deletePlan(serviceInstanceId, planId);
         return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
     }
 }
