@@ -12,9 +12,9 @@ public interface BackupService {
 
     ResponseEntity<HashMap> restoreNow (String serviceInstanceId, HashMap fileDestination) throws ServiceInstanceDoesNotExistException;
 
-    ResponseEntity<List<HashMap>> getJobs (String serviceInstanceId, int page, int pageSize);
+    ResponseEntity<HashMap> getJobs (String serviceInstanceId, int page, int pageSize);
 
-    ResponseEntity<List<HashMap>> getPlans (String serviceInstanceId);
+    ResponseEntity<HashMap> getPlans (String serviceInstanceId);
 
     ResponseEntity<HashMap> deleteJob (String serviceInstanceId, String jobid);
 

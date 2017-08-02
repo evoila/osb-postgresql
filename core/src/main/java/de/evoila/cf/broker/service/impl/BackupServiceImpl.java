@@ -67,22 +67,22 @@ public class BackupServiceImpl implements BackupService {
     }
 
     @Override
-    public ResponseEntity<List<HashMap>> getJobs (String serviceInstanceId, int page, int pageSize) {
+    public ResponseEntity<HashMap> getJobs (String serviceInstanceId, int page, int pageSize) {
         HashMap queryParams = new HashMap();
         queryParams.put("page", page);
         queryParams.put("page_size", pageSize);
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<List<HashMap>> response = rest.exchange(config.getUri() + "/jobs/byInstance/" + serviceInstanceId,
-                HttpMethod.GET, entity, new ParameterizedTypeReference<List<HashMap>>() {}, queryParams);
+        ResponseEntity<HashMap> response = rest.exchange(config.getUri() + "/jobs/byInstance/" + serviceInstanceId,
+                HttpMethod.GET, entity, new ParameterizedTypeReference<HashMap>() {}, queryParams);
 
         return response;
     }
 
     @Override
-    public ResponseEntity<List<HashMap>> getPlans (String serviceInstanceId) {
+    public ResponseEntity<HashMap> getPlans (String serviceInstanceId) {
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<List<HashMap>> response = rest.exchange(config.getUri()+"/plans/byInstance/"+serviceInstanceId,
-                                                HttpMethod.GET, entity, new ParameterizedTypeReference<List<HashMap>>() {});
+        ResponseEntity<HashMap> response = rest.exchange(config.getUri()+"/plans/byInstance/"+serviceInstanceId,
+                                                HttpMethod.GET, entity, new ParameterizedTypeReference<HashMap>() {});
         return response;
     }
 

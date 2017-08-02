@@ -32,11 +32,11 @@ class BackupController extends BaseController {
     }
 
     @RequestMapping(value = "/{serviceInstanceId}/jobs", method = RequestMethod.GET)
-    public ResponseEntity<List<HashMap>> getJobs (@PathVariable String serviceInstanceId,
+    public ResponseEntity<HashMap> getJobs (@PathVariable String serviceInstanceId,
                                             @RequestParam(value = "page_size", defaultValue = "25") int pageSize,
                                             @RequestParam(value = "page", defaultValue = "0") int page) {
-        ResponseEntity<List<HashMap>> response = backupService.getJobs(serviceInstanceId, page, pageSize);
-        return new ResponseEntity<List<HashMap>>(response.getBody(), response.getStatusCode());
+        ResponseEntity<HashMap> response = backupService.getJobs(serviceInstanceId, page, pageSize);
+        return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
     }
 
     @RequestMapping(value = "/{serviceInstanceId}/jobs/{jobid}", method = RequestMethod.DELETE)
@@ -47,9 +47,9 @@ class BackupController extends BaseController {
     }
 
     @RequestMapping(value = "/{serviceInstanceId}/plans", method = RequestMethod.GET)
-    public ResponseEntity<List<HashMap>> getJobs (@PathVariable String serviceInstanceId) {
-        ResponseEntity<List<HashMap>> response = backupService.getPlans(serviceInstanceId);
-        return new ResponseEntity<List<HashMap>>(response.getBody(), response.getStatusCode());
+    public ResponseEntity<HashMap> getJobs (@PathVariable String serviceInstanceId) {
+        ResponseEntity<HashMap> response = backupService.getPlans(serviceInstanceId);
+        return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
     }
 
     @RequestMapping(value = "/{serviceInstanceId}/plans", method = RequestMethod.POST)
