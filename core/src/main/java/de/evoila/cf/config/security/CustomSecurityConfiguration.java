@@ -1,6 +1,11 @@
 package de.evoila.cf.config.security;
 
 import de.evoila.cf.broker.bean.AuthenticationPropertiesBean;
+import de.evoila.cf.config.security.uaa.UaaRelyingPartyFilter;
+import de.evoila.cf.config.security.uaa.handler.CommonCorsAuthenticationEntryPoint;
+import de.evoila.cf.config.security.uaa.handler.UaaRelyingPartyAuthenticationFailureHandler;
+import de.evoila.cf.config.security.uaa.handler.UaaRelyingPartyAuthenticationSuccessHandler;
+import de.evoila.cf.config.security.uaa.provider.UaaRelyingPartyAuthenticationProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -12,9 +17,11 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 /**
@@ -68,10 +75,16 @@ public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
         	.csrf().disable();
     }
 
-	/**
+
 	@Configuration
 	@Order(1)
 	public static class ApiWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
+
+		@Bean
+		public UaaRelyingPartyAuthenticationProvider openIDRelyingPartyAuthenticationProvider() {
+			UaaRelyingPartyAuthenticationProvider openIDAuthenticationProvider = new UaaRelyingPartyAuthenticationProvider();
+			return openIDAuthenticationProvider;
+		}
 
 		@Bean
 		public SessionRegistry sessionRegistry() {
@@ -85,7 +98,29 @@ public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
 
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
+			UaaRelyingPartyFilter uaaRelyingPartyFilter = new UaaRelyingPartyFilter(authenticationManager());
+			uaaRelyingPartyFilter.setSuccessHandler(new UaaRelyingPartyAuthenticationSuccessHandler());
+			uaaRelyingPartyFilter.setFailureHandler(new UaaRelyingPartyAuthenticationFailureHandler());
+
+			http
+				.addFilterBefore(uaaRelyingPartyFilter, LogoutFilter.class)
+
+				.csrf().disable()
+
+				.sessionManagement()
+				.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+
+				.and()
+
+				.exceptionHandling()
+					.authenticationEntryPoint(new CommonCorsAuthenticationEntryPoint())
+
+				.and()
+
+				.authorizeRequests()
+					.antMatchers(HttpMethod.GET,"/v2/authentication/{serviceInstanceId}").permitAll()
+					.antMatchers(HttpMethod.GET,"/v2/authentication/{serviceInstanceId}/confirm").permitAll()
+					.antMatchers(HttpMethod.GET, "/v2/manage/**").authenticated();
 		}
 	}
-	**/
 }
