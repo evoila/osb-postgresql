@@ -16,8 +16,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.core.authority.mapping.NullAuthoritiesMapper;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.util.Assert;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +43,7 @@ public class UaaRelyingPartyAuthenticationProvider implements AuthenticationProv
     private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();
 
     public void afterPropertiesSet() throws Exception {
-        Assert.notNull(this.publicKey, "The publicKey must be set");
+        //Assert.notNull(this.publicKey, "The publicKey must be set");
     }
 
     public Authentication authenticate(final Authentication authentication) throws AuthenticationException {
