@@ -23,4 +23,8 @@ public interface BackupService {
     ResponseEntity<HashMap> deletePlan (String serviceInstanceId, String planid);
 
     ResponseEntity<HashMap> updatePlan (String serviceInstanceId, String planId, HashMap plan) throws ServiceInstanceDoesNotExistException;
+
+    ResponseEntity<HashMap> getJob (String serviceInstanceId, String jobid);
+
+    ResponseEntity<HashMap> getPlan (String serviceInstanceId, String planId);
 }

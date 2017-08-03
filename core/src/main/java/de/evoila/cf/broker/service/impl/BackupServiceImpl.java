@@ -61,11 +61,13 @@ public class BackupServiceImpl implements BackupService {
     }
 
     @Override
-    public ResponseEntity<HashMap> restoreNow (String serviceInstanceId, HashMap fileDestination) throws ServiceInstanceDoesNotExistException {
+    public ResponseEntity<HashMap> restoreNow (String serviceInstanceId, HashMap body) throws ServiceInstanceDoesNotExistException {
         HashMap credentials = credentialService.getCredentialsForInstanceId(serviceInstanceId);
-        HashMap body = new HashMap();
         body.put("destination", credentials);
-        body.put("source", fileDestination);
+        Object obj = body.get("source");
+        if(obj instanceof Map){
+            ((Map) obj).put("type", "Swift");
+        }
 
         RequestEntity e  = new RequestEntity(body, headers, HttpMethod.POST,
                                              URI.create(config.getUri()+"/restore"));
@@ -118,8 +120,8 @@ public class BackupServiceImpl implements BackupService {
     @Override
     public ResponseEntity<HashMap> deleteJob (String serviceInstanceId, String jobid) {
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity response = rest.exchange(config.getUri() + "/plans",
-                                                HttpMethod.POST, entity, HashMap.class
+        ResponseEntity response = rest.exchange(config.getUri() + "/jobs/" + jobid,
+                                                HttpMethod.DELETE, entity, HashMap.class
         );
         return response;
     }
@@ -153,6 +155,18 @@ public class BackupServiceImpl implements BackupService {
                                                 HttpMethod.PUT, entity, HashMap.class
         );
         return response;
+    }
+
+    @Override
+    public ResponseEntity<HashMap> getJob (String serviceInstanceId, String jobid) {
+        HttpEntity entity = new HttpEntity(headers);
+        return rest.exchange(config.getUri()+"/jobs/"+jobid,HttpMethod.GET,entity,HashMap.class);
+    }
+
+    @Override
+    public ResponseEntity<HashMap> getPlan (String serviceInstanceId, String planId) {
+        HttpEntity entity = new HttpEntity(headers);
+        return rest.exchange(config.getUri()+"/plans/"+planId,HttpMethod.GET,entity,HashMap.class);
     }
 
 }

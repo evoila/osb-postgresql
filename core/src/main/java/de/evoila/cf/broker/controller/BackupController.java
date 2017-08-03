@@ -32,6 +32,8 @@ class BackupController extends BaseController {
         return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
     }
 
+    // JOBS
+
     @RequestMapping(value = "/{serviceInstanceId}/jobs", method = RequestMethod.GET)
     public ResponseEntity<HashMap> getJobs(@PathVariable String serviceInstanceId,
                                             @PageableDefault(size = 50, page = 0) Pageable pageable) {
@@ -39,13 +41,18 @@ class BackupController extends BaseController {
         return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
     }
 
-    @RequestMapping(value = "/{serviceInstanceId}/jobs/{jobid}", method = RequestMethod.DELETE)
-    public ResponseEntity<HashMap> getJob(@PathVariable String serviceInstanceId,
-                                            @PathVariable String jobid) {
-        ResponseEntity<HashMap> response = backupService.deleteJob(serviceInstanceId, jobid);
+    @RequestMapping(value = "/{serviceInstanceId}/jobs/{jobid}", method = RequestMethod.GET)
+    public ResponseEntity<HashMap> getJobs(@PathVariable String serviceInstanceId, @PathVariable String jobid) {
+        ResponseEntity<HashMap> response = backupService.getJob(serviceInstanceId, jobid);
         return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
     }
 
+    @RequestMapping(value = "/{serviceInstanceId}/jobs/{jobid}", method = RequestMethod.DELETE)
+    public ResponseEntity<HashMap> deleteJobs(@PathVariable String serviceInstanceId, @PathVariable String jobid) {
+        ResponseEntity<HashMap> response = backupService.deleteJob(serviceInstanceId, jobid);
+        return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
+    }
+    // PLAN
     @RequestMapping(value = "/{serviceInstanceId}/plans", method = RequestMethod.GET)
     public ResponseEntity<HashMap> getPlans(@PathVariable String serviceInstanceId,
                                             @PageableDefault(size = 50, page = 0) Pageable pageable) {
@@ -59,6 +66,14 @@ class BackupController extends BaseController {
         return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
     }
 
+
+    @RequestMapping(value = "/{serviceInstanceId}/plans/{planId}", method = RequestMethod.GET)
+    public ResponseEntity<HashMap> getPlan(@PathVariable String serviceInstanceId,
+                                             @PathVariable String planId) throws ServiceInstanceDoesNotExistException {
+        ResponseEntity<HashMap> response = backupService.getPlan(serviceInstanceId, planId);
+        return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
+    }
+
     @RequestMapping(value = "/{serviceInstanceId}/plans/{planId}", method = RequestMethod.PATCH)
     public ResponseEntity<HashMap> patchPlan(@PathVariable String serviceInstanceId,
                                              @PathVariable String planId,
@@ -68,7 +83,7 @@ class BackupController extends BaseController {
     }
 
     @RequestMapping(value = "/{serviceInstanceId}/plans/{planId}", method = RequestMethod.DELETE)
-    public ResponseEntity<HashMap> deleteJob(@PathVariable String serviceInstanceId,
+    public ResponseEntity<HashMap> deletePlan(@PathVariable String serviceInstanceId,
                                               @PathVariable String planId) {
         ResponseEntity<HashMap> response = backupService.deletePlan(serviceInstanceId, planId);
         return new ResponseEntity<HashMap>(response.getBody(), response.getStatusCode());
