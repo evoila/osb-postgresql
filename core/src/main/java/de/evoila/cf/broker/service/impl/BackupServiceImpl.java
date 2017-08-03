@@ -7,14 +7,16 @@ import de.evoila.cf.broker.service.InstanceCredentialService;
 import org.codehaus.groovy.util.ListHashMap;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 @Service
 @ConditionalOnBean(BackupConfiguration.class)
@@ -67,22 +69,44 @@ public class BackupServiceImpl implements BackupService {
     }
 
     @Override
-    public ResponseEntity<HashMap> getJobs (String serviceInstanceId, int page, int pageSize) {
-        HashMap queryParams = new HashMap();
-        queryParams.put("page", page);
-        queryParams.put("page_size", pageSize);
+    public ResponseEntity<HashMap> getJobs (String serviceInstanceId, Pageable pageable) {
+        Map<String, String> uriParams = new HashMap<String, String>();
+        uriParams.put("serviceInstanceId", serviceInstanceId);
+
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<HashMap> response = rest.exchange(config.getUri() + "/jobs/byInstance/" + serviceInstanceId,
-                HttpMethod.GET, entity, new ParameterizedTypeReference<HashMap>() {}, queryParams);
+        ResponseEntity<HashMap> response = rest
+                .exchange(buildUri("/jobs/byInstance/{serviceInstanceId}", pageable).buildAndExpand(uriParams).toUri(),
+                    HttpMethod.GET, entity, new ParameterizedTypeReference<HashMap>() {});
 
         return response;
     }
 
+    private UriComponentsBuilder buildUri(String path, Pageable pageable) {
+        UriComponentsBuilder builder = UriComponentsBuilder
+                .fromUriString(config.getUri() + path);
+
+        builder.queryParam("page", pageable.getPageNumber());
+        builder.queryParam("page_size", pageable.getPageSize());
+        Iterator<Sort.Order> sortIterator = pageable.getSort().iterator();
+        while (sortIterator.hasNext()) {
+            Sort.Order order = sortIterator.next();
+            builder.queryParam("sort", order.getProperty() + "," + order.getDirection().toString());
+        }
+
+        return builder;
+    }
+
     @Override
-    public ResponseEntity<HashMap> getPlans (String serviceInstanceId) {
+    public ResponseEntity<HashMap> getPlans (String serviceInstanceId, Pageable pageable) {
+        Map<String, String> uriParams = new HashMap<String, String>();
+        uriParams.put("serviceInstanceId", serviceInstanceId);
+
+
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<HashMap> response = rest.exchange(config.getUri()+"/plans/byInstance/"+serviceInstanceId,
-                                                HttpMethod.GET, entity, new ParameterizedTypeReference<HashMap>() {});
+        ResponseEntity<HashMap> response = rest
+                .exchange(buildUri("/jobs/byInstance/{serviceInstanceId}", pageable).buildAndExpand(uriParams).toUri(),
+                        HttpMethod.GET, entity, new ParameterizedTypeReference<HashMap>() {});
+
         return response;
     }
 
