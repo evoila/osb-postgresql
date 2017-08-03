@@ -5,6 +5,9 @@ import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
 import de.evoila.cf.broker.service.BackupService;
 import de.evoila.cf.broker.service.InstanceCredentialService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -13,11 +16,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 @Service
 @ConditionalOnBean(BackupConfiguration.class)
-
 public class BackupServiceImpl implements BackupService {
     private final RestTemplate rest;
     private final HttpHeaders headers;
@@ -36,7 +39,7 @@ public class BackupServiceImpl implements BackupService {
     }
 
     private String encodeCredentials () {
-        String str = config.getUser() + ":" + config.getPassword();
+        String str = config.getUser()+":"+config.getPassword();
         return "Basic " + Base64.getEncoder().encodeToString(str.getBytes());
     }
 
@@ -64,23 +67,51 @@ public class BackupServiceImpl implements BackupService {
         body.put("destination", credentials);
         body.put("source", fileDestination);
 
-        RequestEntity e = new RequestEntity(body, headers, HttpMethod.POST,
-                                            URI.create(config.getUri() + "/restore")
-        );
-        ResponseEntity response = rest.exchange(e, HashMap.class);
+        RequestEntity e  = new RequestEntity(body, headers, HttpMethod.POST,
+                                             URI.create(config.getUri()+"/restore"));
+        ResponseEntity response = rest.exchange(e,HashMap.class);
         return response;
     }
 
     @Override
-    public ResponseEntity<HashMap> getPlans (String serviceInstanceId, Map<String, String> urlParams) {
+    public ResponseEntity<HashMap> getJobs (String serviceInstanceId, Pageable pageable) {
+        Map<String, String> uriParams = new HashMap<String, String>();
+        uriParams.put("serviceInstanceId", serviceInstanceId);
+
         HttpEntity entity = new HttpEntity(headers);
-        final UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(config.getUri() + "/plans/byInstance/" + serviceInstanceId);
-        urlParams.forEach((k, v) -> builder.queryParam(k, v));
-        ResponseEntity<HashMap> response = rest.exchange(builder.build().toUri(),
-                                                         HttpMethod.GET,
-                                                         entity,
-                                                         HashMap.class
-        );
+        ResponseEntity<HashMap> response = rest
+                .exchange(buildUri("/jobs/byInstance/{serviceInstanceId}", pageable).buildAndExpand(uriParams).toUri(),
+                    HttpMethod.GET, entity, new ParameterizedTypeReference<HashMap>() {});
+
+        return response;
+    }
+
+    private UriComponentsBuilder buildUri(String path, Pageable pageable) {
+        UriComponentsBuilder builder = UriComponentsBuilder
+                .fromUriString(config.getUri() + path);
+
+        builder.queryParam("page", pageable.getPageNumber());
+        builder.queryParam("page_size", pageable.getPageSize());
+        Iterator<Sort.Order> sortIterator = pageable.getSort().iterator();
+        while (sortIterator.hasNext()) {
+            Sort.Order order = sortIterator.next();
+            builder.queryParam("sort", order.getProperty() + "," + order.getDirection().toString());
+        }
+
+        return builder;
+    }
+
+    @Override
+    public ResponseEntity<HashMap> getPlans (String serviceInstanceId, Pageable pageable) {
+        Map<String, String> uriParams = new HashMap<String, String>();
+        uriParams.put("serviceInstanceId", serviceInstanceId);
+
+
+        HttpEntity entity = new HttpEntity(headers);
+        ResponseEntity<HashMap> response = rest
+                .exchange(buildUri("/plans/byInstance/{serviceInstanceId}", pageable).buildAndExpand(uriParams).toUri(),
+                        HttpMethod.GET, entity, new ParameterizedTypeReference<HashMap>() {});
+
         return response;
     }
 
@@ -124,16 +155,4 @@ public class BackupServiceImpl implements BackupService {
         return response;
     }
 
-    @Override
-    public ResponseEntity<HashMap> getJobs (String serviceInstanceId, Map<String, String> urlParams) {
-        HttpEntity entity = new HttpEntity(headers);
-        final UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(config.getUri() + "/jobs/byInstance/" + serviceInstanceId);
-        urlParams.forEach((k, v) -> builder.queryParam(k, v));
-        ResponseEntity<HashMap> response = rest.exchange(builder.build().toUri(),
-                                                         HttpMethod.GET,
-                                                         entity,
-                                                         HashMap.class
-        );
-        return response;
-    }
 }
