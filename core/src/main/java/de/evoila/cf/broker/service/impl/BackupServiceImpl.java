@@ -41,11 +41,13 @@ public class BackupServiceImpl implements BackupService {
     }
 
     @Override
-    public ResponseEntity<HashMap> backupNow (String serviceInstanceId, HashMap fileDestination) throws ServiceInstanceDoesNotExistException {
+    public ResponseEntity<HashMap> backupNow (String serviceInstanceId, HashMap body) throws ServiceInstanceDoesNotExistException {
         HashMap credentials = credentialService.getCredentialsForInstanceId(serviceInstanceId);
-        HashMap body = new HashMap();
         body.put("source", credentials);
-        body.put("destination", fileDestination);
+        Object obj = body.get("destination");
+        if(obj instanceof Map){
+            ((Map) obj).put("type", "Swift");
+        }
 
         RequestEntity e = new RequestEntity(body, headers,
                                             HttpMethod.POST,
