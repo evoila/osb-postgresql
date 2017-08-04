@@ -1,13 +1,12 @@
 package de.evoila.cf.config.security;
 
-import de.evoila.cf.broker.bean.AuthenticationPropertiesBean;
+import de.evoila.cf.broker.bean.AuthenticationPropertiesConfiguration;
 import de.evoila.cf.config.security.uaa.UaaRelyingPartyFilter;
 import de.evoila.cf.config.security.uaa.handler.CommonCorsAuthenticationEntryPoint;
 import de.evoila.cf.config.security.uaa.handler.UaaRelyingPartyAuthenticationFailureHandler;
 import de.evoila.cf.config.security.uaa.handler.UaaRelyingPartyAuthenticationSuccessHandler;
 import de.evoila.cf.config.security.uaa.provider.UaaRelyingPartyAuthenticationProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -25,7 +24,7 @@ import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 /**
- * @author Johannes Hiemer, cloudscale.
+ * @author Johannes Hiemer.
  * 
  */
 @Configuration
@@ -33,7 +32,7 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
 
 	@Autowired
-	private AuthenticationPropertiesBean authentication;
+	private AuthenticationPropertiesConfiguration authentication;
 	
 	@Bean
 	public BCryptPasswordEncoder passwordEncoder() {
