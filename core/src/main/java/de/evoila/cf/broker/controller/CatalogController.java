@@ -11,11 +11,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import de.evoila.cf.broker.model.Catalog;
 import de.evoila.cf.broker.service.CatalogService;
 
-/**
- * 
- * @author Johannes Hiemer.
- *
- */
+/** @author Johannes Hiemer. */
 @Controller
 @RequestMapping(value = "/v2/catalog")
 public class CatalogController extends BaseController {
