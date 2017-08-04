@@ -17,7 +17,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 /**
- * 
  * @author Johannes Hiemer.
  * @author Christian Brinker, evoila.
  */
@@ -57,8 +56,6 @@ public class ServiceInstanceController extends BaseController {
 		if (svc == null) {
 			throw new ServiceDefinitionDoesNotExistException(request.getServiceDefinitionId());
 		}
-
-
 
 		ServiceInstanceResponse response = deploymentService.createServiceInstance(serviceInstanceId,
 				request.getServiceDefinitionId(), request.getPlanId(), request.getOrganizationGuid(),
@@ -105,20 +102,20 @@ public class ServiceInstanceController extends BaseController {
 	@ExceptionHandler({ ServiceDefinitionDoesNotExistException.class, AsyncRequiredException.class })
 	@ResponseBody
 	public ResponseEntity<ErrorMessage> handleException(Exception ex, HttpServletResponse response) {
-		return getErrorResponse(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+		return processErrorResponse(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
 	}
 
 	@ExceptionHandler(ServiceInstanceExistsException.class)
 	@ResponseBody
 	public ResponseEntity<ErrorMessage> handleException(ServiceInstanceExistsException ex,
 			HttpServletResponse response) {
-		return getErrorResponse(ex.getMessage(), HttpStatus.CONFLICT);
+		return processErrorResponse(ex.getMessage(), HttpStatus.CONFLICT);
 	}
 
 	@ExceptionHandler(ServiceInstanceDoesNotExistException.class)
 	@ResponseBody
 	public ResponseEntity<ErrorMessage> handleException(ServiceInstanceDoesNotExistException ex,
 			HttpServletResponse response) {
-		return getErrorResponse("{}", HttpStatus.GONE);
+		return processErrorResponse("{}", HttpStatus.GONE);
 	}
 }

@@ -6,9 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 
-/**
- * @author Johannes Hiemer.
- */
+/** @author Johannes Hiemer. */
 public class UaaRelyingPartyToken extends AbstractAuthenticationToken {
 
     /**

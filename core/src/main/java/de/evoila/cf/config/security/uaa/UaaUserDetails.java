@@ -1,6 +1,5 @@
 package de.evoila.cf.config.security.uaa;
 
-import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -8,9 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-/**
- *
- */
+/** @author Johannes Hiemer. */
 public class UaaUserDetails implements UserDetails {
 
     private String username;

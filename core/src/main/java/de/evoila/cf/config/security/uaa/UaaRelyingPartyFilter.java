@@ -1,9 +1,6 @@
 package de.evoila.cf.config.security.uaa;
 
-import de.evoila.cf.config.security.uaa.token.UaaRelyingPartyToken;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.Authentication;
@@ -26,9 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-/**
- *
- */
+/** @author Johannes Hiemer. */
 public class UaaRelyingPartyFilter extends GenericFilterBean {
 
     private AuthenticationManager authenticationManager;

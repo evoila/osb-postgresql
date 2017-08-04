@@ -2,10 +2,7 @@ package de.evoila.cf.config.security.uaa.utils;
 
 import javax.servlet.http.HttpServletRequest;
 
-/**
- * @author Johannes Hiemer.
- *
- */
+/** @author Johannes Hiemer. */
 public class DefaultCorsHeader {
 
     public static String ACCESS_CONTROL_EXPOSE_HEADERS = "Access-Control-Expose-Headers";
