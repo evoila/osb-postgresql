@@ -1,6 +1,10 @@
 package de.evoila.cf.config.security.uaa;
 
+import de.evoila.cf.config.security.uaa.token.UaaRelyingPartyToken;
+import de.evoila.cf.config.security.uaa.utils.UaaFilterUtils;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.Authentication;
@@ -86,10 +90,9 @@ public class UaaRelyingPartyFilter extends GenericFilterBean {
         }
 
         // We need to handle the tokens here, check the implementation how to resovle it
-        // String token = OpenIDFilterUtils.tryResolveToken(request, HttpHeaders.AUTHORIZATION);
+        String token = UaaFilterUtils.tryResolveToken(request, HttpHeaders.AUTHORIZATION);
         try {
 
-            /**
             if (token == null) {
                 throw new AuthenticationCredentialsNotFoundException("No authorization header present.");
             }
@@ -100,10 +103,6 @@ public class UaaRelyingPartyFilter extends GenericFilterBean {
                 successfulAuthentication(request, response, chain, authResult);
                 return;
             }
-
-            **/
-            logger.warn("authResult null");
-            // REVIEW: isn't this wrong? shouldn't there be a chain.doFilter() here?
 
         } catch (InternalAuthenticationServiceException ex) {
             logger.error("An internal error occurred while trying to authenticate the user.", ex);

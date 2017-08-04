@@ -17,11 +17,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
-import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 /**
  * @author Johannes Hiemer.
@@ -85,14 +82,11 @@ public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
 			return openIDAuthenticationProvider;
 		}
 
-		@Bean
-		public SessionRegistry sessionRegistry() {
-			return new SessionRegistryImpl();
-		}
-
-		@Bean
-		public HttpSessionEventPublisher httpSessionEventPublisher() {
-			return new HttpSessionEventPublisher();
+		@Autowired
+		public void configureGlobal(AuthenticationManagerBuilder authenticationManagerBuilder)
+				throws Exception {
+			authenticationManagerBuilder
+					.authenticationProvider(openIDRelyingPartyAuthenticationProvider());
 		}
 
 		@Override

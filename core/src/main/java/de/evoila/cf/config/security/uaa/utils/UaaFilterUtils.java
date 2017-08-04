@@ -77,8 +77,7 @@ public class UaaFilterUtils {
             return null;
 
         try {
-            return objectMapper.readValue(jwt.getEncoded(), new TypeReference<HashMap<String, Object>>() {
-            });
+            return objectMapper.readValue(jwt.getClaims(), new TypeReference<HashMap<String, Object>>() {});
         } catch (IOException e) {
             log.error("Error parsing claims from JWT", e);
         }

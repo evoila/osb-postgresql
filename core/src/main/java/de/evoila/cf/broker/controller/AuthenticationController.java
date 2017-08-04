@@ -40,7 +40,7 @@ public class AuthenticationController extends BaseController {
 
 	private static final String IS_AUTHENTICATED = "dashboard_is_authenticated";
 
-	private static final String TOKEN_PREFIX = "Bearer";
+	private static final String TOKEN_PREFIX = "Bearer ";
 
 	private ServiceInstanceRepository serviceInstanceRepository;
 	
@@ -117,12 +117,10 @@ public class AuthenticationController extends BaseController {
 						dashboardClient, redirectUri);
 			} catch (Exception ex) {}
 
-			token = new CompositeAccessToken();
-			token.setAccessToken("eyJhbGciOiJSUzI1NiIsImtpZCI6ImxlZ2FjeS10b2tlbi1rZXkiLCJ0eXAiOiJKV1QifQ.eyJqdGkiOiIyZWUxYmM0ZmI5NWI0NmRlODU4MTZkNTIzMzA5ZDQwNCIsInN1YiI6IjUwNWM1NDIxLWYxYWYtNGZmNi1iZTY1LWU4MmViZWFhMDc5MSIsInNjb3BlIjpbImNsb3VkX2NvbnRyb2xsZXIucmVhZCIsInBhc3N3b3JkLndyaXRlIiwiY2xvdWRfY29udHJvbGxlci53cml0ZSIsIm9wZW5pZCIsImRvcHBsZXIuZmlyZWhvc2UiLCJzY2ltLndyaXRlIiwic2NpbS5yZWFkIiwiY2xvdWRfY29udHJvbGxlci5hZG1pbiIsInVhYS51c2VyIl0sImNsaWVudF9pZCI6ImNmIiwiY2lkIjoiY2YiLCJhenAiOiJjZiIsImdyYW50X3R5cGUiOiJwYXNzd29yZCIsInVzZXJfaWQiOiI1MDVjNTQyMS1mMWFmLTRmZjYtYmU2NS1lODJlYmVhYTA3OTEiLCJvcmlnaW4iOiJ1YWEiLCJ1c2VyX25hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW4iLCJyZXZfc2lnIjoiZjA5NWFkYTAiLCJpYXQiOjE1MDE4Mjg4OTUsImV4cCI6MTUwMTgyOTQ5NSwiaXNzIjoiaHR0cHM6Ly91YWEuY2YuZXUtZGUtbmV0ZGUubXNoLmhvc3Qvb2F1dGgvdG9rZW4iLCJ6aWQiOiJ1YWEiLCJhdWQiOlsic2NpbSIsImNsb3VkX2NvbnRyb2xsZXIiLCJwYXNzd29yZCIsImNmIiwidWFhIiwib3BlbmlkIiwiZG9wcGxlciJdfQ.KhIrEb4ENYV_Y7hA0Os02hqPXpkKSLjNaOxNvPjbK_QX9ltceNMXIdWDBkDAJuaBgHQbfuSlf0q7goz1cNRTMicLONImDCkjMlEVcYGFiiK0-yCM8CMx7-__BbGKpQrildDtTHwUj1ZwCSK3Gzl5OmWpRtZ29mgqTm01clLTlXE");
 			if (token != null) {
 				mav.addObject("token", TOKEN_PREFIX + token.getAccessToken());
 				mav.addObject("serviceInstanceId", serviceInstanceId);
-				mav.addObject("serviceBrokerEndpointUrl", generalConfiguration.getEndpointUrl());
+				mav.addObject("endpointUrl", generalConfiguration.getEndpointUrl());
 			} else {
 				log.info("Did not receive a valid token, had to abort authentication...");
 				return this.processErrorResponse("Token could not be processed/or is not valid",
