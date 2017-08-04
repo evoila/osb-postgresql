@@ -10,11 +10,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 
-/**
- * @author Yannic Remmet.
- */
+/** @author Yannic Remmet. */
 @RestController
-@RequestMapping(value = "/v2/backup")
+@RequestMapping(value = "/v2/manage/backup")
 class BackupController extends BaseController {
 
     @Autowired
