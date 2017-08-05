@@ -26,9 +26,9 @@ public class DashboardUtils {
 	}
 
 	public static String redirectUri(DashboardClient dashboardClient, String... appendixes) {
-		String url = null;
+		String url = dashboardClient.getRedirectUri();
 		for (String appendix : appendixes) {
-			url = DashboardUtils.appendSegmentToPath(dashboardClient.getRedirectUri(), appendix);
+			url = DashboardUtils.appendSegmentToPath(url, appendix);
 		}
 
 		return url;
