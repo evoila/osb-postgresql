@@ -19,13 +19,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
@@ -34,11 +33,11 @@ import java.net.URISyntaxException;
 @RequestMapping(value = "/v2/authentication")
 public class AuthenticationController extends BaseController {
 
+	private static final String CONFIRM = "/confirm";
+
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
 	private final static String REQUIRED_SCOPES = "cloud_controller_service_permissions.read openid";
-
-	private static final String IS_AUTHENTICATED = "dashboard_is_authenticated";
 
 	private static final String TOKEN_PREFIX = "Bearer ";
 
@@ -59,29 +58,22 @@ public class AuthenticationController extends BaseController {
 		this.generalConfiguration = generalConfiguration;
 	}
 
-    @RequestMapping(value = "/{serviceInstanceId}")
-    public Object authRedirect(@PathVariable String serviceInstanceId,
-    		HttpServletResponse response) throws URISyntaxException, IOException {
+    @GetMapping(value = "/{serviceInstanceId}")
+    public Object authRedirect(@PathVariable String serviceInstanceId) throws URISyntaxException, IOException {
     	ServiceDefinition serviceDefinition = resolveServiceDefinitionByServiceInstanceId(serviceInstanceId);
-    	if (serviceDefinition != null) {
-    		if (serviceDefinition != null
-    				&& serviceDefinition.getDashboard() != null 
-    				&& serviceDefinition.getDashboard().getAuthEndpoint() != null
-    				&& DashboardUtils.isURL(serviceDefinition.getDashboard().getAuthEndpoint())) {
+    	if (serviceDefinition != null && serviceDefinition.getDashboard() != null
+				&& serviceDefinition.getDashboard().getAuthEndpoint() != null
+				&& DashboardUtils.isURL(serviceDefinition.getDashboard().getAuthEndpoint())) {
     			
     			Dashboard dashboard = serviceDefinition.getDashboard();
     			DashboardClient dashboardClient = serviceDefinition.getDashboardClient();
-    			
-    			String redirectUri = DashboardUtils.appendSegmentToPath(dashboard.getUrl(), serviceInstanceId);
+
+				String redirectUri =  DashboardUtils.redirectUri(dashboardClient, serviceInstanceId, "/confirm");
     			DashboardAuthenticationRedirectBuilder dashboardAuthenticationRedirectBuilder 
     				= new DashboardAuthenticationRedirectBuilder(dashboard,
     						dashboardClient, redirectUri, REQUIRED_SCOPES);
     				
     			return new ModelAndView("redirect:" + dashboardAuthenticationRedirectBuilder.getRedirectUrl());
-    		} else {
-				return this.processErrorResponse("Service Definition or Dashboard Configuration could not be found",
-						HttpStatus.NOT_FOUND);
-			}
     	} else {
 			return this.processErrorResponse("Service Definition of Service Instance could not be found",
 					HttpStatus.NOT_FOUND);
@@ -97,9 +89,9 @@ public class AuthenticationController extends BaseController {
     		return null;
     }
 
-	@RequestMapping(value = "/{serviceInstanceId}/confirm")
-    public Object confirm(@PathVariable String serviceInstanceId, @RequestParam(value = "code", required = true) String authCode,
-								HttpServletRequest request) throws Exception {
+	@GetMapping(value = "/{serviceInstanceId}" + CONFIRM)
+    public Object confirm(@PathVariable String serviceInstanceId,
+						  @RequestParam(value = "code") String authCode) throws Exception {
 		ModelAndView mav = new ModelAndView("index");
 		if (authCode == null)
 			return this.processErrorResponse("No authentication code from UAA could be found",
@@ -110,12 +102,10 @@ public class AuthenticationController extends BaseController {
 			Dashboard dashboard = serviceDefinition.getDashboard();
 			DashboardClient dashboardClient = serviceDefinition.getDashboardClient();
 
-			String redirectUri = DashboardUtils.appendSegmentToPath(dashboardClient.getRedirectUri(), serviceInstanceId);
-			CompositeAccessToken token = null;
-			try {
-				token = OpenIdAuthenticationUtils.getAccessAndRefreshToken(dashboard.getAuthEndpoint(), authCode,
-						dashboardClient, redirectUri);
-			} catch (Exception ex) {}
+			String redirectUri =  DashboardUtils.redirectUri(dashboardClient, serviceInstanceId, CONFIRM);
+
+			CompositeAccessToken  token = OpenIdAuthenticationUtils
+					.getAccessAndRefreshToken(dashboard.getAuthEndpoint(), authCode, dashboardClient, redirectUri);
 
 			if (token != null) {
 				mav.addObject("token", TOKEN_PREFIX + token.getAccessToken());

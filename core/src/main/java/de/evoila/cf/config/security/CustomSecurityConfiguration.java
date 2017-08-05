@@ -30,7 +30,7 @@ public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
 
 	@Autowired
 	private AuthenticationPropertiesConfiguration authentication;
-	
+
 	@Bean
 	public BCryptPasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
@@ -78,8 +78,7 @@ public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
 
 		@Bean
 		public UaaRelyingPartyAuthenticationProvider openIDRelyingPartyAuthenticationProvider() {
-			UaaRelyingPartyAuthenticationProvider openIDAuthenticationProvider = new UaaRelyingPartyAuthenticationProvider();
-			return openIDAuthenticationProvider;
+			return new UaaRelyingPartyAuthenticationProvider();
 		}
 
 		@Autowired

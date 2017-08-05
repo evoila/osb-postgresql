@@ -112,7 +112,7 @@ public class UaaRelyingPartyFilter extends GenericFilterBean {
         }
     }
 
-    protected void unsuccessfulAuthentication(
+    private void unsuccessfulAuthentication(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain chain,
@@ -129,7 +129,7 @@ public class UaaRelyingPartyFilter extends GenericFilterBean {
         failureHandler.onAuthenticationFailure(request, response, failed);
     }
 
-    protected void successfulAuthentication(
+    private void successfulAuthentication(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain chain,
