@@ -27,4 +27,16 @@ public interface BackupService {
     ResponseEntity<HashMap> getJob (String serviceInstanceId, String jobid);
 
     ResponseEntity<HashMap> getPlan (String serviceInstanceId, String planId);
+
+    ResponseEntity<HashMap> getDestinations (String serviceInstanceId, Pageable pageable);
+
+    ResponseEntity<HashMap> getDestination (String serviceInstanceId, String destinationId);
+
+    ResponseEntity<HashMap> postDestination (String serviceInstanceId, HashMap plan);
+
+    ResponseEntity<HashMap> updateDestination (String serviceInstanceId, String destinationId, HashMap plan) throws ServiceInstanceDoesNotExistException;
+
+    ResponseEntity<HashMap> deleteDestination (String serviceInstanceId, String destinationId);
+
+    ResponseEntity<HashMap> validateDestination (String serviceInstanceId, HashMap plan);
 }
