@@ -171,4 +171,63 @@ public class BackupServiceImpl implements BackupService {
         return rest.exchange(config.getUri()+"/plans/"+planId,HttpMethod.GET,entity,HashMap.class);
     }
 
+    @Override
+    public ResponseEntity<HashMap> getDestinations (String serviceInstanceId, Pageable pageable) {
+        Map<String, String> uriParams = new HashMap<String, String>();
+        uriParams.put("serviceInstanceId", serviceInstanceId);
+
+        HttpEntity entity = new HttpEntity(headers);
+        ResponseEntity<HashMap> response = rest
+                                 .exchange(buildUri("/destinations/byInstance/{serviceInstanceId}", pageable)
+                                 .buildAndExpand(uriParams).toUri(),
+                                       HttpMethod.GET, entity, new ParameterizedTypeReference<HashMap>() {});
+        return response;
+    }
+
+    @Override
+    public ResponseEntity<HashMap> getDestination (String serviceInstanceId, String destinationId) {
+        HttpEntity entity = new HttpEntity(headers);
+        return rest.exchange(config.getUri()+"/plans/"+destinationId,HttpMethod.GET,entity,HashMap.class);
+    }
+
+    @Override
+    public ResponseEntity<HashMap> postDestination (String serviceInstanceId, HashMap dest) {
+        HttpEntity entity = new HttpEntity(dest, headers);
+        dest.put("instanceId", serviceInstanceId);
+        ResponseEntity response = rest.exchange(config.getUri() + "/destinations",
+                                                HttpMethod.POST, entity, HashMap.class
+        );
+        return response;
+    }
+
+    @Override
+    public ResponseEntity<HashMap> updateDestination (String serviceInstanceId, String destinationId, HashMap dest)  {
+        HttpEntity entity = new HttpEntity(dest, headers);
+        dest.put("instanceId", serviceInstanceId);
+        ResponseEntity response = rest.exchange(config.getUri() + "/destinations/" + destinationId,
+                                                HttpMethod.PUT, entity, HashMap.class
+        );
+        return response;
+    }
+
+    @Override
+    public ResponseEntity<HashMap> deleteDestination (String serviceInstanceId, String destinationId) {
+        HttpEntity entity = new HttpEntity(headers);
+        ResponseEntity response = rest.exchange(config.getUri() + "/destinations/" + destinationId,
+                                                HttpMethod.DELETE, entity, HashMap.class
+        );
+        return response;
+    }
+
+    @Override
+    public ResponseEntity<HashMap> validateDestination (String serviceInstanceId, HashMap dest) {
+        HttpEntity entity = new HttpEntity(dest, headers);
+        dest.put("instanceId", serviceInstanceId);
+        ResponseEntity response = rest.exchange(config.getUri() + "/destinations/validate",
+                                                HttpMethod.POST, entity, HashMap.class
+        );
+        return response;
+    }
+
+
 }
