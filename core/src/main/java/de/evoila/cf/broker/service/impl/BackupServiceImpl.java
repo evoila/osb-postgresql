@@ -94,10 +94,12 @@ public class BackupServiceImpl implements BackupService {
 
         builder.queryParam("page", pageable.getPageNumber());
         builder.queryParam("page_size", pageable.getPageSize());
-        Iterator<Sort.Order> sortIterator = pageable.getSort().iterator();
-        while (sortIterator.hasNext()) {
-            Sort.Order order = sortIterator.next();
-            builder.queryParam("sort", order.getProperty() + "," + order.getDirection().toString());
+        if (pageable.getSort() != null) {
+            Iterator<Sort.Order> sortIterator = pageable.getSort().iterator();
+            while (sortIterator.hasNext()) {
+                Sort.Order order = sortIterator.next();
+                builder.queryParam("sort", order.getProperty() + "," + order.getDirection().toString());
+            }
         }
 
         return builder;
