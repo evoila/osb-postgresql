@@ -108,7 +108,7 @@ class BackupController extends BaseController {
         return new ResponseEntity<>(response.getBody(), response.getStatusCode());
     }
 
-    @PutMapping(value = "/{serviceInstanceId}/destinations/{destinationId}")
+    @PatchMapping(value = "/{serviceInstanceId}/destinations/{destinationId}")
     public ResponseEntity<HashMap> putDestinaton(@PathVariable String serviceInstanceId,
                                              @PathVariable String destinationId,
                                              @RequestBody HashMap plan) throws ServiceInstanceDoesNotExistException {

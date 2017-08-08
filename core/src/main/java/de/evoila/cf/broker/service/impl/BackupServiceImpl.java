@@ -187,7 +187,7 @@ public class BackupServiceImpl implements BackupService {
     @Override
     public ResponseEntity<HashMap> getDestination (String serviceInstanceId, String destinationId) {
         HttpEntity entity = new HttpEntity(headers);
-        return rest.exchange(config.getUri()+"/plans/"+destinationId,HttpMethod.GET,entity,HashMap.class);
+        return rest.exchange(config.getUri()+"/destinations/"+destinationId,HttpMethod.GET,entity,HashMap.class);
     }
 
     @Override
