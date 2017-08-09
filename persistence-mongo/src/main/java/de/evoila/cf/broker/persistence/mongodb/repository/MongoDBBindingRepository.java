@@ -3,9 +3,10 @@
  */
 package de.evoila.cf.broker.persistence.mongodb.repository;
 
+import de.evoila.cf.broker.model.ServiceInstanceBinding;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import de.evoila.cf.broker.model.ServiceInstanceBinding;
+import java.util.List;
 
 /**
  * @author Christian Brinker, evoila.
@@ -13,4 +14,5 @@ import de.evoila.cf.broker.model.ServiceInstanceBinding;
  */
 public interface MongoDBBindingRepository extends MongoRepository<ServiceInstanceBinding, String> {
 
+    List<ServiceInstanceBinding> findByServiceInstanceId (String serviceInstanceId);
 }
