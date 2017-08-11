@@ -1,6 +1,8 @@
 package de.evoila.cf.broker.service;
 
 import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
+import de.evoila.cf.model.BackupRequest;
+import de.evoila.cf.model.RestoreRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
@@ -8,9 +10,9 @@ import java.util.HashMap;
 
 public interface BackupService {
 
-    ResponseEntity<HashMap> backupNow(String serviceInstanceId, HashMap fileDestination) throws ServiceInstanceDoesNotExistException;
+    ResponseEntity<Object> backupNow(String serviceInstanceId, BackupRequest fileDestination) throws ServiceInstanceDoesNotExistException;
 
-    ResponseEntity<HashMap> restoreNow (String serviceInstanceId, HashMap fileDestination) throws ServiceInstanceDoesNotExistException;
+    ResponseEntity<HashMap> restoreNow (String serviceInstanceId, RestoreRequest fileDestination) throws ServiceInstanceDoesNotExistException;
 
     ResponseEntity<HashMap> getJobs (String serviceInstanceId, Pageable pageable);
 

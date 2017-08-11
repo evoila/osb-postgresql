@@ -1,9 +1,9 @@
 package de.evoila.cf.broker.service;
 
-import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
 
-import java.util.HashMap;
+import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
+import de.evoila.cf.model.DatabaseCredential;
 
 public interface InstanceCredentialService {
-    HashMap getCredentialsForInstanceId (String serviceInstanceId) throws ServiceInstanceDoesNotExistException;
+    DatabaseCredential getCredentialsForInstanceId (String serviceInstanceId) throws ServiceInstanceDoesNotExistException;
 }

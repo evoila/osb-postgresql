@@ -2,6 +2,8 @@ package de.evoila.cf.broker.controller;
 
 import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
 import de.evoila.cf.broker.service.BackupService;
+import de.evoila.cf.model.BackupRequest;
+import de.evoila.cf.model.RestoreRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -19,13 +21,13 @@ class BackupController extends BaseController {
     private BackupService backupService;
 
     @PostMapping(value = "/{serviceInstanceId}/backup")
-    public ResponseEntity<HashMap> backupNow(@PathVariable String serviceInstanceId, @RequestBody HashMap fileDestination) throws ServiceInstanceDoesNotExistException {
-        ResponseEntity<HashMap> response = backupService.backupNow(serviceInstanceId, fileDestination);
+    public ResponseEntity<Object> backupNow(@PathVariable String serviceInstanceId, @RequestBody BackupRequest fileDestination) throws ServiceInstanceDoesNotExistException {
+        ResponseEntity<Object> response = backupService.backupNow(serviceInstanceId, fileDestination);
         return new ResponseEntity<>(response.getBody(), response.getStatusCode());
     }
 
     @PostMapping(value = "/{serviceInstanceId}/restore")
-    public ResponseEntity<HashMap> restoreNow(@PathVariable String serviceInstanceId, @RequestBody HashMap fileDestination) throws ServiceInstanceDoesNotExistException {
+    public ResponseEntity<HashMap> restoreNow(@PathVariable String serviceInstanceId, @RequestBody RestoreRequest fileDestination) throws ServiceInstanceDoesNotExistException {
         ResponseEntity<HashMap> response = backupService.restoreNow(serviceInstanceId, fileDestination);
         return new ResponseEntity<>(response.getBody(), response.getStatusCode());
     }

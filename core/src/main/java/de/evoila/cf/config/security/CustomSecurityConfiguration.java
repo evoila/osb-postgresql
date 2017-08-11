@@ -1,10 +1,6 @@
 package de.evoila.cf.config.security;
 
 import de.evoila.cf.broker.bean.AuthenticationPropertiesConfiguration;
-import de.evoila.cf.config.security.uaa.UaaRelyingPartyFilter;
-import de.evoila.cf.config.security.uaa.handler.CommonCorsAuthenticationEntryPoint;
-import de.evoila.cf.config.security.uaa.handler.UaaRelyingPartyAuthenticationFailureHandler;
-import de.evoila.cf.config.security.uaa.handler.UaaRelyingPartyAuthenticationSuccessHandler;
 import de.evoila.cf.config.security.uaa.provider.UaaRelyingPartyAuthenticationProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -16,9 +12,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.web.authentication.logout.LogoutFilter;
 
 /**
  * @author Johannes Hiemer.
@@ -61,6 +55,7 @@ public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
         		.antMatchers(HttpMethod.GET, "/info").authenticated()
         		.antMatchers(HttpMethod.GET, "/health").authenticated()
 				.antMatchers(HttpMethod.GET, "/error").authenticated()
+			.antMatchers(HttpMethod.GET, "/env").authenticated()
 				.antMatchers(HttpMethod.GET,"/v2/dashboard/{serviceInstanceId}").permitAll()
 				.antMatchers(HttpMethod.GET,"/v2/dashboard/{serviceInstanceId}/confirm").permitAll()
 				.antMatchers("/v2/backup/**").permitAll()
@@ -90,11 +85,13 @@ public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
 
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			UaaRelyingPartyFilter uaaRelyingPartyFilter = new UaaRelyingPartyFilter(authenticationManager());
-			uaaRelyingPartyFilter.setSuccessHandler(new UaaRelyingPartyAuthenticationSuccessHandler());
-			uaaRelyingPartyFilter.setFailureHandler(new UaaRelyingPartyAuthenticationFailureHandler());
+			//UaaRelyingPartyFilter uaaRelyingPartyFilter = new UaaRelyingPartyFilter(authenticationManager());
+			//uaaRelyingPartyFilter.setSuccessHandler(new UaaRelyingPartyAuthenticationSuccessHandler());
+			//uaaRelyingPartyFilter.setFailureHandler(new UaaRelyingPartyAuthenticationFailureHandler());
 
-			http
+			http.authorizeRequests().anyRequest().permitAll().and().csrf().disable();
+				/*
+				http.authorizeRequests()
 				.addFilterBefore(uaaRelyingPartyFilter, LogoutFilter.class)
 
 				.csrf().disable()
@@ -113,6 +110,7 @@ public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter  {
 					.antMatchers(HttpMethod.GET,"/v2/authentication/{serviceInstanceId}").permitAll()
 					.antMatchers(HttpMethod.GET,"/v2/authentication/{serviceInstanceId}/confirm").permitAll()
 					.antMatchers(HttpMethod.GET, "/v2/manage/**").authenticated();
+					*/
 		}
 	}
 }

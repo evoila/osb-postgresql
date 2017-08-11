@@ -26,5 +26,5 @@ public class DeploymentRepoConfiguration {
 
 	public void setMonit(String monit) {
 		this.monit = monit;
-	}	
+	}
 }
