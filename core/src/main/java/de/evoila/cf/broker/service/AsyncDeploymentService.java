@@ -6,7 +6,6 @@ import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
 import de.evoila.cf.broker.model.JobProgress;
 import de.evoila.cf.broker.model.Plan;
 import de.evoila.cf.broker.model.ServiceInstance;
-import de.evoila.cf.broker.service.impl.DeploymentServiceImpl;
 
 /**
  * 

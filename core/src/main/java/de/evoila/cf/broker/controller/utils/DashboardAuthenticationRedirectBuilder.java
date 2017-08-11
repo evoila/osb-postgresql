@@ -3,13 +3,12 @@
  */
 package de.evoila.cf.broker.controller.utils;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
-import org.apache.http.client.utils.URIBuilder;
-
 import de.evoila.cf.broker.model.Dashboard;
 import de.evoila.cf.broker.model.DashboardClient;
+import org.apache.http.client.utils.URIBuilder;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * @author Johannes Hiemer.
@@ -77,6 +76,5 @@ public class DashboardAuthenticationRedirectBuilder {
 	public void setScopes(String scopes) {
 		this.scopes = scopes;
 	}
-	
 	
 }

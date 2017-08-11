@@ -1,7 +1,7 @@
 /**
  * 
  */
-package de.evoila.cf.broker.service.impl;
+package de.evoila.cf.broker.service;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -118,8 +118,8 @@ public class DeploymentServiceImpl implements DeploymentService {
 		}
 	}
 
-	ServiceInstanceResponse syncCreateInstance(ServiceInstance serviceInstance, Map<String, String> parameters,
-			Plan plan, PlatformService platformService) throws ServiceBrokerException {
+	public ServiceInstanceResponse syncCreateInstance (ServiceInstance serviceInstance, Map<String, String> parameters,
+                                                       Plan plan, PlatformService platformService) throws ServiceBrokerException {
 		ServiceInstance createdServiceInstance;
 		try {
 			Map<String, String> mergedProperties = domainPropertyHandler.addDomainBasedCustomProperties(plan,
@@ -194,7 +194,7 @@ public class DeploymentServiceImpl implements DeploymentService {
 
 	}
 
-	void syncDeleteInstance(ServiceInstance serviceInstance, PlatformService platformService)
+	public void syncDeleteInstance (ServiceInstance serviceInstance, PlatformService platformService)
 			throws ServiceBrokerException, ServiceInstanceDoesNotExistException {
 		platformService.preDeprovisionServiceInstance(serviceInstance);
 
