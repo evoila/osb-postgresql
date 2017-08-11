@@ -1,13 +1,12 @@
-package de.evoila.cf.broker.bean.impl;
+package de.evoila.cf.broker.bean;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
-import de.evoila.cf.broker.bean.DeploymentRepoBean;
-
+/** @author Yannic Remmet */
 @Service
 @ConfigurationProperties(prefix="deployment.repo")
-public class DeploymentRepoBeanImpl implements DeploymentRepoBean {
+public class DeploymentRepoConfiguration {
 
 	private String service;
 	
@@ -27,5 +26,5 @@ public class DeploymentRepoBeanImpl implements DeploymentRepoBean {
 
 	public void setMonit(String monit) {
 		this.monit = monit;
-	}	
+	}
 }

@@ -4,11 +4,13 @@
 package de.evoila.cf.broker.service;
 
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-
+import de.evoila.cf.broker.bean.HAProxyConfiguration;
+import de.evoila.cf.broker.exception.ServiceBrokerException;
+import de.evoila.cf.broker.model.HABackendResponse;
+import de.evoila.cf.broker.model.HAProxyServerAddress;
+import de.evoila.cf.broker.model.Mode;
+import de.evoila.cf.broker.model.ServerAddress;
+import de.evoila.cf.config.security.AcceptSelfSignedClientHttpRequestFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,13 +22,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import de.evoila.cf.broker.bean.HAProxyBean;
-import de.evoila.cf.broker.exception.ServiceBrokerException;
-import de.evoila.cf.broker.model.HABackendResponse;
-import de.evoila.cf.broker.model.HAProxyServerAddress;
-import de.evoila.cf.broker.model.Mode;
-import de.evoila.cf.broker.model.ServerAddress;
-import de.evoila.cf.config.security.AcceptSelfSignedClientHttpRequestFactory;
+import javax.annotation.PostConstruct;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Christian Brinker, Sebastian Boeing, evoila.
@@ -43,7 +41,7 @@ public abstract class HAProxyService {
 	private Logger log = LoggerFactory.getLogger(getClass());
 
 	@Autowired
-	private HAProxyBean haproxyBean;
+	private HAProxyConfiguration haProxyConfiguration;
 	
 	private String haProxy;
 	
@@ -55,8 +53,8 @@ public abstract class HAProxyService {
 
 	@PostConstruct
 	private void initHeaders() {
-		haProxy = haproxyBean.getUri();
-		authToken = haproxyBean.getAuthToken();
+		haProxy = haProxyConfiguration.getUri();
+		authToken = haProxyConfiguration.getAuthToken();
 		headers.add(X_AUTH_TOKEN_HEADER, authToken);
 		headers.add(CONTENT_TYPE, APPLICATION_JSON);
 		
