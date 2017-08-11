@@ -58,4 +58,5 @@ public class DatabaseCredential {
     public void setType (DatabaseType type) {
         this.type = type;
     }
+
 }
