@@ -28,6 +28,7 @@ public class InstanceCredentialServiceImpl implements InstanceCredentialService 
         credential.setPassword(serviceInstanceId);
         credential.setHostname(instance.getHosts().get(0).getIp());
         credential.setPort(instance.getHosts().get(0).getPort());
+        credential.setType(backupTypeService.getType());
         return credential;
     }
 }
