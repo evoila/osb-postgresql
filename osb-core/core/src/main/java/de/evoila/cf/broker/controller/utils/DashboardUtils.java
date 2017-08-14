@@ -3,9 +3,10 @@
  */
 package de.evoila.cf.broker.controller.utils;
 
-import java.net.URL;
-
+import de.evoila.cf.broker.model.DashboardClient;
 import de.evoila.cf.broker.model.ServiceDefinition;
+
+import java.net.URL;
 
 /**
  * @author Johannes Hiemer.
@@ -14,17 +15,23 @@ import de.evoila.cf.broker.model.ServiceDefinition;
 public class DashboardUtils {
 	
 	public static boolean hasDashboard(ServiceDefinition serviceDefinition) {
-		if (serviceDefinition.getDashboard() != null 
+		return (serviceDefinition.getDashboard() != null
 				&& serviceDefinition.getDashboard().getUrl() != null
 				&& DashboardUtils.isURL(serviceDefinition.getDashboard().getUrl())
-				&& serviceDefinition.getDashboardClient() != null) 
-			return true;
-		
-		return false;
+				&& serviceDefinition.getDashboardClient() != null);
 	}
 	
 	public static String dashboard(ServiceDefinition serviceDefinition, String serviceInstanceId) {
 		return DashboardUtils.appendSegmentToPath(serviceDefinition.getDashboard().getUrl(), serviceInstanceId);
+	}
+
+	public static String redirectUri(DashboardClient dashboardClient, String... appendixes) {
+		String url = dashboardClient.getRedirectUri();
+		for (String appendix : appendixes) {
+			url = DashboardUtils.appendSegmentToPath(url, appendix);
+		}
+
+		return url;
 	}
 	
 	public static boolean isURL(String url) {
@@ -36,7 +43,7 @@ public class DashboardUtils {
 	    }
 	}
 	
-	public static String appendSegmentToPath(String path, String segment) {
+	private static String appendSegmentToPath(String path, String segment) {
 		if (path == null || path.isEmpty()) 
 			return "/" + segment;
 

@@ -2,6 +2,8 @@ package de.evoila.cf.broker.repository;
 
 import de.evoila.cf.broker.model.ServiceInstanceBinding;
 
+import java.util.List;
+
 /**
  * @author Christian Brinker, evoila.
  *
@@ -22,4 +24,5 @@ public interface BindingRepository {
 
 	ServiceInstanceBinding findOne(String bindingId);
 
+    List<ServiceInstanceBinding> getBindingsForServiceInstance (String serviceInstanceId);
 }
