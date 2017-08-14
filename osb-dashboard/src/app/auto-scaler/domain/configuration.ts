@@ -1,50 +1,58 @@
 export interface Configuration {
-  // Multiplicator of Scaling checks multiplied with 30s
-  scalingIntervalMultiplier: number;
+    appId: string;
+    appName: string;
+    creationTimeAsString: Date;
+    creationTime: number;
+    scaling: Scaling;
+    cpu: Cpu;
+    ram: Ram;
+    latency: Latency;
+    requests: Requests;
+    learning: Learning;
+}
 
-  // Minimum required instance starting from 0
-  minInstances: number;
-
-  // Maximum required instances > minInstances
-  maxInstances: number;
-
-  minMaxRange: number[];
-
-  // Threshhold time, during the scaler is not allowed to scale
-  cooldownTime: number;
-
-  // Timeout until learned behavouir shall be applied
-  learningTimeMultiplier: number;
-
-  cpuUpperLimit: number;
-
-  cpuLowerLimit: number;
-
-  cpuLowerUpperLimit: number[];
-
-  // Do know yet
-  minQuotient: number;
-
-  ramUpperLimit: number;
-
-  ramLowerLimit: number;
-
-  ramLowerUpperLimit: number[];
-
+export interface Scaling {
   scalingEnabled: boolean;
+  predictionScalingEnabled: boolean;
+  billingIntervalEnabled: boolean;
+  scalingIntervalMultiplier: number;
+  currentIntervalState: number;
+  minInstances: number;
+  maxInstances: number;
+  cooldownTime: number;
+}
 
-  quotientBasedScalingEnabled: boolean;
+export interface Cpu {
+  upperLimit: number;
+  lowerLimit: number;
+  thresholdPolicy: string;
+  cpuScalingEnabled: boolean;
+}
 
+export interface Ram {
+  upperLimit: number;
+  lowerLimit: number;
+  thresholdPolicy: string;
+  ramScalingEnabled: boolean;
+}
+
+export interface Latency {
+  upperLimit: number;
+  lowerLimit: number;
+  thresholdPolicy: string;
+  latencyScalingEnabled: boolean;
+}
+
+export interface Requests {
+  quotient: number;
+  minQuotient: number;
+  thresholdPolicy: string;
+  quotientScalingEnabled: boolean;
+}
+
+export interface Learning {
   learningEnabled: boolean;
-
-  billingIntervalConsidered: boolean;
-
-  // ("max", "min", "mean")
-  cpuThresholdPolicy: string;
-
-  // ("max", "min", "mean")
-  requestThresholdPolicy: string;
-
-  // ("max", "min", "mean")
-  ramThresholdPolicy: string
+  learningTimeMultiplier: number;
+  learningStartTime: number;
+  learningStartTimeAsString: Date;
 }

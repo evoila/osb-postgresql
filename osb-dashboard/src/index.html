@@ -9,7 +9,22 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico"></link>
   <link href="styles.9bbe57e349f2d4391dc5.bundle.css" rel="stylesheet"></link>
 </head>
-
+<script th:inline="javascript">
+/*<![CDATA[*/
+  window["INJECTED_ENVIRONMENT"] = {
+    serviceInstanceId: /*[[${serviceInstanceId}]]*/,
+    token: /*[[${token}]]*/,
+    production: false,
+    baseUrls: {
+      serviceBrokerUrl: /*[[${endpointUrl}]]*/,
+    },
+    ui: {
+      title: "Service Broker Panel",
+      logoSrc: "./assets/core/sb-white.svg"
+    }
+  };
+/*]]>*/
+</script>
 <body>
   <div id="preloader">
     <div class="loader loader-white"></div>

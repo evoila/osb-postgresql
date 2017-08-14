@@ -8,9 +8,6 @@
 
   <div class="collapse navbar-collapse" id="navbarsExampleDefault">
     <ul class="navbar-nav mr-auto">
-      <li class="nav-item active" *ngIf="dynamicModuleSupport.mongodb">
-        <a class="nav-link" routerLink="/mongodb" routerLinkActive="active">Sample Module </a>
-      </li>
       <li class="nav-item active" *ngIf="dynamicModuleSupport.autoscaler">
         <a class="nav-link" routerLink="/autoscaler" routerLinkActive="active">Auto Scaler </a>
       </li>
@@ -28,6 +25,9 @@
     </ul>
   </div>
 </nav>
-<div class="main-outlet">
-  <router-outlet></router-outlet>
+<div class="main">
+  <div class="main-outlet">
+    <router-outlet></router-outlet>
+  </div>
+  <sb-notification-banner *ngIf="notification" [notification]="notification" (close)="closeNotification()"></sb-notification-banner>
 </div>

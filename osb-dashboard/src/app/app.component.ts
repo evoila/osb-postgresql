@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 
 import { environment } from 'environments/runtime-environment';
 
+import { NotificationService, Notification } from './core/notification.service';
+
 import {
   BuildTargetService, ModuleSupport
 } from 'app/shared';
@@ -16,12 +18,22 @@ export class AppComponent {
   public readonly moduleSupport: ModuleSupport;
   public readonly dynamicModuleSupport: any;
 
-  title = 'app works!';
+  public notification: Notification | null = null;
 
   constructor(
+    private readonly notifications: NotificationService,
     buildTarget: BuildTargetService
   ) {
     this.dynamicModuleSupport = buildTarget.dynamicModuleSupport;
     this.moduleSupport = buildTarget.moduleSupport;
+
+    this.notifications.notifications.subscribe(x => {
+      console.log(x)
+      this.notification = x
+    });
+  }
+
+  public closeNotification() {
+    this.notification = null;
   }
 }
