@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import de.evoila.cf.broker.bean.impl.AuthenticationPropertiesBeanImpl;
 import de.evoila.cf.broker.bean.impl.ExistingEndpointBeanImpl;
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.Plan;
