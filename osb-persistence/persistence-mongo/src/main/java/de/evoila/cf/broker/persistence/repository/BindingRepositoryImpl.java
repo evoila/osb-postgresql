@@ -4,12 +4,13 @@
 package de.evoila.cf.broker.persistence.repository;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import de.evoila.cf.broker.model.ServiceInstanceBinding;
 import de.evoila.cf.broker.persistence.mongodb.repository.MongoDBBindingRepository;
 import de.evoila.cf.broker.repository.BindingRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * @author Patrick Weber, evoila.
@@ -72,6 +73,11 @@ public class BindingRepositoryImpl implements BindingRepository {
 	public ServiceInstanceBinding findOne(String bindingId) {
 		ServiceInstanceBinding findOne = bindingRepository.findOne(bindingId);
 		return findOne;
+	}
+
+	@Override
+	public List<ServiceInstanceBinding> getBindingsForServiceInstance (String serviceInstanceId) {
+		return bindingRepository.findByServiceInstanceId(serviceInstanceId);
 	}
 
 }
