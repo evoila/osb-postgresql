@@ -35,7 +35,7 @@ export class ServiceKeysDetailComponent implements OnInit {
   }
 
   private redirect(): void {
-    this.router.navigate(['/']);
+    this.router.navigate(['/service-keys']);
   }
 
 }

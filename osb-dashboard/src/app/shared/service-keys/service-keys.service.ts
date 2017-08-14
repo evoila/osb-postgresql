@@ -29,7 +29,7 @@ export class ServiceKeysService extends EntityService {
   }
 
   public saveOne(entity: any, entityRel: string, id?: string): Observable<{} | any> {
-    return this.get(this.BACKUP_BASEURL + '/' + entityRel  + '/' + serviceInstanceId + '/create');
+    return this.post(this.BACKUP_BASEURL + '/' + entityRel  + '/' + serviceInstanceId, {});
   }
 
 }

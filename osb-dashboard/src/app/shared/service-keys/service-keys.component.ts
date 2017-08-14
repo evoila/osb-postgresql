@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ServiceKeysService } from './service-keys.service';
+import {NotificationService, Notification} from '../../core/notification.service';
 
 @Component({
   selector: 'sb-service-keys',
@@ -11,7 +12,8 @@ export class ServiceKeysComponent implements OnInit {
   serviceKeys: [any];
   isLoading = false;
 
-  constructor(protected readonly service: ServiceKeysService) { }
+  constructor(protected readonly service: ServiceKeysService,
+              protected readonly nService: NotificationService) { }
 
   ngOnInit() {
     this.loadKeys();
@@ -27,9 +29,15 @@ export class ServiceKeysComponent implements OnInit {
   create(): void {
     this.isLoading = true;
     this.service.saveOne({}, this.ENTITY)
-      .subscribe((key: any) => {
-        this.isLoading = false;
-        this.loadKeys();
+      .subscribe({
+        next: (d) => {
+          this.isLoading = false;
+          this.loadKeys();
+          this.nService.add(new Notification('Warning', 'Created new Service Key.'));
+        },
+        error: (e) => {
+          this.nService.add(new Notification('Warning', 'Could not generate new Service Key'));
+        }
       });
   }
 }
