@@ -1,5 +1,8 @@
 package de.evoila.cf.broker.configuration;
 
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+
 import de.evoila.cf.broker.bean.RabbitMQCredentials;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
@@ -9,9 +12,8 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.cloud.config.java.AbstractCloudConfig;
+
 
 /**
  * Created by reneschollmeyer on 09.08.17.
@@ -67,5 +69,4 @@ class RabbitOnConditionalConfiguration{
                   return new RabbitTemplate(rabbitConnectionFactory());
             }
       }
-
 }
