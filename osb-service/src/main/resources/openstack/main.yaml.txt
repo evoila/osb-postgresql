@@ -1,0 +1,131 @@
+heat_template_version: 2016-04-08
+description: >
+        Deployment of PostgreSQL-HA with 2 nodes (Primary and Standby) (Skript 3/5)
+        Scripts 4 and 5 will used by this script for creation of the primary and the standby node.
+
+parameters:
+
+  image_id:
+    type: string
+    description: Image used for servers
+    default: xenial-16.04_softwareconfig_running
+  key_name:
+    type: string
+    description: SSH key to connect to the servers
+  flavor:
+    type: string
+    description: flavor used by the servers
+    default: gp1.small
+  availability_zone:
+    type: string
+    description: Availability Zone of the nodes.
+    default: zone00
+  resource_name:
+    type: string
+    description: Name-prefix for created resources in OpenStack.
+
+  primary_volume_id:
+    type: string
+    description: ID of the pre-created volume to be attached to the primary node.
+  primary_port:
+    type: string
+    description: Port-ID of the pre-created Port for the primary node.
+  primary_ip:
+    type: string
+    description: IP of primary node.
+
+
+  standby_active:
+    type: number
+    description: 0 single node, 1 cluster
+    constraints: 
+      - range: { min: 0, max: 1 }
+    default: 0
+  standby_volume_id:
+    type: string
+    description: ID of the pre-created volume to be attached to the standby node.
+    default: ""
+  standby_port:
+    type: string
+    description: Network-Port used by the standby node.
+    default: ""
+  standby_ip:
+    type: string
+    description: IP of standby node.
+    default: ""
+ 
+  service_db:
+    type: string
+    description: Name of the Database.
+    default: servicedb
+  admin_user:
+    type: string
+    description: Admin user for the service.
+    default: servicedb
+  admin_password:
+    type: string
+    hidden: true
+    description: Password for the service_user password.
+
+
+
+resources:
+
+  anti-affinity:
+    type: OS::Nova::ServerGroup
+    properties:
+      name:
+        str_replace:
+         template: $resource_name-SG
+         params:
+           $resource_name: { get_param: resource_name }
+      policies: [ 'anti-affinity' ]
+
+  primary_server_postgresql:
+    type: primary.yaml
+
+    properties:
+      primary_hostname:
+        str_replace:
+          template: $hostname-n0
+          params:
+            $hostname: { get_param: resource_name }
+      image_id: {get_param: image_id }
+      key_name: {get_param: key_name }
+      flavor: {get_param: flavor }
+      availability_zone: {get_param: availability_zone }
+      service_db: {get_param: service_db }
+      admin_user: {get_param: admin_user }
+      admin_password: {get_param: admin_password }
+      primary_port: {get_param: primary_port }
+      primary_ip: {get_param: primary_ip }
+      standby_ip: {get_param: standby_ip }
+      primary_volume_id: {get_param: primary_volume_id }
+      server_group: {get_resource: anti-affinity }
+      
+
+  standby_server_postgresql:
+    type: OS::Heat::ResourceGroup
+    depends_on: primary_server_postgresql
+    properties:
+      count: { get_param: standby_active }
+      resource_def:
+        type: secondaries.yaml
+        properties:
+          standby_hostname:
+            str_replace:
+              template: $hostname-n1
+              params:
+                $hostname: { get_param: resource_name }
+          image_id: {get_param: image_id }
+          key_name: {get_param: key_name }
+          flavor: {get_param: flavor }
+          availability_zone: {get_param: availability_zone }
+          service_db: {get_param: service_db }
+          admin_user: {get_param: admin_user }
+          admin_password: {get_param: admin_password }
+          standby_port: {get_param: standby_port }
+          primary_ip: {get_param: primary_ip }
+          standby_ip: {get_param: standby_ip }
+          standby_volume_id: {get_param: standby_volume_id }
+          server_group: {get_resource: anti-affinity }
