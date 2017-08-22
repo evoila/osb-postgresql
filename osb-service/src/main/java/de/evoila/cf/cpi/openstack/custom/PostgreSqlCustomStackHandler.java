@@ -146,7 +146,7 @@ public class PostgreSqlCustomStackHandler extends CustomStackHandler {
 	}
 
 	private Map<? extends String, ? extends String> generateValues(String instanceId) {
-		HashMap<String, String> valueMap = new HashMap<String, String>();|
+		HashMap<String, String> valueMap = new HashMap<String, String>();
 		valueMap.put(PostgreSqlParameterManager.ADMIN_PASSWORD, instanceId);
 		valueMap.put(PostgreSqlParameterManager.ADMIN_USER, instanceId);
 		valueMap.put(PostgreSqlParameterManager.SERVICE_DB, instanceId);
