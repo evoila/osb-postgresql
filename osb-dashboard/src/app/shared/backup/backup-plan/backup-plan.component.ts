@@ -55,7 +55,7 @@ export class BackupPlanComponent implements OnInit {
           this.redirect();
         },
         error: (e) => {
-          this.nService.add(new Notification('Warning', 'Could not create Backup Plan. Please check your value.'));
+          this.nService.add(new Notification('Warning', 'Could not create Backup Plan. Please check your entries.'));
         }
       });
   }
