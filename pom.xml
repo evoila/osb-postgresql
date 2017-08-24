@@ -11,9 +11,9 @@
 
     <parent>
 		<groupId>de.evoila.cf.broker</groupId>
-		<artifactId>persistence-parent</artifactId>
-		<relativePath>../</relativePath>
+		<artifactId>parent</artifactId>
 		<version>1.1.0</version>
+		<relativePath>../osb-core/</relativePath>
 	</parent>
     
     <properties>
