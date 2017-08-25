@@ -1,39 +1,23 @@
 package de.evoila.cf.broker.controller;
 
-import java.util.Map;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-
+import de.evoila.cf.broker.exception.*;
+import de.evoila.cf.broker.model.ErrorMessage;
+import de.evoila.cf.broker.model.ServiceInstanceBindingRequest;
+import de.evoila.cf.broker.model.ServiceInstanceBindingResponse;
+import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
-import de.evoila.cf.broker.exception.ServerviceInstanceBindingDoesNotExistsException;
-import de.evoila.cf.broker.exception.ServiceBrokerException;
-import de.evoila.cf.broker.exception.ServiceDefinitionDoesNotExistException;
-import de.evoila.cf.broker.exception.ServiceInstanceBindingExistsException;
-import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
-import de.evoila.cf.broker.model.ErrorMessage;
-import de.evoila.cf.broker.model.ServiceInstanceBindingRequest;
-import de.evoila.cf.broker.model.ServiceInstanceBindingResponse;
-import de.evoila.cf.broker.service.impl.BindingServiceImpl;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+import java.util.Map;
 
-/**
- * 
- * 
- * @author Johannes Hiemer.
- */
+/** @author Johannes Hiemer. */
 @Controller
 @RequestMapping(value = "/v2/service_instances")
 public class ServiceInstanceBindingController extends BaseController {
@@ -89,14 +73,14 @@ public class ServiceInstanceBindingController extends BaseController {
 	@ResponseBody
 	public ResponseEntity<ErrorMessage> handleException(ServiceInstanceDoesNotExistException ex,
 			HttpServletResponse response) {
-		return getErrorResponse(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+		return processErrorResponse(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
 	}
 
 	@ExceptionHandler(ServiceInstanceBindingExistsException.class)
 	@ResponseBody
 	public ResponseEntity<ErrorMessage> handleException(ServiceInstanceBindingExistsException ex,
 			HttpServletResponse response) {
-		return getErrorResponse(ex.getMessage(), HttpStatus.CONFLICT);
+		return processErrorResponse(ex.getMessage(), HttpStatus.CONFLICT);
 	}
 
 }

@@ -3,30 +3,20 @@
  */
 package de.evoila.cf.broker.service.impl;
 
-import java.util.List;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import de.evoila.cf.broker.exception.ServerviceInstanceBindingDoesNotExistsException;
-import de.evoila.cf.broker.exception.ServiceBrokerException;
-import de.evoila.cf.broker.exception.ServiceDefinitionDoesNotExistException;
-import de.evoila.cf.broker.exception.ServiceInstanceBindingExistsException;
-import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
-import de.evoila.cf.broker.model.Plan;
-import de.evoila.cf.broker.model.RouteBinding;
-import de.evoila.cf.broker.model.ServerAddress;
-import de.evoila.cf.broker.model.ServiceInstance;
-import de.evoila.cf.broker.model.ServiceInstanceBinding;
-import de.evoila.cf.broker.model.ServiceInstanceBindingResponse;
+import de.evoila.cf.broker.exception.*;
+import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.repository.BindingRepository;
 import de.evoila.cf.broker.repository.RouteBindingRepository;
 import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
 import de.evoila.cf.broker.repository.ServiceInstanceRepository;
 import de.evoila.cf.broker.service.BindingService;
 import de.evoila.cf.broker.service.HAProxyService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Johannes Hiemer.
@@ -72,11 +62,8 @@ public abstract class BindingServiceImpl implements BindingService {
 
 		if (route != null) {
 			RouteBinding routeBinding = bindRoute(serviceInstance, route);
-
 			routeBindingRepository.addRouteBinding(routeBinding);
-
 			ServiceInstanceBindingResponse response = new ServiceInstanceBindingResponse(routeBinding.getRoute());
-
 			return response;
 		}
 

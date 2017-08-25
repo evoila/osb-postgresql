@@ -1,20 +1,15 @@
 /**
  * 
  */
-package de.evoila.cf.broker.bean.impl;
+package de.evoila.cf.broker.bean;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
-import de.evoila.cf.broker.bean.HAProxyBean;
-
-/**
- * @author Rene Schollmeyer
- *
- */
+/** @author Rene Schollmeyer */
 @Service
 @ConfigurationProperties(prefix="haproxy")
-public class HAProxyBeanImpl implements HAProxyBean {
+public class HAProxyConfiguration {
 
 	private String uri;
 	

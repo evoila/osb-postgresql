@@ -1,37 +1,22 @@
 package de.evoila.cf.broker.controller;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-
+import de.evoila.cf.broker.controller.utils.DashboardUtils;
+import de.evoila.cf.broker.exception.*;
+import de.evoila.cf.broker.model.*;
+import de.evoila.cf.broker.service.CatalogService;
+import de.evoila.cf.broker.service.DeploymentServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
-import de.evoila.cf.broker.exception.AsyncRequiredException;
-import de.evoila.cf.broker.exception.ServiceBrokerException;
-import de.evoila.cf.broker.exception.ServiceDefinitionDoesNotExistException;
-import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
-import de.evoila.cf.broker.exception.ServiceInstanceExistsException;
-import de.evoila.cf.broker.model.ErrorMessage;
-import de.evoila.cf.broker.model.JobProgressResponse;
-import de.evoila.cf.broker.model.ServiceDefinition;
-import de.evoila.cf.broker.model.ServiceInstanceRequest;
-import de.evoila.cf.broker.model.ServiceInstanceResponse;
-import de.evoila.cf.broker.service.CatalogService;
-import de.evoila.cf.broker.service.impl.DeploymentServiceImpl;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 /**
- * 
  * @author Johannes Hiemer.
  * @author Christian Brinker, evoila.
  */
@@ -77,6 +62,8 @@ public class ServiceInstanceController extends BaseController {
 				request.getSpaceGuid(), request.getParameters(), request.getContext());
 
 
+		if (DashboardUtils.hasDashboard(svc))
+			response.setDashboardUrl(DashboardUtils.dashboard(svc, serviceInstanceId));
 		log.debug("ServiceInstance Created: " + serviceInstanceId);
 
 		if (response.isAsync())
@@ -115,20 +102,20 @@ public class ServiceInstanceController extends BaseController {
 	@ExceptionHandler({ ServiceDefinitionDoesNotExistException.class, AsyncRequiredException.class })
 	@ResponseBody
 	public ResponseEntity<ErrorMessage> handleException(Exception ex, HttpServletResponse response) {
-		return getErrorResponse(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+		return processErrorResponse(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
 	}
 
 	@ExceptionHandler(ServiceInstanceExistsException.class)
 	@ResponseBody
 	public ResponseEntity<ErrorMessage> handleException(ServiceInstanceExistsException ex,
 			HttpServletResponse response) {
-		return getErrorResponse(ex.getMessage(), HttpStatus.CONFLICT);
+		return processErrorResponse(ex.getMessage(), HttpStatus.CONFLICT);
 	}
 
 	@ExceptionHandler(ServiceInstanceDoesNotExistException.class)
 	@ResponseBody
 	public ResponseEntity<ErrorMessage> handleException(ServiceInstanceDoesNotExistException ex,
 			HttpServletResponse response) {
-		return getErrorResponse("{}", HttpStatus.GONE);
+		return processErrorResponse("{}", HttpStatus.GONE);
 	}
 }

@@ -29,7 +29,9 @@
 		<org.springframework.boot>1.5.2.RELEASE</org.springframework.boot>
 		<java.version>1.8</java.version>
 	</properties>
+
 	<dependencyManagement>
+	</dependencyManagement>
 		<dependencies>
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
@@ -67,6 +69,11 @@
 
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-cloud-connectors</artifactId>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-starter-security</artifactId>
 				<version>${org.springframework.boot}</version>
 			</dependency>
@@ -90,7 +97,7 @@
 			</dependency>
 
 		</dependencies>
-	</dependencyManagement>
+
 	<build>
 		<pluginManagement>
 			<plugins>
