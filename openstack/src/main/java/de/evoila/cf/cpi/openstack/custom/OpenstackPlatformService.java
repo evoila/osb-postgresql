@@ -131,7 +131,7 @@ public class OpenstackPlatformService extends OpenstackServiceFactory {
 		if(plan.getMetadata().containsKey(CLUSTER)) {
 			platformParameters.put(SECURITY_GROUPS, plan.getMetadata().get(SECURITY_GROUPS).toString());
 			platformParameters.put(CLUSTER, plan.getMetadata().get(CLUSTER).toString());
-			platformParameters.put(NODE_NUMBER, "1");
+			platformParameters.put(NODE_NUMBER, plan.getMetadata().containsKey(NODE_NUMBER) ? plan.getMetadata().get(NODE_NUMBER).toString() : "1");
 		}
 
 		platformParameters.putAll(customProperties);
