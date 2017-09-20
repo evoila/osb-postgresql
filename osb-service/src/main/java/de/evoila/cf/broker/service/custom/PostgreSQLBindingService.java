@@ -32,11 +32,15 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
 	private Logger log = LoggerFactory.getLogger(getClass());
 
-	@Autowired
 	private PostgresCustomImplementation postgresCustomImplementation;
-	
-	@Autowired
 	private PostgreSQLExistingServiceFactory existingServiceFactory;
+
+	PostgreSQLBindingService(PostgresCustomImplementation customImplementation, PostgreSQLExistingServiceFactory existingServiceFactory){
+		Assert.notNull(customImplementation, "PostgresCustomImplementation may not be null");
+		Assert.notNull(existingServiceFactory, "PostgreSQLExistingServiceFactory may not be null");
+		this.existingServiceFactory = existingServiceFactory;
+		this.postgresCustomImplementation = customImplementation;
+	}
 	
 
 	private PostgresDbService connection(ServiceInstance serviceInstance) throws SQLException {
@@ -55,53 +59,6 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		PostgresDbService jdbcService = new PostgresDbService();
 		jdbcService.createConnection(existingServiceFactory.getHosts().get(0), existingServiceFactory.getPort(), database, existingServiceFactory.getUsername(), existingServiceFactory.getPassword());
 		return jdbcService;
-	}
-
-	public void create(ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
-		PostgresDbService jdbcService;
-		try {
-			jdbcService = connection(serviceInstance);
-		} catch (SQLException e1) {
-			throw new ServiceBrokerException("Could not connect to database");
-		}
-
-		String instanceId = serviceInstance.getId();
-
-		try {
-			postgresCustomImplementation.initServiceInstance(jdbcService, serviceInstance, serviceInstance.getId());
-
-			jdbcService.executeUpdate("REVOKE all on database \"" + instanceId + "\" from public");
-		} catch (SQLException e) {
-			log.error(e.toString());
-			throw new ServiceBrokerException("Could not add to database");
-		} finally {
-            jdbcService.closeIfConnected();
-        }
-	}
-
-	public void delete(ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
-		PostgresDbService jdbcService;
-		
-		try {
-			jdbcService = connection(serviceInstance);
-		} catch (SQLException e1) {
-			throw new ServiceBrokerException("Could not connect to database");
-		}
-
-		String instanceId = serviceInstance.getId();
-
-		try {
-//			jdbcService.executeUpdate("REVOKE all on database \"" + instanceId + "\" from public");
-			jdbcService.executeUpdate("DROP DATABASE \"" + instanceId + "\"");
-			jdbcService.executeUpdate("DROP ROLE \"" + instanceId + "\"");
-		} catch (SQLException e) {
-			log.error(e.toString());
-			throw new ServiceBrokerException("Could not remove from database");
-		} finally {
-            jdbcService.closeIfConnected();
-        }
-		
-		
 	}
 
 	/*
