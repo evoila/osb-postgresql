@@ -16,7 +16,7 @@ import java.util.HashMap;
 /** @author Yannic Remmet. */
 @RestController
 @RequestMapping(value = "/v2/manage/backup")
-@ConditionalOnBean(name="backupService") // Needs to be the Bean Name in this case otherwise Spring tries to create the controller
+@ConditionalOnBean(BackupService.class)
 class BackupController extends BaseController {
 
     @Autowired

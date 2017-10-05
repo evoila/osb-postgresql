@@ -11,9 +11,11 @@ import de.evoila.cf.model.DatabaseCredential;
 import de.evoila.cf.model.RestoreRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -29,7 +31,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 @Service
-@ConditionalOnBean(BackupServiceCondition.class)
+@ConditionalOnBean({BackupConfiguration.class, InstanceCredentialService.class, ConnectionFactory.class})
 public class BackupServiceImpl implements BackupService {
     private static final Logger logger = LoggerFactory.getLogger(BackupServiceImpl.class);
     private final RestTemplate rest;
@@ -54,6 +56,8 @@ public class BackupServiceImpl implements BackupService {
         headers.add("Authorization", encodeCredentials());
 
         template.setMessageConverter(new Jackson2JsonMessageConverter());
+
+        logger.debug("CREATED BackupService!");
     }
 
     private String encodeCredentials () {
