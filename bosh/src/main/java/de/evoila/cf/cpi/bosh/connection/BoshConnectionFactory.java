@@ -21,6 +21,13 @@ public class BoshConnectionFactory {
 
     private static BoshConnectionFactory instance = null;
 
+    public static BoshConnectionFactory getInstance() {
+        if(instance == null) {
+            return new BoshConnectionFactory();
+        }
+        return instance;
+    }
+
     public BoshConnectionFactory setCredentials(String username, String password) {
         BoshConnectionFactory.username = username;
         BoshConnectionFactory.password = password;
