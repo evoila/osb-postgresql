@@ -11,6 +11,7 @@ import de.evoila.cf.broker.repository.PlatformRepository;
 import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
 import de.evoila.cf.cpi.bosh.connection.BoshConnection;
 import io.bosh.client.deployments.Deployment;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import rx.Observable;
@@ -22,14 +23,14 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
-public class BoshPlatormService extends BoshServiceFactory {
+public class BoshPlatformService extends BoshServiceFactory {
 
     private PlatformRepository platformRepository;
     private ServicePortAvailabilityVerifier portAvailabilityVerifier;
     private Optional<DashboardClient> dashboardClient;
     private DeploymentManager deploymentManager;
 
-    BoshPlatormService(PlatformRepository repository, ServicePortAvailabilityVerifier availabilityVerifier,DeploymentManager deploymentManager){
+    BoshPlatformService(PlatformRepository repository, ServicePortAvailabilityVerifier availabilityVerifier, DeploymentManager deploymentManager){
         Assert.notNull(repository, "The platform repository can not be null");
         Assert.notNull(connection, "The ServicePortAvailabilityVerifier can not be null");
         Assert.notNull(connection, "The DeploymentManager can not be null");
@@ -71,14 +72,15 @@ public class BoshPlatormService extends BoshServiceFactory {
 
     @Override
     public ServiceInstance createInstance (ServiceInstance instance, Plan plan, Map<String, String> customParameters) throws PlatformException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "text/yaml");
+
         try {
             Deployment deployment = deploymentManager.newDeployment(instance, plan);
+            connection.connection().deployments().create(deployment, headers);
         } catch (URISyntaxException | IOException e) {
             throw new PlatformException("Could not create Service instance", e);
         }
-
-        // TODO
-        connection.connection().deployments().create(deployment);
 
         return instance;
     }
@@ -93,10 +95,9 @@ public class BoshPlatormService extends BoshServiceFactory {
 
     @Override
     public void deleteServiceInstance (ServiceInstance serviceInstance) throws PlatformException {
-        Deployment deployment = connection.connection().deployments().get(serviceInstance.getId()).toBlocking().first();
+       Deployment deployment = connection.connection().deployments().get(serviceInstance.getId()).toBlocking().first();
 
-        // TODO
-        connection.connection().deployments().delete(deployment);
+       connection.connection().deployments().delete(deployment);
     }
 
     @Override
