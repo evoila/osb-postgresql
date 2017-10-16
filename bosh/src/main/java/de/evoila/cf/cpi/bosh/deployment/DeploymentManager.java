@@ -4,22 +4,18 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.sun.xml.internal.ws.developer.Serialization;
 import de.evoila.cf.broker.model.Plan;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
 import io.bosh.client.deployments.Deployment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cloud.cloudfoundry.com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.net.URISyntaxException;
-import java.util.Map;
 
 @Service
 public class DeploymentManager {
@@ -36,16 +32,16 @@ public class DeploymentManager {
         this.reader = mapper.readerFor(Manifest.class);
     }
 
-    protected String replaceParameters (String templateDeployment, Plan plan) { return templateDeployment;}
+    protected void replaceParameters (Manifest manifest, Plan plan) {
+        manifest.setProperties(plan.getMetadata());
+    }
 
     public Deployment createDeployment (ServiceInstance instance, Plan plan) throws IOException, URISyntaxException {
         Deployment deployment = new Deployment();
         deployment.setName(instance.getId());
-        String templateDeployment = accessTemplate("bosh/manifest.yml");
-
-        String deploymentManifest = replaceParameters(templateDeployment, plan);
-
-        deployment.setManifestMap(reader.readValue(deploymentManifest));
+        Manifest manifest = readTemplate("bosh/manifest.yml");
+        replaceParameters(manifest,plan);
+        deployment.setRawManifest(generateManifest(manifest));
         return deployment;
     }
 
@@ -59,8 +55,9 @@ public class DeploymentManager {
     }
 
     public Deployment updateDeployment (Deployment deployment, Plan plan) throws IOException {
-        String deploymentManifest = replaceParameters(deployment.getRawManifest(), plan);
-        deployment.setManifestMap(reader.readValue(deploymentManifest));
+        Manifest manifest = mapper.readValue(deployment.getRawManifest(), Manifest.class);
+        replaceParameters(manifest,plan);
+        deployment.setRawManifest(generateManifest(manifest));
         return deployment;
     }
 
