@@ -51,7 +51,7 @@ public abstract class ExistingServiceFactory implements PlatformService {
 	
 	@Override
 	@PostConstruct
-	public void registerCustomPlatformServie() {
+	public void registerCustomPlatformService () {
 
 		hosts = existingServiceBean.getHosts();
 		port = existingServiceBean.getPort();
