@@ -12,20 +12,19 @@ import io.bosh.client.deployments.Deployment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
-@Service
 public class DeploymentManager {
     private final ObjectReader reader;
     private final ObjectMapper mapper;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-
-
-    DeploymentManager() {
+    public DeploymentManager() {
         this.mapper = new ObjectMapper(new YAMLFactory());
         mapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
 
@@ -33,13 +32,21 @@ public class DeploymentManager {
     }
 
     protected void replaceParameters (Manifest manifest, Plan plan) {
-        manifest.setProperties(plan.getMetadata());
+        manifest.getProperties().putAll(plan.getMetadata());
+        HashMap<String, HashMap<String, List<String>>> params = new HashMap<>();
+        HashMap<String, List<String>> p = new HashMap<>();
+        List<String> l = new ArrayList<>();
+        l.add("root");
+        p.put("additional_roles", l);
+        params.put("auth", p);
+        manifest.getProperties().put("mongodb", params);
     }
 
     public Deployment createDeployment (ServiceInstance instance, Plan plan) throws IOException, URISyntaxException {
         Deployment deployment = new Deployment();
         deployment.setName(instance.getId());
         Manifest manifest = readTemplate("bosh/manifest.yml");
+        manifest.setName(instance.getId());
         replaceParameters(manifest,plan);
         deployment.setRawManifest(generateManifest(manifest));
         return deployment;

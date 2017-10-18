@@ -13,7 +13,7 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Job {
     private String name;
-    private String persistent_disk;
+    private int persistent_disk;
     private int instances;
     private String resource_pool;
     private List<Template> templates;
@@ -29,11 +29,11 @@ public class Job {
         this.name = name;
     }
 
-    public String getPersistent_disk () {
+    public int getPersistent_disk () {
         return persistent_disk;
     }
 
-    public void setPersistent_disk (String persistent_disk) {
+    public void setPersistent_disk (int persistent_disk) {
         this.persistent_disk = persistent_disk;
     }
 

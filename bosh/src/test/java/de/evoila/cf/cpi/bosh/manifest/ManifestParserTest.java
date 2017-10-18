@@ -1,6 +1,7 @@
 package de.evoila.cf.cpi.bosh.manifest;
 
 import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
+import de.evoila.cf.cpi.bosh.deployment.manifest.Compilation;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
 
 import de.evoila.cf.cpi.bosh.deployment.manifest.ResourcePool;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ManifestParserTest extends ManifestTest {
 
 
+
     @Autowired
     DeploymentManager deploymentManager;
 
@@ -40,7 +42,6 @@ public class ManifestParserTest extends ManifestTest {
     @Test public void testManifestParameter() throws IOException, URISyntaxException {
         assertEquals(DIRECTOR_UUID, manifest.getDirector_uuid());
         assertEquals(DEPLOYMENT_NAME, manifest.getName());
-        assertEquals("release", manifest.getReleases().get(0).getName());
     }
 
     @Test public void testUpdateParameter() throws IOException, URISyntaxException {
@@ -104,5 +105,18 @@ public class ManifestParserTest extends ManifestTest {
         } else {
             assertFalse(true);
         }
+    }
+
+    @Test public void testReleases(){
+        assertEquals(RELEASE_NAME, manifest.getReleases().get(0).getName());
+        assertEquals(RELEASE_VERSION, manifest.getReleases().get(0).getVersion());
+    }
+
+    @Test public void testCompilation(){
+        Compilation comp = manifest.getCompilation();
+
+        assertEquals(COMP_NETWORK, comp.getNetwork());
+        assertEquals(COMP_WORKERS,comp.getWorkers());
+
     }
 }

@@ -10,9 +10,12 @@ update:
   max_in_flight: 2
 properties:
   TEST: "TEST"
+compilation:
+  workers: 1
+  network: "default"
 jobs:
 - name: "job1"
-  persistent_disk: "10_240"
+  persistent_disk: 10240
   instances: 3
   resource_pool: "R-Pool"
   templates:

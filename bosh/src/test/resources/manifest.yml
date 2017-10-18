@@ -7,7 +7,7 @@ releases:
 compilation:
   workers: 1
   reuse_compilation_vms: false
-  network: compile
+  network: default
   cloud_properties:
     cpu: 4
     datacenters:
@@ -44,7 +44,7 @@ jobs:
     release: default
   - name: mongodb3
     release: mongodb3
-  persistent_disk: 10_240
+  persistent_disk: 10240
   resource_pool: R-Pool
   networks:
   - name: default
