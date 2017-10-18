@@ -97,9 +97,6 @@ public class BoshPlatformService implements PlatformService {
 
         try {
             Deployment deployment = deploymentManager.createDeployment(instance, plan);
-            FileWriter writer = new FileWriter("/Users/yremmet/test.yml");
-            writer.write(deployment.getRawManifest());
-            writer.close();
             Observable<Task> task = connection.connection().deployments().create(deployment);
             System.err.println(task.toBlocking().first().getId());
 
