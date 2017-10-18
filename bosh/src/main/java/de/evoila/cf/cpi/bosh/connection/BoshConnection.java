@@ -34,7 +34,7 @@ public class BoshConnection {
                                .withHost(host)
                                .withCredentials(username, password)
                                .build();
-        return this; //return fehlte hier, stimmt das so?
+        return this;
     }
 
 

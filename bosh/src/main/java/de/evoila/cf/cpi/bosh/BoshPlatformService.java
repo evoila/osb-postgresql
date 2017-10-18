@@ -1,6 +1,7 @@
 package de.evoila.cf.cpi.bosh;
 
 
+import de.evoila.cf.broker.bean.BoshProperties;
 import de.evoila.cf.broker.controller.utils.DashboardUtils;
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.DashboardClient;
@@ -8,45 +9,65 @@ import de.evoila.cf.broker.model.Plan;
 import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.repository.PlatformRepository;
+import de.evoila.cf.broker.service.CatalogService;
 import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
 import de.evoila.cf.cpi.bosh.connection.BoshConnection;
+import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
 import io.bosh.client.deployments.Deployment;
-import org.springframework.http.HttpHeaders;
+import io.bosh.client.tasks.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import rx.Observable;
+import de.evoila.cf.broker.service.PlatformService;
 
 import javax.annotation.PostConstruct;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Map;
+import java.util.Map;;
 import java.util.Optional;
 
 @Service
-public class BoshPlatformService extends BoshServiceFactory {
+public class BoshPlatformService implements PlatformService {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final BoshConnection connection;
+    private final PlatformRepository platformRepository;
+    private final ServicePortAvailabilityVerifier portAvailabilityVerifier;
+    private final DeploymentManager deploymentManager;
+    private final Optional<DashboardClient> dashboardClient;
+    private final BoshProperties boshProperties;
+    private final CatalogService catalogService;
 
-    private PlatformRepository platformRepository;
-    private ServicePortAvailabilityVerifier portAvailabilityVerifier;
-    private Optional<DashboardClient> dashboardClient;
-    private DeploymentManager deploymentManager;
 
-    BoshPlatformService(PlatformRepository repository, ServicePortAvailabilityVerifier availabilityVerifier, DeploymentManager deploymentManager){
+    BoshPlatformService (PlatformRepository repository,
+                         CatalogService catalogService,
+                         ServicePortAvailabilityVerifier availabilityVerifier,
+                         BoshProperties boshProperties,
+                         Optional<DashboardClient> dashboardClient){
+
         Assert.notNull(repository, "The platform repository can not be null");
-        Assert.notNull(connection, "The ServicePortAvailabilityVerifier can not be null");
-        Assert.notNull(connection, "The DeploymentManager can not be null");
+        Assert.notNull(availabilityVerifier, "The ServicePortAvailabilityVerifier can not be null");
+        Assert.notNull(boshProperties, "The BoshProperties can not be null");
+        Assert.notNull(catalogService, "The CatalogService can not be null");
+
+        this.catalogService = catalogService;
         this.platformRepository = repository;
         this.portAvailabilityVerifier = availabilityVerifier;
         this.dashboardClient = dashboardClient;
-        this.deploymentManager = deploymentManager;
+        this.deploymentManager = new DeploymentManager();
+        this.boshProperties = boshProperties;
+        connection = new BoshConnection(boshProperties.getUsername(),
+                                        boshProperties.getPassword(),
+                                        boshProperties.getHost()).authenticate();
     }
 
     @Override
     @PostConstruct
-    public void registerCustomPlatformServie () {
+    public void registerCustomPlatformService () {
             this.platformRepository.addPlatform(Platform.BOSH, this);
     }
-
-
 
     @Override
     public ServiceInstance postProvisioning (ServiceInstance serviceInstance, Plan plan) throws PlatformException {
@@ -72,13 +93,18 @@ public class BoshPlatformService extends BoshServiceFactory {
 
     @Override
     public ServiceInstance createInstance (ServiceInstance instance, Plan plan, Map<String, String> customParameters) throws PlatformException {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", "text/yaml");
+
 
         try {
-            Deployment deployment = deploymentManager.newDeployment(instance, plan);
-            connection.connection().deployments().create(deployment, headers);
+            Deployment deployment = deploymentManager.createDeployment(instance, plan);
+            FileWriter writer = new FileWriter("/Users/yremmet/test.yml");
+            writer.write(deployment.getRawManifest());
+            writer.close();
+            Observable<Task> task = connection.connection().deployments().create(deployment);
+            System.err.println(task.toBlocking().first().getId());
+
         } catch (URISyntaxException | IOException e) {
+            logger.error("Couldn't create Service Instace via Bosh Deployment");
             throw new PlatformException("Could not create Service instance", e);
         }
 
@@ -95,8 +121,8 @@ public class BoshPlatformService extends BoshServiceFactory {
 
     @Override
     public void deleteServiceInstance (ServiceInstance serviceInstance) throws PlatformException {
-       Deployment deployment = connection.connection().deployments().get(serviceInstance.getId()).toBlocking().first();
-
+       Observable<Deployment> obs = connection.connection().deployments().get(serviceInstance.getId());
+       Deployment deployment = obs.toBlocking().first();
        connection.connection().deployments().delete(deployment);
     }
 
@@ -113,4 +139,21 @@ public class BoshPlatformService extends BoshServiceFactory {
                                    instance.getOrganizationGuid(), instance.getSpaceGuid(), instance.getParameters(),
                                    instance.getDashboardUrl(), instance.getInternalId());
     }
+
+
+    @Override
+    public boolean isSyncPossibleOnCreate (Plan plan) {
+        return false;
+    }
+
+    @Override
+    public boolean isSyncPossibleOnDelete (ServiceInstance instance) {
+        return false;
+    }
+
+    @Override
+    public boolean isSyncPossibleOnUpdate (ServiceInstance instance, Plan plan) {
+        return false;
+    }
+
 }
