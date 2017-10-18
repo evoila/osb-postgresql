@@ -1,16 +1,12 @@
 package de.evoila.cf.cpi.bosh.manifest;
 
 import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
-import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
-import de.evoila.cf.cpi.bosh.deployment.manifest.ResourcePool;
-import de.evoila.cf.cpi.bosh.deployment.manifest.Stemcell;
-import de.evoila.cf.cpi.bosh.deployment.manifest.Update;
+import de.evoila.cf.cpi.bosh.deployment.manifest.*;
 import de.evoila.cf.cpi.bosh.deployment.manifest.job.Job;
 import de.evoila.cf.cpi.bosh.deployment.manifest.job.Template;
 
 import de.evoila.cf.cpi.bosh.deployment.manifest.network.Network;
 import de.evoila.cf.cpi.bosh.deployment.manifest.network.Subnet;
-import io.bosh.client.releases.Release;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,6 +36,7 @@ public class ManifestGeneratorTest extends ManifestTest {
         manifest.getProperties().put("TEST", "TEST");
         Release release = new Release();
         release.setName(RELEASE_NAME);
+        release.setVersion(null);
         manifest.getReleases().add(release);
 
         Update u = new Update();
@@ -86,6 +83,11 @@ public class ManifestGeneratorTest extends ManifestTest {
         job.getNetworks().add(jobNetwork);
         job.getProperties().put("TEST","TEST");
 
+        Compilation compilation = new Compilation();
+        compilation.setNetwork(COMP_NETWORK);
+        compilation.setWorkers(COMP_WORKERS);
+
+        manifest.setCompilation(compilation);
         manifest.getNetworks().add(network);
         manifest.getResource_pools().add(r);
         manifest.getJobs().add(job);

@@ -3,9 +3,6 @@ package de.evoila.cf.cpi.bosh.deployment.manifest;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import de.evoila.cf.cpi.bosh.deployment.manifest.job.Job;
 import de.evoila.cf.cpi.bosh.deployment.manifest.network.Network;
-import io.bosh.client.releases.Release;
-
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +18,7 @@ public class Manifest {
         private List<Stemcell> stemcells = new ArrayList<>();
         private List<InstanceGroup> instance_groups = new ArrayList<>();
         private Map<String, Object> properties = new HashMap<>();
+        private Compilation compilation;
 
         private List<Job> jobs = new ArrayList<>();
 
@@ -107,4 +105,11 @@ public class Manifest {
                 this.resource_pools = resource_pools;
         }
 
+        public Compilation getCompilation () {
+                return compilation;
+        }
+
+        public void setCompilation (Compilation compilation) {
+                this.compilation = compilation;
+        }
 }

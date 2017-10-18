@@ -8,10 +8,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 
-public class ManifestTest {
+public abstract class ManifestTest {
     public static final String DIRECTOR_UUID = "9b61cd26-8e25-4272-b45d-340eaaf47f08";
     public static final String DEPLOYMENT_NAME = "deployment-name";
     public static final String RELEASE_NAME = "release";
+    public static final String RELEASE_VERSION = "latest";
 
     public static final int CANARIES = 1;
     public static final String UPDATE_WATCH_TIME = "15000-30000";
@@ -26,7 +27,7 @@ public class ManifestTest {
 
     public static final String JOB_NAME = "job1";
     public static final int INSTANCES = 3;
-    public static final String JOB_PERSISTENT_DISK = "10_240";
+    public static final int JOB_PERSISTENT_DISK = 10240;
     public static final String JOB_RESOURCE_POOL_NAME = "R-Pool";
 
     public static final String TEMPLATE1 = "default";
@@ -40,6 +41,8 @@ public class ManifestTest {
     public static final String STATIC_IP = "10.241.143.44";
     public static final String RESERVED = "10.241.143.44";
 
+    public static final int COMP_WORKERS = 1;
+    public static final String COMP_NETWORK = "default";
 
     public String readFile(String path) throws IOException, URISyntaxException {
         InputStream inputStream = new ClassPathResource(path).getInputStream();
