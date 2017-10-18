@@ -20,7 +20,7 @@ public abstract interface PlatformService {
 	/**
 	 * 
 	 */
-	public void registerCustomPlatformServie();
+	public void registerCustomPlatformService ();
 	
 	/**
 	 * @param plan
