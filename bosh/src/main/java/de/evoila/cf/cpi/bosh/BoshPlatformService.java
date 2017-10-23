@@ -10,6 +10,7 @@ import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.repository.PlatformRepository;
 import de.evoila.cf.broker.service.CatalogService;
+import de.evoila.cf.broker.service.PlatformServiceAdapter;
 import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
 import de.evoila.cf.cpi.bosh.connection.BoshConnection;
 import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
@@ -30,7 +31,12 @@ import java.util.Map;;
 import java.util.Optional;
 
 @Service
-public class BoshPlatformService implements PlatformService {
+public class BoshPlatformService extends PlatformServiceAdapter {
+    public static final String QUEUED = "queued";
+    public static final int SLEEP = 3000;
+    public static final String ERROR = "error";
+    public static final String PROCESSING = "processing";
+    public static final String DONE = "done";
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final BoshConnection connection;
     private final PlatformRepository platformRepository;
@@ -87,25 +93,41 @@ public class BoshPlatformService implements PlatformService {
     }
 
     @Override
-    public void preDeprovisionServiceInstance (ServiceInstance serviceInstance) {
-
-    }
-
-    @Override
     public ServiceInstance createInstance (ServiceInstance instance, Plan plan, Map<String, String> customParameters) throws PlatformException {
-
-
         try {
             Deployment deployment = deploymentManager.createDeployment(instance, plan);
             Observable<Task> task = connection.connection().deployments().create(deployment);
-            System.err.println(task.toBlocking().first().getId());
-
+            waitForStackCompletion(task.toBlocking().first());
         } catch (URISyntaxException | IOException e) {
-            logger.error("Couldn't create Service Instace via Bosh Deployment");
-            throw new PlatformException("Could not create Service instance", e);
+            logger.error("Couldn't create Service Instannce via Bosh Deployment");
+            throw new PlatformException("Could not create Service Instance", e);
         }
 
         return instance;
+    }
+
+    private void waitForStackCompletion (Task task) throws PlatformException {
+        logger.debug("Bosh Deployment started waiting for task to complete {}", task);
+        if(task == null) {
+            logger.error("Deployment Task is null");
+            throw new PlatformException("Could not create Service Instance. No Bosh task is present");
+        }
+        switch (task.getState()){
+            case PROCESSING:
+            case QUEUED:
+                try {
+                    Thread.sleep(SLEEP);
+                } catch (InterruptedException e) {
+                    throw new PlatformException(e);
+                }
+                Observable<Task> taskObservable = connection.connection().tasks().get(task.getId());
+                waitForStackCompletion(taskObservable.toBlocking().first());
+                return;
+            case ERROR:
+                throw new PlatformException(String.format("Could not create Service Instance. Task finished with error. [%s]  %s", task.getId(), task.getResult()));
+            case DONE:
+                return;
+        }
     }
 
     @Override
@@ -137,20 +159,5 @@ public class BoshPlatformService implements PlatformService {
                                    instance.getDashboardUrl(), instance.getInternalId());
     }
 
-
-    @Override
-    public boolean isSyncPossibleOnCreate (Plan plan) {
-        return false;
-    }
-
-    @Override
-    public boolean isSyncPossibleOnDelete (ServiceInstance instance) {
-        return false;
-    }
-
-    @Override
-    public boolean isSyncPossibleOnUpdate (ServiceInstance instance, Plan plan) {
-        return false;
-    }
 
 }

@@ -1,7 +1,8 @@
 package de.evoila.cf.cpi.bosh.deployment.manifest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.graph.Network;
+import de.evoila.cf.cpi.bosh.deployment.manifest.instanceGroup.JobV2;
+import de.evoila.cf.cpi.bosh.deployment.manifest.instanceGroup.NetworkV2;
 import io.bosh.client.releases.Job;
 
 import java.util.List;
@@ -17,8 +18,8 @@ public class InstanceGroup {
     private String lifecycle;
     private String persistent_disk_type;
     private List<String> azs;
-    private List<Network> networks;
-    private List<Job> jobs;
+    private List<NetworkV2> networks;
+    private List<JobV2> jobs;
 
     public String getName () {
         return name;
@@ -76,19 +77,19 @@ public class InstanceGroup {
         this.azs = azs;
     }
 
-    public List<Network> getNetworks () {
+    public List<NetworkV2> getNetworks () {
         return networks;
     }
 
-    public void setNetworks (List<Network> networks) {
+    public void setNetworks (List<NetworkV2> networks) {
         this.networks = networks;
     }
 
-    public List<Job> getJobs () {
+    public List<JobV2> getJobs () {
         return jobs;
     }
 
-    public void setJobs (List<Job> jobs) {
+    public void setJobs (List<JobV2> jobs) {
         this.jobs = jobs;
     }
 }
