@@ -140,9 +140,10 @@ public class BoshPlatformService extends PlatformServiceAdapter {
 
     @Override
     public void deleteServiceInstance (ServiceInstance serviceInstance) throws PlatformException {
-       Observable<Deployment> obs = connection.connection().deployments().get(serviceInstance.getId());
-       Deployment deployment = obs.toBlocking().first();
-       connection.connection().deployments().delete(deployment);
+        Observable<Deployment> obs = connection.connection().deployments().get(serviceInstance.getId());
+        Deployment deployment = obs.toBlocking().first();
+        Observable<Task> task = connection.connection().deployments().delete(deployment);
+        waitForStackCompletion(task.toBlocking().first());
     }
 
     @Override
