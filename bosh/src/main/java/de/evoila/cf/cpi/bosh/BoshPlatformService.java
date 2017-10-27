@@ -15,30 +15,30 @@ import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
 import de.evoila.cf.cpi.bosh.connection.BoshConnection;
 import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
 import io.bosh.client.deployments.Deployment;
+import io.bosh.client.errands.ErrandSummary;
 import io.bosh.client.tasks.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import rx.Observable;
-import de.evoila.cf.broker.service.PlatformService;
 
 import javax.annotation.PostConstruct;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;;
 import java.util.Optional;
 
-@Service
-public class BoshPlatformService extends PlatformServiceAdapter {
+
+public abstract class BoshPlatformService extends PlatformServiceAdapter {
     public static final String QUEUED = "queued";
     public static final int SLEEP = 3000;
     public static final String ERROR = "error";
     public static final String PROCESSING = "processing";
     public static final String DONE = "done";
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final BoshConnection connection;
+    protected final BoshConnection connection;
     private final PlatformRepository platformRepository;
     private final ServicePortAvailabilityVerifier portAvailabilityVerifier;
     private final DeploymentManager deploymentManager;
@@ -51,18 +51,20 @@ public class BoshPlatformService extends PlatformServiceAdapter {
                          CatalogService catalogService,
                          ServicePortAvailabilityVerifier availabilityVerifier,
                          BoshProperties boshProperties,
-                         Optional<DashboardClient> dashboardClient){
+                         Optional<DashboardClient> dashboardClient,
+                         DeploymentManager deploymentManager){
 
         Assert.notNull(repository, "The platform repository can not be null");
         Assert.notNull(availabilityVerifier, "The ServicePortAvailabilityVerifier can not be null");
         Assert.notNull(boshProperties, "The BoshProperties can not be null");
         Assert.notNull(catalogService, "The CatalogService can not be null");
+        Assert.notNull(deploymentManager, "The Deployment Manager can not be null");
 
         this.catalogService = catalogService;
         this.platformRepository = repository;
         this.portAvailabilityVerifier = availabilityVerifier;
         this.dashboardClient = dashboardClient;
-        this.deploymentManager = new DeploymentManager();
+        this.deploymentManager = deploymentManager;
         this.boshProperties = boshProperties;
         connection = new BoshConnection(boshProperties.getUsername(),
                                         boshProperties.getPassword(),
@@ -95,9 +97,11 @@ public class BoshPlatformService extends PlatformServiceAdapter {
     @Override
     public ServiceInstance createInstance (ServiceInstance instance, Plan plan, Map<String, String> customParameters) throws PlatformException {
         try {
-            Deployment deployment = deploymentManager.createDeployment(instance, plan);
+            Deployment deployment = deploymentManager.createDeployment(instance, plan, customParameters);
             Observable<Task> task = connection.connection().deployments().create(deployment);
-            waitForStackCompletion(task.toBlocking().first());
+            waitForTaskCompletion(task.toBlocking().first());
+            Observable<List<ErrandSummary>> errands = connection.connection().errands().list(deployment.getName());
+            runCreateErrands(instance, plan, deployment, errands);
         } catch (URISyntaxException | IOException e) {
             logger.error("Couldn't create Service Instannce via Bosh Deployment");
             throw new PlatformException("Could not create Service Instance", e);
@@ -106,11 +110,15 @@ public class BoshPlatformService extends PlatformServiceAdapter {
         return instance;
     }
 
-    private void waitForStackCompletion (Task task) throws PlatformException {
+    protected void runCreateErrands (ServiceInstance instance, Plan plan, Deployment deployment, Observable<List<ErrandSummary>> errands) throws PlatformException { }
+    protected void runUpdateErrands (ServiceInstance instance, Plan plan, Deployment deployment, Observable<List<ErrandSummary>> errands) throws PlatformException { }
+    protected void runDeleteErrands (ServiceInstance instance, Deployment deployment, Observable<List<ErrandSummary>> errands) { }
+
+    protected void waitForTaskCompletion (Task task) throws PlatformException {
         logger.debug("Bosh Deployment started waiting for task to complete {}", task);
         if(task == null) {
             logger.error("Deployment Task is null");
-            throw new PlatformException("Could not create Service Instance. No Bosh task is present");
+            throw new PlatformException("Could not alter Service Instance. No Bosh task is present");
         }
         switch (task.getState()){
             case PROCESSING:
@@ -121,7 +129,7 @@ public class BoshPlatformService extends PlatformServiceAdapter {
                     throw new PlatformException(e);
                 }
                 Observable<Task> taskObservable = connection.connection().tasks().get(task.getId());
-                waitForStackCompletion(taskObservable.toBlocking().first());
+                waitForTaskCompletion(taskObservable.toBlocking().first());
                 return;
             case ERROR:
                 throw new PlatformException(String.format("Could not create Service Instance. Task finished with error. [%s]  %s", task.getId(), task.getResult()));
@@ -142,15 +150,23 @@ public class BoshPlatformService extends PlatformServiceAdapter {
     public void deleteServiceInstance (ServiceInstance serviceInstance) throws PlatformException {
         Observable<Deployment> obs = connection.connection().deployments().get(serviceInstance.getId());
         Deployment deployment = obs.toBlocking().first();
-        Observable<Task> task = connection.connection().deployments().delete(deployment);
-        waitForStackCompletion(task.toBlocking().first());
+        Observable<List<ErrandSummary>> errands = connection.connection().errands().list(deployment.getName());
+        runDeleteErrands(serviceInstance, deployment, errands);
+        connection.connection().deployments().delete(deployment);
+    }
+
+    private void runDeleteErrands (ServiceInstance serviceInstance, Deployment deployment) {
     }
 
     @Override
     public ServiceInstance updateInstance (ServiceInstance instance, Plan plan) throws PlatformException {
         Deployment deployment = connection.connection().deployments().get(instance.getId()).toBlocking().first();
+        Observable<List<ErrandSummary>> errands = connection.connection().errands().list(deployment.getName());
+        runUpdateErrands(instance, plan, deployment, errands);
         try {
-            deployment = deploymentManager.updateDeployment(deployment, plan);
+            deployment = deploymentManager.updateDeployment(instance, deployment, plan);
+            Observable<Task> taskObservable = connection.connection().deployments().update(deployment);
+            waitForTaskCompletion(taskObservable.toBlocking().first());
         } catch (IOException e) {
             throw new PlatformException("Could not update Service instance", e);
         }
