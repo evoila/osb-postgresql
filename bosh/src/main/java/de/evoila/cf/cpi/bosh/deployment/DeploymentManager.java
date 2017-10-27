@@ -15,9 +15,8 @@ import org.springframework.core.io.ClassPathResource;
 
 import java.io.*;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 
 public class DeploymentManager {
     private final ObjectReader reader;
@@ -31,23 +30,16 @@ public class DeploymentManager {
         this.reader = mapper.readerFor(Manifest.class);
     }
 
-    protected void replaceParameters (Manifest manifest, Plan plan) {
+    protected void replaceParameters (ServiceInstance instance, Manifest manifest, Plan plan, Map<String, String> customParameters) {
         manifest.getProperties().putAll(plan.getMetadata());
-        HashMap<String, HashMap<String, List<String>>> params = new HashMap<>();
-        HashMap<String, List<String>> p = new HashMap<>();
-        List<String> l = new ArrayList<>();
-        l.add("root");
-        p.put("additional_roles", l);
-        params.put("auth", p);
-        manifest.getProperties().put("mongodb", params);
     }
 
-    public Deployment createDeployment (ServiceInstance instance, Plan plan) throws IOException, URISyntaxException {
+    public Deployment createDeployment (ServiceInstance instance, Plan plan, Map<String, String> customParameters) throws IOException, URISyntaxException {
         Deployment deployment = new Deployment();
         deployment.setName(instance.getId());
         Manifest manifest = readTemplate("bosh/manifest.yml");
         manifest.setName(instance.getId());
-        replaceParameters(manifest,plan);
+        replaceParameters(instance, manifest,plan, customParameters);
         deployment.setRawManifest(generateManifest(manifest));
         return deployment;
     }
@@ -61,9 +53,9 @@ public class DeploymentManager {
         return mapper.writeValueAsString(manifest);
     }
 
-    public Deployment updateDeployment (Deployment deployment, Plan plan) throws IOException {
+    public Deployment updateDeployment (ServiceInstance instance, Deployment deployment, Plan plan) throws IOException {
         Manifest manifest = mapper.readValue(deployment.getRawManifest(), Manifest.class);
-        replaceParameters(manifest,plan);
+        replaceParameters(instance, manifest, plan, new HashMap<>());
         deployment.setRawManifest(generateManifest(manifest));
         return deployment;
     }
