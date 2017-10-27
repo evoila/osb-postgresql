@@ -6,6 +6,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -37,6 +38,11 @@ public class Plan {
 	@JsonSerialize
 	@JsonProperty(value="free", required=false)
 	private boolean free = true;
+
+	@JsonSerialize()
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	@JsonProperty(value="bosh", required=false)
+	private BoshProperties bosh;
 
 	private int volumeSize;
 
