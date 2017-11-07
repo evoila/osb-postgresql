@@ -39,10 +39,8 @@ public class Plan {
 	@JsonProperty(value="free", required=false)
 	private boolean free = true;
 
-	@JsonSerialize()
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	@JsonProperty(value="bosh", required=false)
-	private BoshProperties bosh;
+	@JsonProperty(value = "plan_updateable",required = false, defaultValue = "false")
+	private boolean planUpdateable;
 
 	private int volumeSize;
 
@@ -169,4 +167,11 @@ public class Plan {
 		this.free = free;
 	}
 
+	public boolean isPlanUpdateable () {
+		return planUpdateable;
+	}
+
+	public void setPlanUpdateable (boolean planUpdateable) {
+		this.planUpdateable = planUpdateable;
+	}
 }
