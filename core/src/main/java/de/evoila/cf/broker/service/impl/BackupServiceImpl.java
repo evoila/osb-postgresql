@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+//@Service
 @ConditionalOnBean({BackupConfiguration.class, InstanceCredentialService.class, RabbitTemplate.class})
 public class BackupServiceImpl implements BackupService {
     private static final Logger logger = LoggerFactory.getLogger(BackupServiceImpl.class);
