@@ -90,6 +90,7 @@ public class ServiceInstance implements BaseEntity<String> {
 	public ServiceInstance(ServiceInstance serviceInstance, String dashboardUrl, String internalId) {
 		initialize(serviceInstance.id, serviceInstance.serviceDefinitionId, serviceInstance.planId,
 				serviceInstance.organizationGuid, serviceInstance.spaceGuid, serviceInstance.parameters);
+		this.setHosts(serviceInstance.getHosts());
 		setInternalId(internalId);
 		setDashboardUrl(dashboardUrl);
 	}
@@ -160,6 +161,8 @@ public class ServiceInstance implements BaseEntity<String> {
 	}
 
 	public Map<String, String> getParameters() {
+		if(parameters == null)
+			parameters = new HashMap<>();
 		return parameters;
 	}
 
