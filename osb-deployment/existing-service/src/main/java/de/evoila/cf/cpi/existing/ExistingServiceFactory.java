@@ -24,8 +24,6 @@ import java.util.Map;
  * @author Christian Brinker, evoila.
  *
  */
-
-@Service
 public abstract class ExistingServiceFactory implements PlatformService {
 	
 	private List<String> hosts = new ArrayList<String>();
@@ -48,10 +46,9 @@ public abstract class ExistingServiceFactory implements PlatformService {
 	
 	@Autowired
 	private ExistingEndpointBeanImpl existingServiceBean;
-	
-	@Override
+
 	@PostConstruct
-	public void registerCustomPlatformServie() {
+	public void registerCustomPlatformService () {
 
 		hosts = existingServiceBean.getHosts();
 		port = existingServiceBean.getPort();
