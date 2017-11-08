@@ -2,6 +2,7 @@ package de.evoila.cf.broker.service.impl;
 
 
 import de.evoila.cf.broker.bean.BackupConfiguration;
+import de.evoila.cf.broker.bean.conditional.BackupServiceCondition;
 import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
 import de.evoila.cf.broker.service.BackupService;
 import de.evoila.cf.broker.service.InstanceCredentialService;
@@ -10,7 +11,6 @@ import de.evoila.cf.model.DatabaseCredential;
 import de.evoila.cf.model.RestoreRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -29,7 +29,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 @Service
-@ConditionalOnBean({BackupConfiguration.class, InstanceCredentialService.class, RabbitTemplate.class})
+@ConditionalOnBean(BackupServiceCondition.class)
 public class BackupServiceImpl implements BackupService {
     private static final Logger logger = LoggerFactory.getLogger(BackupServiceImpl.class);
     private final RestTemplate rest;
@@ -54,8 +54,6 @@ public class BackupServiceImpl implements BackupService {
         headers.add("Authorization", encodeCredentials());
 
         template.setMessageConverter(new Jackson2JsonMessageConverter());
-
-        logger.debug("CREATED BackupService!");
     }
 
     private String encodeCredentials () {
@@ -65,7 +63,6 @@ public class BackupServiceImpl implements BackupService {
 
     @Override
     public ResponseEntity<Object> backupNow (String serviceInstanceId, BackupRequest body) throws ServiceInstanceDoesNotExistException {
-
         DatabaseCredential credential = credentialService.getCredentialsForInstanceId(serviceInstanceId);
         body.setSource(credential);
 
