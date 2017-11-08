@@ -1,0 +1,68 @@
+---
+name: deployment-name
+director_uuid: 9b61cd26-8e25-4272-b45d-340eaaf47f08 
+releases:
+- name: release
+  version: latest
+compilation:
+  workers: 1
+  reuse_compilation_vms: false
+  network: default
+  cloud_properties:
+    cpu: 4
+    datacenters:
+    - clusters:
+      - cf_z10:
+          resource_pool: lynn
+      name: demohop 
+    disk: 20480
+    ram: 4096
+
+update:
+  canaries: 1
+  canary_watch_time: 9000-55000
+  update_watch_time: 15000-30000
+  max_in_flight: 2
+
+resource_pools:
+- name: R-Pool
+  network: default
+  stemcell:
+    name: bosh-warden-boshlite-ubuntu-trusty-go_agent
+#    name: bosh-vsphere-esxi-ubuntu-trusty-go_agent
+    version: latest
+  cloud_properties:
+    cpu: 4
+    disk: 11111
+    ram: 4096
+
+jobs:
+- name: job1
+  instances: 3
+  templates:
+  - name: default
+    release: default
+  - name: mongodb3
+    release: mongodb3
+  persistent_disk: 10240
+  resource_pool: R-Pool
+  networks:
+  - name: default
+  properties: {}
+
+networks:
+- name: Network
+  subnets:
+  - cloud_properties:
+      name: Network
+    dns:
+    - 10.254.174.10
+    gateway: 10.241.143.1
+    range: 10.241.143.0/24
+    static_ips:
+    - 10.241.143.44
+
+properties:
+ custom:
+   name: TEST
+

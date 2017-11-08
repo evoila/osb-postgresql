@@ -48,7 +48,7 @@ public abstract class ExistingServiceFactory implements PlatformService {
 	private ExistingEndpointBeanImpl existingServiceBean;
 
 	@PostConstruct
-	public void registerCustomPlatformServie() {
+	public void registerCustomPlatformService () {
 
 		hosts = existingServiceBean.getHosts();
 		port = existingServiceBean.getPort();

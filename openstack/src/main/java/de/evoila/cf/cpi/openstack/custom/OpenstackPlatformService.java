@@ -78,7 +78,7 @@ public class OpenstackPlatformService extends OpenstackServiceFactory {
 
 	@Override
 	@PostConstruct
-	public void registerCustomPlatformServie() {
+	public void registerCustomPlatformService () {
 		if (platformRepository != null)
 			platformRepository.addPlatform(Platform.OPENSTACK, this);
 
