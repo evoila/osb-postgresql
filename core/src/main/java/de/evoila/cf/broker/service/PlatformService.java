@@ -20,7 +20,7 @@ public abstract interface PlatformService {
 	/**
 	 * 
 	 */
-	public void registerCustomPlatformServie();
+	public void registerCustomPlatformService ();
 	
 	/**
 	 * @param plan
@@ -88,6 +88,6 @@ public abstract interface PlatformService {
 	 * @param plan
 	 * @return new ServiceInstance with updated fields
 	 */
-	public ServiceInstance updateInstance(ServiceInstance instance, Plan plan);
+	public ServiceInstance updateInstance(ServiceInstance instance, Plan plan) throws PlatformException;
 
 }

@@ -149,14 +149,20 @@ public class DeploymentServiceImpl implements DeploymentService {
 		else {
 			serviceInstanceRepository.deleteServiceInstance(serviceInstance.getId());
 
-			throw new ServiceBrokerException(
-					"Internal error. Service instance was not created. ID was: " + serviceInstance.getId());
+			throw new ServiceBrokerException("Internal error. Service instance was not created. ID was: " + serviceInstance.getId());
 		}
 
 		try {
 			createdServiceInstance = platformService.postProvisioning(createdServiceInstance, plan);
 		} catch (PlatformException e) {
+			try {
+				platformService.deleteServiceInstance(serviceInstance);
+				serviceInstanceRepository.deleteServiceInstance(serviceInstance.getId());
+			} catch (PlatformException e1) {
+				throw new ServiceBrokerException("Could not delete failed instance " +serviceInstance.getId() + " due to: ", e);
+			}
 			throw new ServiceBrokerException("Error during service availability verification", e);
+
 		}
 
 		return new ServiceInstanceResponse(createdServiceInstance, false);
