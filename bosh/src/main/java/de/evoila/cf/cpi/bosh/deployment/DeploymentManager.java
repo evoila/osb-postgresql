@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DeploymentManager {
+    public static final String STEMCELL_VERSION = "stemcell_version";
     private final ObjectReader reader;
     private final ObjectMapper mapper;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
