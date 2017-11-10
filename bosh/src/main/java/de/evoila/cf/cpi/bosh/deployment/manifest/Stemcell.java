@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(
       ignoreUnknown = true
@@ -20,7 +18,12 @@ public class Stemcell {
     private String os;
     private List<String> deployments = new ArrayList();
 
-    public Stemcell() {
+    public Stemcell(){};
+
+    public Stemcell (String alias, String stemcellVersion, String stemcellOs) {
+        this.alias = alias;
+        this.version = stemcellVersion;
+        this.os = stemcellOs;
     }
 
     public String getName() {
