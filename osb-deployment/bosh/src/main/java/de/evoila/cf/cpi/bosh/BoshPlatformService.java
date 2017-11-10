@@ -46,12 +46,12 @@ public abstract class BoshPlatformService extends PlatformServiceAdapter {
     ;
 
 
-    BoshPlatformService (PlatformRepository repository,
-                         CatalogService catalogService,
-                         ServicePortAvailabilityVerifier availabilityVerifier,
-                         BoshProperties boshProperties,
-                         Optional<DashboardClient> dashboardClient,
-                         DeploymentManager deploymentManager){
+    public BoshPlatformService (PlatformRepository repository,
+                                CatalogService catalogService,
+                                ServicePortAvailabilityVerifier availabilityVerifier,
+                                BoshProperties boshProperties,
+                                Optional<DashboardClient> dashboardClient,
+                                DeploymentManager deploymentManager){
 
         Assert.notNull(repository, "The platform repository can not be null");
         Assert.notNull(availabilityVerifier, "The ServicePortAvailabilityVerifier can not be null");
@@ -179,5 +179,15 @@ public abstract class BoshPlatformService extends PlatformServiceAdapter {
     protected abstract void updateHosts (ServiceInstance instance, Plan plan, Deployment deployment);
 
 
+    protected List<Vm> getVms (ServiceInstance instance){
+        return this.connection.connection().vms().listDetails(instance.getId()).toBlocking().first();
+    }
 
+    protected ServerAddress toServerAddress (String namePrefix, Vm vm, int port){
+        return new ServerAddress(namePrefix+vm.getIndex(), vm.getIps().get(0), port);
+    }
+
+    protected ServerAddress toServerAddress (Vm vm, int port){
+        toServerAddress("Host/", vm, port);
+    }
 }

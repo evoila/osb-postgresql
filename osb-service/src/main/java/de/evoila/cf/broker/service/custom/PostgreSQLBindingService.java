@@ -76,7 +76,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 	 */
 	@Override
 	protected Map<String, Object> createCredentials(String bindingId, ServiceInstance serviceInstance,
-			ServerAddress host) throws ServiceBrokerException {
+			ServerAddress host, Plan plan) throws ServiceBrokerException {
 		PostgresDbService jdbcService;
 		try {
 			jdbcService = connection(serviceInstance);
@@ -170,5 +170,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 	protected RouteBinding bindRoute(ServiceInstance serviceInstance, String route) {
 		throw new UnsupportedOperationException();
 	}
+
+
 
 }
