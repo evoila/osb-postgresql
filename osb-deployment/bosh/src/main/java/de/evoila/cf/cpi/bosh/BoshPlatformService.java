@@ -98,6 +98,8 @@ public abstract class BoshPlatformService extends PlatformServiceAdapter {
         try {
             Deployment deployment = deploymentManager.createDeployment(in,plan,customParameters);
             Observable<Task> task = connection.connection().deployments().create(deployment);
+            task.subscribe(n -> logger.info(String.format("Deployment started successfuly. Task %s", n.getId())),
+                           e -> logger.error(String.format("Deployment could not been started %s", e.getMessage())));
             waitForTaskCompletion(task.toBlocking().first());
             Observable<List<ErrandSummary>> errands = connection.connection().errands().list(deployment.getName());
             runCreateErrands(in, plan, deployment, errands);
@@ -132,6 +134,7 @@ public abstract class BoshPlatformService extends PlatformServiceAdapter {
                 waitForTaskCompletion(taskObservable.toBlocking().first());
                 return;
             case ERROR:
+                logger.error(String.format("Could not create Service Instance. Task finished with error. [%s]  %s", task.getId(), task.getResult()));
                 throw new PlatformException(String.format("Could not create Service Instance. Task finished with error. [%s]  %s", task.getId(), task.getResult()));
             case DONE:
                 return;
@@ -148,18 +151,22 @@ public abstract class BoshPlatformService extends PlatformServiceAdapter {
 
     @Override
     public void deleteServiceInstance (ServiceInstance serviceInstance) throws PlatformException {
-        Observable<Deployment> obs = connection.connection().deployments().get(serviceInstance.getId());
-        Deployment deployment = obs.toBlocking().first();
-        Observable<List<ErrandSummary>> errands = connection.connection().errands().list(deployment.getName());
-        runDeleteErrands(serviceInstance, deployment, errands);
-        connection.connection().deployments().delete(deployment);
+        Observable<Deployment> obs = connection.connection().deployments().get("sb-" + serviceInstance.getId());
+        try {
+            Deployment deployment = obs.toBlocking().first();
+            Observable<List<ErrandSummary>> errands = connection.connection().errands().list(deployment.getName());
+            runDeleteErrands(serviceInstance, deployment, errands);
+            connection.connection().deployments().delete(deployment);
+        } catch (Exception e){
+            throw new PlatformException("Could not delete failed service instance", e);
+        }
     }
 
 
 
     @Override
     public ServiceInstance updateInstance (ServiceInstance instance, Plan plan) throws PlatformException {
-        Deployment deployment = connection.connection().deployments().get(instance.getId()).toBlocking().first();
+        Deployment deployment = connection.connection().deployments().get("sb-" + instance.getId()).toBlocking().first();
         Observable<List<ErrandSummary>> errands = connection.connection().errands().list(deployment.getName());
         runUpdateErrands(instance, plan, deployment, errands);
         try {
