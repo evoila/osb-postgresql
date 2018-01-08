@@ -1,0 +1,15 @@
+[submodule "osb-backup-core"]
+	path = osb-backup-core
+	url = https://github.com/evoila/osb-backup-core
+[submodule "osb-core"]
+	path = osb-core
+	url = https://github.com/evoila/cf-service-broker-core
+[submodule "osb-persistence"]
+	path = osb-persistence
+	url = https://github.com/evoila/cf-service-broker-persistence
+[submodule "osb-deployment"]
+	path = osb-deployment
+	url = https://github.com/evoila/cf-service-broker-deployment
+[submodule "osb-dashboard"]
+	path = osb-dashboard
+	url = https://github.com/evoila/cf-service-broker-dashboard
