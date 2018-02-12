@@ -29,7 +29,7 @@ public class PostgesBoshPlatformService extends BoshPlatformService {
     private static final int defaultPort = 5678;
 
     PostgesBoshPlatformService (PlatformRepository repository, CatalogService catalogService, ServicePortAvailabilityVerifier availabilityVerifier, BoshProperties boshProperties, Optional<DashboardClient> dashboardClient) {
-        super(repository, catalogService, availabilityVerifier, boshProperties, dashboardClient, new PostgresDeploymentManager());
+        super(repository, catalogService, availabilityVerifier, boshProperties, dashboardClient, new PostgresDeploymentManager(boshProperties));
     }
 
     @Override
