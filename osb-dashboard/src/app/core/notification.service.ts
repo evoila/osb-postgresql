@@ -1,7 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs/Subject';
 
-export type NotificationType = 'Warning';
+export enum NotificationType {
+  Warning = <any>"warning",
+  Info = <any>"info"
+}
 
 export interface NotificationActionLink {
   title: string;

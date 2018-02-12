@@ -3,7 +3,7 @@ import { BackupService } from './backup.service';
 import { Job } from './domain/job';
 import { BackupPlan } from './domain/backup-plan';
 import { FileEndpoint } from './domain/file-endpoint';
-import {NotificationService, Notification} from '../../core/notification.service';
+import {NotificationService, Notification, NotificationType} from '../../core/notification.service';
 
 @Component({
   selector: 'sb-backup',
@@ -52,11 +52,11 @@ export class BackupComponent implements OnInit {
     this.backupService.saveOne({destinationId: id}, 'backup')
       .subscribe({
         next: (d) => {
-          this.nService.add(new Notification('Warning', 'Started Backup'));
+          this.nService.add(new Notification(NotificationType.Warning, 'Started Backup'));
           this.loadDestinations()
         },
         error: (e) => {
-          this.nService.add(new Notification('Warning', 'Could not start backup.'));
+          this.nService.add(new Notification(NotificationType.Warning, 'Could not start backup.'));
         }
       });
   }

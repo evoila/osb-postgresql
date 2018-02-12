@@ -9,12 +9,14 @@ import de.evoila.cf.model.DatabaseCredential;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+
 @Service
 public class InstanceCredentialServiceImpl implements InstanceCredentialService {
     @Autowired
     BackupTypeService backupTypeService;
     @Autowired
     ServiceInstanceRepository repository;
+
 
     @Override
     public DatabaseCredential getCredentialsForInstanceId (String serviceInstanceId) throws ServiceInstanceDoesNotExistException{

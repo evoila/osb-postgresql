@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { BackupService } from '../backup.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NotificationService, Notification} from '../../../core/notification.service';
+import { NotificationType } from 'app/core';
 
 
 @Component({
@@ -51,11 +52,11 @@ export class BackupPlanComponent implements OnInit {
     this.backupService.saveOne(this.plan, this.ENTITY, id)
       .subscribe({
         next: (d) => {
-          this.nService.add(new Notification('Warning', 'Backup Plan Created'));
+          this.nService.add(new Notification(NotificationType.Info, 'Backup Plan Created'));
           this.redirect();
         },
         error: (e) => {
-          this.nService.add(new Notification('Warning', 'Could not create Backup Plan. Please check your entries.'));
+          this.nService.add(new Notification(NotificationType.Warning, 'Could not create Backup Plan. Please check your entries.'));
         }
       });
   }

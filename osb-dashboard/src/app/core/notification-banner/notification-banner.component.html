@@ -1,4 +1,4 @@
-<div class="notification-banner">
+<div class="notification-banner {{notification.type}}">
   <button type="button" class="close" aria-label="Close" (click)="onClose()">
     <span aria-hidden="true">&times;</span>
   </button> {{notification.message}} <a *ngIf="notification.link" [routerLink]="notification.link.routerLink" (click)="onClose()">{{notification.link.title}}</a>

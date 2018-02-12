@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package de.evoila.cf.cpi.openstack.custom.cluster;
 
@@ -12,30 +12,30 @@ public class ClusterParameterManager {
 
 	public static final String RESOURCE_NAME = "resource_name";
 	public static final String NODE_NUMBER = "node_number";
-	
+
 	public static final String VOLUME_SIZE = "volume_size";
 	public static final String KEY_NAME = "key_name";
 	public static final String IMAGE_ID = "image_id";
-	public static final String AVAILABILITY_ZONE = "availability_zone";	
+	public static final String AVAILABILITY_ZONE = "availability_zone";
 	public static final String NETWORK_ID = "network_id";
 	public static final String SECURITY_GROUPS = "security_groups";
 	public static final String FLAVOR = "flavor";
-	
+
 	public static final String FLAVOUR = "flavor";
 	public static final String SERVICE_DB = "service_db";
 	public static final String ADMIN_USER = "admin_user";
 	public static final String ADMIN_PASSWORD = "admin_password";
-	
+
 	public static final String PRIMARY_HOSTNAME = "primary_hostname";
 	public static final String PRIMARY_VOLUME_ID  = "primary_volume_id";
 	public static final String PRIMARY_IP = "primary_ip";
 	public static final String PRIMARY_PORT = "primary_port";
-	
+
 	public static final String STANDBY_HOSTNAME = "standby_hostname";
 	public static final String STANDBY_VOLUME_ID = "standby_volume_id";
 	public static final String STANDBY_IP = "standby_ip";
-	public static final String STANDBY_PORT = "standby_port";	
-	
+	public static final String STANDBY_PORT = "standby_port";
+
 	public static final String SECONDARY_1_VOLUME_ID = "secondary1_volume_id";
 	public static final String SECONDARY_2_VOLUME_ID = "secondary2_volume_id";
 	public static final String SECONDARY_1_PORT = "secondary1_port";
@@ -46,10 +46,10 @@ public class ClusterParameterManager {
 	public static final String SECONDARY_PORTS = "secondary_ports";
 	public static final String SECONDARY_VOLUME_IDS = "secondary_volume_ids";
 	public static final String SECONDARY_IPS = "secondary_ips";
-	
+
 	public static final String CLUSTER = "cluster";
-	
-	
+
+
 	public static final String RABBITMQ_VHOST = "rabbitmq_vhost";
 	public static final String ERLANG_KEY = "erlang_key";
 	public static final String MASTER_VOLUME_ID = "master_volume_id";
@@ -64,12 +64,16 @@ public class ClusterParameterManager {
 	public static final String ETC_HOSTS = "etc_hosts";
 	public static final String SECONDARY_NUMBER = "secondary_number";
 
+	public static final String MIRROR_VOLUME_IDS = "mirror_volume_ids";
+	public static final String MIRROR_PORTS = "mirror_ports";
+	public static final String MIRROR_IPS = "mirror_ips";
+	public static final String MIRROR_NUMBER = "mirror_number";
 
-	/** 
-	 * 
+	/**
+	 *
 	 */
 	public ClusterParameterManager() {
-	
+
 	}
 
 	public static String join(List<String> volumes) {

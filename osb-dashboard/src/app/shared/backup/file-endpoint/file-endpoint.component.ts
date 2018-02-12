@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { BackupService } from '../backup.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import {NotificationService, Notification} from '../../../core/notification.service';
+import {NotificationService, Notification, NotificationType} from '../../../core/notification.service';
 
 @Component({
   selector: 'sb-file-endpoint',
@@ -50,7 +50,7 @@ export class FileEndpointComponent implements OnInit {
             this.submitLabel = 'Submit';
           },
           error: (e) => {
-            this.nService.add(new Notification('Warning', 'Could not verify your account credentials.'));
+            this.nService.add(new Notification(NotificationType.Warning, 'Could not verify your account credentials.'));
           }
         });
     } else {

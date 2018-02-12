@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package de.evoila.cf.broker.service.availability;
 
@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.List;
+
+import de.evoila.cf.broker.model.ServiceInstance;
+import de.evoila.cf.broker.service.ServiceInstanceAvailabilityVerifier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +23,8 @@ import de.evoila.cf.broker.model.ServerAddress;
  *
  */
 @Service
-public class ServicePortAvailabilityVerifier {
+public class ServicePortAvailabilityVerifier implements ServiceInstanceAvailabilityVerifier {
+
 
 	private static final int SOCKET_TIMEOUT = 30000;
 
@@ -38,7 +42,8 @@ public class ServicePortAvailabilityVerifier {
 		}
 	}
 
-	public boolean execute(String ip, int port) {
+
+	private boolean execute(String ip, int port) {
 		boolean available = false;
 
 		log.info("Verifying port availability on: {}:{}", ip, port);
@@ -66,12 +71,13 @@ public class ServicePortAvailabilityVerifier {
 		return available;
 	}
 
-	public boolean verifyServiceAvailability(String ip, int port, boolean useInitialTimeout) throws PlatformException {
+
+	private boolean verifyServiceAvailability(String ip, int port, boolean useInitialTimeout) throws PlatformException {
 		boolean available = false;
-		
-		if (useInitialTimeout) 
+
+		if (useInitialTimeout)
 			this.timeout(INITIAL_TIMEOUT);
-		
+
 		for (int i = 0; i < connectionTimeouts; i++) {
 			available = this.execute(ip, port);
 
@@ -85,7 +91,9 @@ public class ServicePortAvailabilityVerifier {
 		return available;
 	}
 
-	public boolean verifyServiceAvailability(List<ServerAddress> serverAddresses, boolean useInitialTimeout) throws PlatformException {
+
+	public boolean verifyServiceAvailability(ServiceInstance serviceInstance, boolean useInitialTimeout) throws PlatformException {
+		List<ServerAddress> serverAddresses = serviceInstance.getHosts();
 		for (ServerAddress serverAddress : serverAddresses) {
 			if (!verifyServiceAvailability(serverAddress.getIp(), serverAddress.getPort(), useInitialTimeout)) {
 				return false;

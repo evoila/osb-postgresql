@@ -57,6 +57,8 @@ export class CoreHttpService extends Http {
     this.customHeaders.forEach((values: string[], name: string) => {
         req.headers.set(name, values);
     });
+ 
+    req.headers.set('Content-Type', "application/json");
 
     return super.request(req, options);
   }
@@ -70,7 +72,7 @@ export class CoreHttpService extends Http {
     if (url.indexOf('http') !== 0) {
       return baseUrl + url;
     }
-
+  
     return url;
   }
 

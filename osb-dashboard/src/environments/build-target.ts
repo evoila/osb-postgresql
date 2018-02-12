@@ -35,10 +35,26 @@ export class BuildTarget {
    * Eagerly loaded core modules (delivered on first page load)
    */
   coreModules: (Type<any> | ModuleWithProviders)[];
+
+  /**
+   * Enable/disable shared module support
+   */
+  sharedModules: ModuleSupport;
+
   /**
    * Routes for lazy loaded core modules.
    */
   extensionModules: Route[];
+}
+
+export function supportedSharedExtensions(bt: BuildTarget): ModuleSupport {
+  const result = {};
+  Object.getOwnPropertyNames(bt.sharedModules).map((key: string) => {
+    result[key] = bt.sharedModules[key];
+  });
+  console.log(result);
+
+  return <any>result;
 }
 
 export function supportedExtensions(bt: BuildTarget): ModuleSupport {
@@ -48,6 +64,5 @@ export function supportedExtensions(bt: BuildTarget): ModuleSupport {
       result[x.path] = true;
     }
   });
-
   return <any>result;
 }

@@ -17,7 +17,7 @@ export class GeneralService extends EntityService {
   }
 
   public loadAll(): Observable<{} | any> {
-    return this.all(this.BACKUP_BASEURL + '/' + serviceInstanceId + '/');
+    return this.all(this.BACKUP_BASEURL + serviceInstanceId + '/');
   }
 
 }

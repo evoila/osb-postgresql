@@ -8,6 +8,11 @@ import { BuildTarget } from './build-target';
 export const buildTarget: BuildTarget = {
   coreModules: [
   ],
+  sharedModules: {
+    general: true,
+    backup: false,
+    serviceKeys: true
+  },
   extensionModules: [
     // https://angular.io/docs/ts/latest/guide/router.html#!#preload-canload
     //  If you want to preload a module and guard against unauthorized access, drop the canLoad guard and rely on the CanActivate guard alone.

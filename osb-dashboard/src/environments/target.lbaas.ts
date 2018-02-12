@@ -7,13 +7,18 @@ import { BuildTarget } from './build-target';
 export const buildTarget: BuildTarget = {
   coreModules: [
   ],
+  sharedModules: {
+    general: true,
+    backup: false,
+    serviceKeys: false
+  },
   extensionModules: [
     // https://angular.io/docs/ts/latest/guide/router.html#!#preload-canload
     //  If you want to preload a module and guard against unauthorized access, drop the
     // canLoad guard and rely on the CanActivate guard alone.
     {
       path: 'lbaas',
-      loadChildren: 'app/lbaas/lbaas.module#LBaaSModule',
+      loadChildren: 'app/lbaas/lbaas.module#LBaasModule',
       data: {
         skipPreload: true // register module is seldomly needed, save these few kbs
       }

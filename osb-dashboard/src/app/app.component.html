@@ -11,10 +11,13 @@
       <li class="nav-item active" *ngIf="dynamicModuleSupport.autoscaler">
         <a class="nav-link" routerLink="/autoscaler" routerLinkActive="active">Auto Scaler </a>
       </li>
-      <li class="nav-item active">
+      <li class="nav-item active" *ngIf="dynamicModuleSupport.lbaas">
+        <a class="nav-link" routerLink="/lbaas" routerLinkActive="active">Configure Certificates </a>
+      </li>
+      <li class="nav-item active" *ngIf="sharedModuleSupport.backup">
         <a class="nav-link" routerLink="/backup" routerLinkActive="active">Backup </a>
       </li>
-      <li class="nav-item active">
+      <li class="nav-item active" *ngIf="sharedModuleSupport.serviceKeys">
         <a class="nav-link" routerLink="/service-keys" routerLinkActive="active">Service Keys </a>
       </li>
     </ul>

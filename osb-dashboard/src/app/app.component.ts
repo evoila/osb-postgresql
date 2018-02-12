@@ -17,6 +17,7 @@ export class AppComponent {
   public logoSrc = environment.ui.logoSrc;
   public readonly moduleSupport: ModuleSupport;
   public readonly dynamicModuleSupport: any;
+  public readonly sharedModuleSupport: any;
 
   public notification: Notification | null = null;
 
@@ -25,6 +26,7 @@ export class AppComponent {
     buildTarget: BuildTargetService
   ) {
     this.dynamicModuleSupport = buildTarget.dynamicModuleSupport;
+    this.sharedModuleSupport = buildTarget.sharedModuleSupport;
     this.moduleSupport = buildTarget.moduleSupport;
 
     this.notifications.notifications.subscribe(x => {

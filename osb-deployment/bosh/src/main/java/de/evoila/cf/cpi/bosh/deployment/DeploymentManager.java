@@ -14,7 +14,6 @@ import de.evoila.cf.cpi.bosh.deployment.manifest.Stemcell;
 import io.bosh.client.deployments.Deployment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.Assert;
 
@@ -37,7 +36,6 @@ public class DeploymentManager {
         this.mapper = new ObjectMapper(new YAMLFactory());
         mapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
         this.boshProperties = properties;
-
         this.reader = mapper.readerFor(Manifest.class);
     }
 
@@ -46,8 +44,7 @@ public class DeploymentManager {
     }
 
     public Deployment createDeployment (ServiceInstance instance, Plan plan, Map<String, String> customParameters) throws IOException, URISyntaxException {
-        Deployment deployment = new Deployment();
-        deployment.setName("sb-" + instance.getInternalId());
+        Deployment deployment = getDeployment(instance);
         Manifest manifest = readTemplate("bosh/manifest.yml");
         manifest.setName("sb-" + instance.getId());
         addStemcell(manifest);
@@ -106,4 +103,9 @@ public class DeploymentManager {
     }
 
 
+    public Deployment getDeployment (ServiceInstance instance) {
+        Deployment deployment = new Deployment();
+        deployment.setName("sb-" + instance.getId());
+        return deployment;
+    }
 }

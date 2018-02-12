@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @ConfigurationProperties(prefix="messaging.rabbitmq")
-@ConditionalOnProperty(name="messaging.rabbitmq.host")
+@ConditionalOnProperty(prefix = "messaging.rabbitmq", name = {"host", "vhost", "username", "password", "port"})
 public class RabbitMQCredentials {
     private String host;
     private String vhost;

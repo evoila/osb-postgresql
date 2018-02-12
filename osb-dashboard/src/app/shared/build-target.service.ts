@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
 import {
-  BuildTarget, ModuleSupport, supportedExtensions
+  BuildTarget, ModuleSupport, supportedExtensions, supportedSharedExtensions
 } from 'environments/build-target';
 
 // reexport it here so that others can consume it from app/shared
@@ -18,7 +18,10 @@ export {
 export class BuildTargetService {
   public readonly moduleSupport: ModuleSupport;
   public readonly dynamicModuleSupport: any;
+  public readonly sharedModuleSupport: any;
+
   constructor(bt: BuildTarget) {
     this.dynamicModuleSupport = supportedExtensions(bt);
+    this.sharedModuleSupport = supportedSharedExtensions(bt);
   }
 }

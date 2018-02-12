@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { GeneralService } from './general.service';
 
-
 @Component({
   selector: 'sb-general',
   templateUrl: './general.component.html',
@@ -15,7 +14,6 @@ export class GeneralComponent implements OnInit {
   ngOnInit() {
     this.generalService.loadAll()
       .subscribe((info: any) => {
-      console.log(info);
         this.generalInfo = info;
       });
   }

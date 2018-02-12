@@ -42,7 +42,7 @@ public class ServiceInstanceBindingController extends BaseController {
 		Map<String, String> bindResource = request.getBindResource();
 		String route = (bindResource != null) ? bindResource.get("route") : null;
 		ServiceInstanceBindingResponse response = bindingService.createServiceInstanceBinding(bindingId, instanceId,
-				request.getServiceDefinitionId(), request.getPlanId(), (request.getAppGuid() == null), route);
+				request.getServiceDefinitionId(), request.getPlanId(), (request.getAppGuid() == null), request.getAppGuid(), route);
 
 		log.debug("ServiceInstanceBinding Created: " + bindingId);
 
