@@ -4,11 +4,12 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>de.evoila.cf.broker</groupId>
-		<artifactId>custom-parent</artifactId>
-		<version>1.2.0</version>
-		<relativePath>../osb-core/custom-parent</relativePath>
-	</parent>
+	    <groupId>de.evoila.cf.broker</groupId>
+            <artifactId>repo-parent</artifactId>
+            <relativePath>../</relativePath>
+            <version>1.2.0</version>
+        </parent>
+
 	<artifactId>cf-service-broker-postgresql</artifactId>
 	<packaging>jar</packaging>
 	<name>ssb-postgresql</name>
@@ -49,5 +50,19 @@
 			<artifactId>persistence-mongodb</artifactId>
 			<version>${persistence.version}</version>
 		</dependency>
+                <dependency>
+            		<groupId>de.evoila.cf.broker</groupId>
+            		<artifactId>bosh</artifactId>
+            		<version>1.2.0</version>
+        	</dependency>
 	</dependencies>
+
+	<build>                                         
+        	<plugins>                                   
+            		<plugin>                                
+               			<groupId>org.springframework.boot</groupId>                                              
+                		<artifactId>spring-boot-maven-plugin</artifactId>                                        
+           		</plugin>                               
+        	</plugins>                                  
+    </build>      
 </project>
