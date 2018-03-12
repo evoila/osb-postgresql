@@ -30,7 +30,7 @@ public class PostgreSqlIpAccessor extends CustomIpAccessor {
 	private HeatFluent heatFluent;
 
 	@Autowired
-	private StackMappingRepository stackMappingRepo;
+	private ClusterStackMappingRepository stackMappingRepo;
 
 	@Autowired
 	private DefaultIpAccessor defaultIpAccessor;

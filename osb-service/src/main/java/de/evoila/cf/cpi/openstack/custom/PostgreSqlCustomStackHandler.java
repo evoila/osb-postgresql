@@ -49,7 +49,7 @@ public class PostgreSqlCustomStackHandler extends CustomStackHandler {
 	private final Logger log = LoggerFactory.getLogger(PostgreSqlCustomStackHandler.class);
 
 	@Autowired
-	private StackMappingRepository stackMappingRepo;
+	private ClusterStackMappingRepository stackMappingRepo;
 	
 	@Autowired
 	private OpenstackBean openstackBean;
