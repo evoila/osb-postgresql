@@ -50,11 +50,11 @@
 			<artifactId>persistence-mongodb</artifactId>
 			<version>${persistence.version}</version>
 		</dependency>
-                <dependency>
-            		<groupId>de.evoila.cf.broker</groupId>
-            		<artifactId>bosh</artifactId>
-            		<version>1.2.0</version>
-        	</dependency>
+        <dependency>
+            <groupId>de.evoila.cf.broker</groupId>
+            <artifactId>bosh</artifactId>
+            <version>1.2.0</version>
+        </dependency>
 	</dependencies>
 
 	<build>                                         
