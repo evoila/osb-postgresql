@@ -3,19 +3,18 @@
  */
 package de.evoila.cf.cpi.openstack.custom;
 
-import java.util.List;
-
+import de.evoila.cf.broker.bean.OpenstackBean;
+import de.evoila.cf.broker.exception.PlatformException;
+import de.evoila.cf.broker.model.ServerAddress;
+import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMapping;
+import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMappingRepository;
+import de.evoila.cf.cpi.openstack.fluent.HeatFluent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-import de.evoila.cf.broker.bean.OpenstackBean;
-import de.evoila.cf.broker.exception.PlatformException;
-import de.evoila.cf.broker.model.ServerAddress;
-import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMapping;
-import de.evoila.cf.broker.persistence.mongodb.repository.StackMappingRepository;
-import de.evoila.cf.cpi.openstack.fluent.HeatFluent;
+import java.util.List;
 
 /**
  * @author Christian Brinker, evoila.

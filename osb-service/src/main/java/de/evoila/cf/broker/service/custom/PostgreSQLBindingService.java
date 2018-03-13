@@ -3,28 +3,22 @@
  */
 package de.evoila.cf.broker.service.custom;
 
+import de.evoila.cf.broker.exception.ServiceBrokerException;
+import de.evoila.cf.broker.model.*;
+import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMapping;
+import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMappingRepository;
+import de.evoila.cf.broker.service.impl.BindingServiceImpl;
+import de.evoila.cf.broker.service.postgres.PostgresCustomImplementation;
+import de.evoila.cf.broker.service.postgres.jdbc.PostgresDbService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
+
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
-import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMapping;
-import de.evoila.cf.broker.persistence.mongodb.repository.StackMappingRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
-
-import de.evoila.cf.broker.exception.ServiceBrokerException;
-import de.evoila.cf.broker.model.Plan;
-import de.evoila.cf.broker.model.RouteBinding;
-import de.evoila.cf.broker.model.ServerAddress;
-import de.evoila.cf.broker.model.ServiceInstance;
-import de.evoila.cf.broker.model.ServiceInstanceBinding;
-import de.evoila.cf.broker.service.impl.BindingServiceImpl;
-import de.evoila.cf.broker.service.postgres.PostgresCustomImplementation;
-import de.evoila.cf.broker.service.postgres.jdbc.PostgresDbService;
 
 /**
  * @author Johannes Hiemer.
@@ -37,9 +31,9 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
 	private PostgresCustomImplementation postgresCustomImplementation;
 	private PostgreSQLExistingServiceFactory existingServiceFactory;
-	private Optional<StackMappingRepository> stackMappingRepository;
+	private Optional<ClusterStackMappingRepository> stackMappingRepository;
 
-	PostgreSQLBindingService(PostgresCustomImplementation customImplementation, PostgreSQLExistingServiceFactory existingServiceFactory, Optional<StackMappingRepository> stackMappingRepository){
+	PostgreSQLBindingService(PostgresCustomImplementation customImplementation, PostgreSQLExistingServiceFactory existingServiceFactory, Optional<ClusterStackMappingRepository> stackMappingRepository){
 		Assert.notNull(customImplementation, "PostgresCustomImplementation may not be null");
 		Assert.notNull(existingServiceFactory, "PostgreSQLExistingServiceFactory may not be null");
 		this.existingServiceFactory = existingServiceFactory;
