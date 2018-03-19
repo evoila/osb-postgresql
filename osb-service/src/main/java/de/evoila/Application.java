@@ -3,9 +3,6 @@
  */
 package de.evoila;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.system.ApplicationPidFileWriter;
@@ -15,8 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.util.Assert;
 
-import de.evoila.cf.cpi.custom.props.DefaultDatabaseCustomPropertyHandler;
-import de.evoila.cf.cpi.custom.props.DomainBasedCustomPropertyHandler;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 
@@ -33,11 +30,6 @@ public class Application {
 		Map<String, String> customProperties = new HashMap<String, String>();
 
 		return customProperties;
-	}
-
-	@Bean
-	public DomainBasedCustomPropertyHandler domainPropertyHandler() {
-		return new DefaultDatabaseCustomPropertyHandler();
 	}
 
 	public static void main(String[] args) {
