@@ -1,0 +1,134 @@
+---
+# https://bosh.io/docs/cli-v2.html#deployment-mgmt
+
+name: postgres
+
+releases:
+- name: osb-postgres
+  version: latest
+- name: osb-haproxy
+  version: latest
+- name: osb-monitoring
+  version: latest
+
+update:
+  canaries: 1
+  max_in_flight: 2
+  canary_watch_time: 1000-30000
+  update_watch_time: 1000-30000
+
+stemcells:
+- alias: default
+  os: ubuntu-trusty
+  version: 3468.13
+
+instance_groups:
+- name: postgres
+  instances: 2
+  vm_type: default
+  stemcell: default
+  networks:
+  - name: default
+  persistent_disk: 0
+  jobs:
+  - name: postgres
+    release: osb-postgres
+  - name: pgpool
+    release: osb-postgres
+  - name: node_exporter
+    release: osb-monitoring
+  - name: postgres_exporter
+    release: osb-monitoring
+  properties:
+    pcp:
+      system_password: secret
+    pgpool:
+      debug: false
+      backend:
+        port: 6432
+      config:
+        init_max_childen: 250
+        enable_pool_hba: on
+        port: 5432
+      databases:
+      - name: admin
+        users:
+        - admin
+      hba:
+      - host all all 0.0.0.0/0 md5
+      - host all all ::/0 md5
+      users:
+      - username: admin
+        password: admin
+        admin: true
+    postgres_exporter:
+      user: admin
+      password: admin
+      port: 6432
+    postgres:
+      config:
+        port: 6432
+        max_connections: 500
+        shared_buffers: 128MB
+        temp_buffers: 8MB
+        max_files_per_process: 1000
+        lc_messages: 'en_US.UTF-8'
+        lc_monetary: 'en_US.UTF-8'
+        lc_numeric:  'en_US.UTF-8'
+        lc_time:     'en_US.UTF-8'
+        shared_preload_libraries: 'pg_stat_statements'
+      hba:
+      - host all all 0.0.0.0/0 md5
+      - host all all ::/0 md5
+      replication:
+        enabled: true
+
+- name: haproxy
+  instances: 1
+  vm_type: default
+  stemcell: default
+  networks:
+  - name: default
+  jobs:
+  - name: haproxy
+    release: osb-haproxy
+  - name: node_exporter
+    release: osb-monitoring
+  - name: haproxy_exporter
+    release: osb-monitoring
+  properties:
+    ha_proxy:
+      client_timeout: 10
+      server_timeout: 10
+      queue_timeout: 10
+      binding_ip: 0.0.0.0
+      disable_http: true
+      backend_port: 5432
+      stats_enable: true
+      stats_user: admin
+      stats_password: admin
+      tcp:
+        - name: pgsql
+          balance: roundrobin
+          port: 5432
+          check: "check"
+
+- name: smoke-tests
+  instances: 0
+  stemcell: default
+  vm_type: default
+  lifecycle: errand
+  networks:
+  - name: default
+  persistent_disk: 0
+  jobs:
+  - name: smoke-tests
+    release: osb-postgres
+    properties:
+      smoke-tests:
+        backend:
+          port: 6432
+        target:
+          password: if-ya-got-em
+          port: 5432
+          username: smoke-tests
