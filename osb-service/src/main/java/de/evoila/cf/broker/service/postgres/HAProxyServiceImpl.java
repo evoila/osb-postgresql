@@ -27,6 +27,6 @@ public class HAProxyServiceImpl extends HAProxyService {
 	
 	@Override
 	public List<String> getOptions(ServerAddress serverAddress) {
-		return new ArrayList<String>();
+		return new ArrayList<>();
 	}
 }
