@@ -41,7 +41,6 @@ public class Application {
 		ApplicationContext ctx = springApplication.run(args);
 
 		Assert.notNull(ctx, "ApplicationContext must not be null.");
-		
 	}
 
 }

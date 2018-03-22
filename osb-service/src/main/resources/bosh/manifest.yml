@@ -27,6 +27,8 @@ instance_groups:
   instances: 2
   vm_type: default
   stemcell: default
+  azs:
+  - z1
   networks:
   - name: default
   persistent_disk: 0
@@ -87,6 +89,8 @@ instance_groups:
   instances: 1
   vm_type: default
   stemcell: default
+  azs:
+  - z1
   networks:
   - name: default
   jobs:
@@ -118,6 +122,8 @@ instance_groups:
   stemcell: default
   vm_type: default
   lifecycle: errand
+  azs:
+  - z1
   networks:
   - name: default
   persistent_disk: 0

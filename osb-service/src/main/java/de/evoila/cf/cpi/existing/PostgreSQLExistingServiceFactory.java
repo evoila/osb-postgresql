@@ -1,7 +1,7 @@
 /**
  * 
  */
-package de.evoila.cf.broker.service.custom;
+package de.evoila.cf.cpi.existing;
 
 import java.sql.SQLException;
 
@@ -11,11 +11,8 @@ import org.springframework.stereotype.Service;
 
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.exception.PlatformException;
-import de.evoila.cf.broker.service.postgres.PostgresCustomImplementation;
-import de.evoila.cf.broker.service.postgres.jdbc.PostgresDbService;
-import de.evoila.cf.cpi.existing.CustomExistingService;
-import de.evoila.cf.cpi.existing.CustomExistingServiceConnection;
-import de.evoila.cf.cpi.existing.ExistingServiceFactory;
+import de.evoila.cf.broker.custom.postgres.PostgresCustomImplementation;
+import de.evoila.cf.broker.custom.postgres.PostgresDbService;
 
 /**
  * @author Christian Brinker, evoila.

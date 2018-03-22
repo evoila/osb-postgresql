@@ -1,7 +1,7 @@
 /**
  * 
  */
-package de.evoila.cf.broker.service.postgres.jdbc;
+package de.evoila.cf.broker.custom.postgres;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -11,9 +11,12 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import de.evoila.cf.broker.model.ServerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,9 +36,22 @@ public class PostgresDbService implements CustomExistingServiceConnection {
 
 	private int port;
 
-	public boolean createConnection(String host, int port, String database, String username, String password) {
-		this.host = host;
-		this.port = port;
+	public boolean createConnection(String username, String password, String database, List<ServerAddress> hosts) {
+	    if (hosts.size() == 1) {
+	        this.host = hosts.get(0).getIp();
+	        this.port = hosts.get(0).getPort();
+        } else {
+	        hosts.stream()
+                .map(s -> {
+                    if (s.getName().contains("haproxy")) {
+                        this.host = s.getIp();
+                        this.port = s.getPort();
+                    }
+                    return s;
+                })
+                .collect(Collectors.toList());
+        }
+
 		try {
 			Class.forName("org.postgresql.Driver");
 			String url = "jdbc:postgresql://" + host + ":" + port + "/" + database;
@@ -44,6 +60,7 @@ public class PostgresDbService implements CustomExistingServiceConnection {
 			log.info("Could not establish connection", e);
 			return false;
 		}
+
 		return true;
 	}
 

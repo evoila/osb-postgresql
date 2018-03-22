@@ -1,4 +1,4 @@
-package de.evoila.cf.cpi.bosh.custom;
+package de.evoila.cf.cpi.bosh;
 
 import de.evoila.cf.broker.bean.BoshProperties;
 import de.evoila.cf.broker.exception.PlatformException;
@@ -8,7 +8,6 @@ import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.repository.PlatformRepository;
 import de.evoila.cf.broker.service.CatalogService;
 import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
-import de.evoila.cf.cpi.bosh.BoshPlatformService;
 import io.bosh.client.deployments.Deployment;
 import io.bosh.client.errands.ErrandSummary;
 import io.bosh.client.vms.Vm;
@@ -21,7 +20,6 @@ import java.util.Optional;
 
 @Service
 @ConditionalOnBean(BoshProperties.class)
-
 public class PostgresBoshPlatformService extends BoshPlatformService {
     private static final int defaultPort = 5678;
 
@@ -40,10 +38,9 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
 
     @Override
     protected void updateHosts (ServiceInstance instance, Plan plan, Deployment deployment) {
-        int port = defaultPort;
-        List<Vm> vms= super.getVms(instance);
+        List<Vm> vms = super.getVms(instance);
         instance.getHosts().clear();
-        // TODO: Filter differenticate between HA Proxy and Postgres Server
+
         vms.forEach(vm -> instance.getHosts().add(super.toServerAddress(vm, defaultPort)));
     }
 
