@@ -32,29 +32,12 @@ public class PostgresDbService implements CustomExistingServiceConnection {
 
 	private Connection connection;
 
-	private String host;
-
-	private int port;
-
 	public boolean createConnection(String username, String password, String database, List<ServerAddress> hosts) {
-	    if (hosts.size() == 1) {
-	        this.host = hosts.get(0).getIp();
-	        this.port = hosts.get(0).getPort();
-        } else {
-	        hosts.stream()
-                .map(s -> {
-                    if (s.getName().contains("haproxy")) {
-                        this.host = s.getIp();
-                        this.port = s.getPort();
-                    }
-                    return s;
-                })
-                .collect(Collectors.toList());
-        }
+        ServerAddress serverAddress = filteredServerAddress(hosts, "haproxy");
 
 		try {
 			Class.forName("org.postgresql.Driver");
-			String url = "jdbc:postgresql://" + host + ":" + port + "/" + database;
+			String url = "jdbc:postgresql://" + serverAddress.getIp() + ":" + serverAddress.getPort() + "/" + database;
 			connection = DriverManager.getConnection(url, username, password);
 		} catch (ClassNotFoundException | SQLException e) {
 			log.info("Could not establish connection", e);
@@ -63,6 +46,22 @@ public class PostgresDbService implements CustomExistingServiceConnection {
 
 		return true;
 	}
+
+    private ServerAddress filteredServerAddress(List<ServerAddress> serverAddresses, String filter) {
+        ServerAddress serverAddress = null;
+        if (serverAddresses.size() == 1)
+            serverAddress = serverAddresses.get(0);
+        else {
+            serverAddress = serverAddresses.stream()
+                    .map(s -> {
+                        if (s.getName().contains(filter))
+                            return s;
+
+                        return null;
+                    }).findFirst().get();
+        }
+        return serverAddress;
+    }
 
 	public boolean isConnected() throws SQLException {
 		return connection != null && !connection.isClosed();
@@ -172,13 +171,5 @@ public class PostgresDbService implements CustomExistingServiceConnection {
 			log.error(e.toString());
 			return null;
 		}
-	}
-
-	public String getHost() {
-		return host;
-	}
-
-	public int getPort() {
-		return port;
 	}
 }

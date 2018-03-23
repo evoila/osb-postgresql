@@ -3,22 +3,17 @@
  */
 package de.evoila.cf.broker.custom.postgres;
 
-import java.math.BigInteger;
-import java.security.SecureRandom;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
+import de.evoila.cf.broker.model.ServerAddress;
+import de.evoila.cf.cpi.existing.CustomExistingService;
+import de.evoila.cf.cpi.existing.CustomExistingServiceConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import de.evoila.cf.broker.model.ServerAddress;
-import de.evoila.cf.broker.model.ServiceInstance;
-import de.evoila.cf.cpi.existing.CustomExistingService;
-import de.evoila.cf.cpi.existing.CustomExistingServiceConnection;
-import sun.jvm.hotspot.debugger.Address;
-
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+ 
 /**
  * @author Johannes Hiemer.
  *
