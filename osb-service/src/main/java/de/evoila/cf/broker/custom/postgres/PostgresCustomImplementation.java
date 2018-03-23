@@ -3,23 +3,18 @@
  */
 package de.evoila.cf.broker.custom.postgres;
 
-import de.evoila.cf.broker.model.ServerAddress;
-import de.evoila.cf.cpi.existing.CustomExistingService;
-import de.evoila.cf.cpi.existing.CustomExistingServiceConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
- 
+
 /**
  * @author Johannes Hiemer.
  *
  */
 @Service
-public class PostgresCustomImplementation implements CustomExistingService {
+public class PostgresCustomImplementation {
 
     private Logger log = LoggerFactory.getLogger(PostgresCustomImplementation.class);
 
@@ -55,37 +50,10 @@ public class PostgresCustomImplementation implements CustomExistingService {
 	}
 
 	public void unbindRoleFromDatabase(PostgresDbService jdbcService, String roleName, String fallBackRoleName) throws SQLException {
-		jdbcService.checkValidUUID(roleName);
-		jdbcService.checkValidUUID(fallBackRoleName);
 		jdbcService.executeUpdate("REVOKE \""+ fallBackRoleName + "\" FROM \"" + roleName + "\"");
 		jdbcService.executeUpdate("REASSIGN OWNED BY \"" + roleName + "\" TO \"" + fallBackRoleName + "\"");
 		jdbcService.executeUpdate("DROP OWNED BY \"" + roleName + "\"");
 		jdbcService.executeUpdate("DROP ROLE \"" + roleName + "\"");
 	}
 
-	@Override
-	public CustomExistingServiceConnection connection(List<String> hosts, int port, String database, String username,
-			String password) throws Exception {
-		PostgresDbService jdbcService = new PostgresDbService();
-
-        List<ServerAddress> serverAddresses = new ArrayList<>();
-        for (String address : hosts) {
-            serverAddresses.add(new ServerAddress("", address, port));
-            log.info("Opening connection to " + address + ":" + port);
-        }
-
-		jdbcService.createConnection(username, password, database, serverAddresses);
-		return jdbcService;
-	}
-
-	@Override
-	public void bindRoleToInstanceWithPassword(CustomExistingServiceConnection connection, String database,
-			String username, String password) throws Exception {
-		if(connection instanceof PostgresDbService) {
-			PostgresDbService postgresConnection = (PostgresDbService) connection;
-			
-			bindRoleToDatabase(postgresConnection, database, username, password, true);
-			postgresConnection.executeUpdate("ALTER ROLE \"" + username + "\" CREATEROLE");
-		}
-	}
 }

@@ -3,41 +3,32 @@
  */
 package de.evoila.cf.broker.custom.postgres;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 import de.evoila.cf.broker.model.ServerAddress;
+import de.evoila.cf.broker.util.ServiceInstanceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.evoila.cf.cpi.existing.CustomExistingServiceConnection;
+import java.sql.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Johannes Hiemer
  *
  */
-public class PostgresDbService implements CustomExistingServiceConnection {
+public class PostgresDbService {
 
 	private Logger log = LoggerFactory.getLogger(getClass());
 
 	private Connection connection;
 
-	public boolean createConnection(String username, String password, String database, List<ServerAddress> hosts) {
-        ServerAddress serverAddress = filteredServerAddress(hosts, "haproxy");
+	public boolean createConnection(String username, String password, String database, List<ServerAddress> serverAddresses) {
+		String connectionUrl = ServiceInstanceUtils.connectionUrl(serverAddresses);
 
-		try {
+	    try {
 			Class.forName("org.postgresql.Driver");
-			String url = "jdbc:postgresql://" + serverAddress.getIp() + ":" + serverAddress.getPort() + "/" + database;
+			String url = "jdbc:postgresql://" + connectionUrl + "/" + database;
 			connection = DriverManager.getConnection(url, username, password);
 		} catch (ClassNotFoundException | SQLException e) {
 			log.info("Could not establish connection", e);
@@ -46,22 +37,6 @@ public class PostgresDbService implements CustomExistingServiceConnection {
 
 		return true;
 	}
-
-    private ServerAddress filteredServerAddress(List<ServerAddress> serverAddresses, String filter) {
-        ServerAddress serverAddress = null;
-        if (serverAddresses.size() == 1)
-            serverAddress = serverAddresses.get(0);
-        else {
-            serverAddress = serverAddresses.stream()
-                    .map(s -> {
-                        if (s.getName().contains(filter))
-                            return s;
-
-                        return null;
-                    }).findFirst().get();
-        }
-        return serverAddress;
-    }
 
 	public boolean isConnected() throws SQLException {
 		return connection != null && !connection.isClosed();
@@ -76,14 +51,6 @@ public class PostgresDbService implements CustomExistingServiceConnection {
             log.info("Could not close connection", e);
         }
     }
-	
-	public void checkValidUUID(String uuidToTest) throws SQLException {
-		UUID uuid = UUID.fromString(uuidToTest);
-
-		if (!uuidToTest.equals(uuid.toString())) {
-			throw new SQLException("UUID '" + uuid + "' is not an UUID.");
-		}
-	}
 
 	public void executeUpdate(String query) throws SQLException {
 		Statement statement = connection.createStatement();

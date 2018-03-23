@@ -6,10 +6,9 @@ package de.evoila.cf.broker.custom.postgres;
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.*;
-import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMapping;
-import de.evoila.cf.broker.persistence.mongodb.repository.ClusterStackMappingRepository;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import de.evoila.cf.broker.util.RandomString;
+import de.evoila.cf.broker.util.ServiceInstanceUtils;
 import de.evoila.cf.cpi.existing.PostgreSQLExistingServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Johannes Hiemer.
@@ -41,17 +42,15 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
 	private PostgresCustomImplementation postgresCustomImplementation;
 	private PostgreSQLExistingServiceFactory existingServiceFactory;
-	private Optional<ClusterStackMappingRepository> stackMappingRepository;
 
     @Autowired(required = false)
     private ExistingEndpointBean existingEndpointBean;
 
-	PostgreSQLBindingService(PostgresCustomImplementation customImplementation, PostgreSQLExistingServiceFactory existingServiceFactory, Optional<ClusterStackMappingRepository> stackMappingRepository){
+	PostgreSQLBindingService(PostgresCustomImplementation customImplementation, PostgreSQLExistingServiceFactory existingServiceFactory){
 		Assert.notNull(customImplementation, "PostgresCustomImplementation may not be null");
 		Assert.notNull(existingServiceFactory, "PostgreSQLExistingServiceFactory may not be null");
 		this.existingServiceFactory = existingServiceFactory;
 		this.postgresCustomImplementation = customImplementation;
-		this.stackMappingRepository = stackMappingRepository;
 	}
 
     @Override
@@ -67,15 +66,14 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
     @Override
     protected ServiceInstanceBinding bindService(String bindingId, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
 
-        List<ServerAddress> hosts = serviceInstance.getHosts();
-        Map<String, Object> credentials = createCredentials(bindingId, serviceInstance, hosts, plan);
+        Map<String, Object> credentials = createCredentials(bindingId, serviceInstance, plan, null);
 
         return new ServiceInstanceBinding(bindingId, serviceInstance.getId(), credentials, null);
     }
 
     @Override
     protected void deleteBinding(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
-        PostgresDbService jdbcService = jdbcService = connection(serviceInstance, plan);
+        PostgresDbService jdbcService = connection(serviceInstance, plan);
 
         try {
             String username = binding.getCredentials().get(USERNAME).toString();
@@ -89,25 +87,20 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
     @Override
     protected Map<String, Object> createCredentials(String bindingId, ServiceInstance serviceInstance,
-                                                    ServerAddress host, Plan plan) throws ServiceBrokerException {
-        List<ServerAddress> hosts = new ArrayList<>();
-        hosts.add(host);
-
-        return createCredentials(bindingId, serviceInstance, hosts, plan);
-    }
-
-	protected Map<String, Object> createCredentials(String bindingId, ServiceInstance serviceInstance,
-			List<ServerAddress> host, Plan plan) throws ServiceBrokerException {
+                                                    Plan plan, ServerAddress host) throws ServiceBrokerException {
 		PostgresDbService jdbcService = connection(serviceInstance, plan);
 
         String username = usernameRandomString.nextString();
         String password = passwordRandomString.nextString();
-        String database = bindingId;
+        String database = serviceInstance.getId();
 
 		try {
 		    postgresCustomImplementation.bindRoleToDatabase(jdbcService, username, password, database, false);
-			jdbcService.closeIfConnected();
+
+		    // TODO: Why are we doin this?
+		    jdbcService.closeIfConnected();
 			jdbcService.createConnection(username, password, database, serviceInstance.getHosts());
+
 			postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, username, password);
 		} catch (SQLException e) {
 			throw new ServiceBrokerException("Could not update database");
@@ -115,17 +108,18 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
             jdbcService.closeIfConnected();
         }
 
-        String hostIp = serviceInstance.getHosts().get(0).getIp();
-        int hostPort = serviceInstance.getHosts().get(0).getPort();
+        String endpoint = ServiceInstanceUtils.connectionUrl(serviceInstance.getHosts());
 
-        String dbURL = String.format("postgres://%s:%s@%s:%d/%s", username, password, hostIp, hostPort, database);
+		// When host is not empty, it is a service key
+		if (host != null)
+		    endpoint = host.getIp() + ":" + host.getPort();
+
+        String dbURL = String.format("postgres://%s:%s@%s/%s", username, password, endpoint, database);
 
 		Map<String, Object> credentials = new HashMap<String, Object>();
 		credentials.put(URI, dbURL);
 		credentials.put(USERNAME, bindingId);
 		credentials.put(PASSWORD, password);
-		credentials.put(HOST, hostIp);
-		credentials.put(PORT, hostPort);
 		credentials.put(DATABASE, database);
 
 		return credentials;
@@ -134,12 +128,19 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
     private PostgresDbService connection(ServiceInstance serviceInstance, Plan plan) {
         PostgresDbService jdbcService = new PostgresDbService();
 
-        if(plan.getPlatform() == Platform.BOSH)
+        if(plan.getPlatform() == Platform.BOSH) {
+            List<ServerAddress> serverAddresses = serviceInstance.getHosts();
+
+            if (plan.getMetadata().getIngressInstanceGroup() != null &&
+                    plan.getMetadata().getIngressInstanceGroup().length() > 0)
+                serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),
+                        plan.getMetadata().getIngressInstanceGroup());
+
             jdbcService.createConnection(serviceInstance.getUsername(), serviceInstance.getPassword(),
-                    "admin", serviceInstance.getHosts());
-        else if (plan.getPlatform() == Platform.EXISTING_SERVICE)
+                    "admin", serverAddresses);
+        } else if (plan.getPlatform() == Platform.EXISTING_SERVICE)
             jdbcService.createConnection(existingEndpointBean.getUsername(), existingEndpointBean.getPassword(),
-                    existingEndpointBean.getDatabase(), existingEndpointBean.getHostsWithServerAddress());
+                    existingEndpointBean.getDatabase(), serviceInstance.getHosts());
 
         return jdbcService;
     }

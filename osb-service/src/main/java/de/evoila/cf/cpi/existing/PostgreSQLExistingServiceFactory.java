@@ -3,16 +3,20 @@
  */
 package de.evoila.cf.cpi.existing;
 
-import java.sql.SQLException;
-
+import de.evoila.cf.broker.bean.ExistingEndpointBean;
+import de.evoila.cf.broker.custom.postgres.PostgresCustomImplementation;
+import de.evoila.cf.broker.custom.postgres.PostgresDbService;
+import de.evoila.cf.broker.exception.PlatformException;
+import de.evoila.cf.broker.model.Plan;
+import de.evoila.cf.broker.model.Platform;
+import de.evoila.cf.broker.model.ServiceInstance;
+import de.evoila.cf.broker.util.RandomString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
-import de.evoila.cf.broker.bean.ExistingEndpointBean;
-import de.evoila.cf.broker.exception.PlatformException;
-import de.evoila.cf.broker.custom.postgres.PostgresCustomImplementation;
-import de.evoila.cf.broker.custom.postgres.PostgresDbService;
+import java.sql.SQLException;
+import java.util.Map;
 
 /**
  * @author Christian Brinker, evoila.
@@ -22,33 +26,29 @@ import de.evoila.cf.broker.custom.postgres.PostgresDbService;
 @ConditionalOnBean(ExistingEndpointBean.class)
 public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 
+    RandomString usernameRandomString = new RandomString(10);
+    RandomString passwordRandomString = new RandomString(15);
+
+    @Autowired
+    private PostgresCustomImplementation postgresCustomImplementation;
+
 	@Autowired
-	private PostgresCustomImplementation postgres;
+    private ExistingEndpointBean existingEndpointBean;
 
-	protected CustomExistingService getCustomExistingService() {
-		return postgres;
-	}
-
-	public void createDatabase(PostgresDbService connection, String database) throws PlatformException {
+	private void createDatabase(PostgresDbService connection, String database) throws PlatformException {
 		try {
 			connection.executeUpdate("CREATE DATABASE \"" + database + "\" ENCODING 'UTF8'");
-			// connection.executeUpdate("REVOKE all on database " + database + "
-			// from public");
 			connection.executeUpdate("REVOKE ALL PRIVILEGES ON DATABASE \"" + database + "\" FROM PUBLIC");
 			connection.executeUpdate("REVOKE CONNECT ON DATABASE \"" + database + "\" FROM PUBLIC");
 		} catch (SQLException e) {
-			log.error(e.toString());
-			throw new PlatformException("Could not add to database");
+			throw new PlatformException("Could not add to database", e);
 		}
 	}
 
-	public void deleteDatabase(PostgresDbService connection, String database) throws PlatformException {
+    private void deleteDatabase(PostgresDbService connection, String username, String database) throws PlatformException {
 		try {
-			String newDBOwner = getUsername();
-			// connection.executeUpdate("REVOKE all on database \"" + database +
-			// "\" from public");
-			connection.executeUpdate("ALTER DATABASE\"" + database + "\" OWNER TO \"" + newDBOwner + "\"");
-			connection.executeUpdate("REASSIGN OWNED BY \"" + database + "\" TO \"" + newDBOwner + "\"");
+			connection.executeUpdate("ALTER DATABASE\"" + database + "\" OWNER TO \"" + username + "\"");
+			connection.executeUpdate("REASSIGN OWNED BY \"" + database + "\" TO \"" + username + "\"");
 			connection.executeUpdate("REVOKE ALL PRIVILEGES ON DATABASE \"" + database + "\" FROM \"" + database + "\"");
 			connection.executeUpdate("REVOKE CONNECT ON DATABASE \"" + database + "\" FROM \"" + database + "\"");
 			connection.executeUpdate("SELECT * FROM pg_stat_activity WHERE pg_stat_activity WHERE datname = '" + database + "';");
@@ -59,22 +59,47 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 			connection.executeUpdate("DROP ROLE \"" + database + "\"");
 			connection.executeUpdate("DROP DATABASE \"" + database + "\"");
 		} catch (SQLException e) {
-			log.error(e.toString());
-			throw new PlatformException("Could not remove from database");
+			throw new PlatformException("Could not remove from database", e);
 		}
 	}
 
 	@Override
-	protected void deleteInstance(CustomExistingServiceConnection connection, String instanceId)
-			throws PlatformException {
-		if (connection instanceof PostgresDbService)
-			deleteDatabase((PostgresDbService) connection, instanceId);
+    public void deleteInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
+	    PostgresDbService postgresDbService = this.connection(serviceInstance, plan);
+	    deleteDatabase(postgresDbService, serviceInstance.getUsername(), serviceInstance.getId());
 	}
 
 	@Override
-	protected void createInstance(CustomExistingServiceConnection connection, String instanceId)
-			throws PlatformException {
-		if (connection instanceof PostgresDbService)
-			createDatabase((PostgresDbService) connection, instanceId);
+	public ServiceInstance createInstance(ServiceInstance serviceInstance, Plan plan, Map<String, String> parameters) throws PlatformException {
+        String username = usernameRandomString.nextString();
+        String password = passwordRandomString.nextString();
+
+	    serviceInstance.setUsername(username);
+        serviceInstance.setPassword(password);
+
+	    PostgresDbService postgresDbService = this.connection(serviceInstance, plan);
+
+        createDatabase(postgresDbService, serviceInstance.getId());
+
+        try {
+            postgresCustomImplementation.bindRoleToDatabase(postgresDbService,
+                    username, password, serviceInstance.getId(), true);
+
+            postgresDbService.executeUpdate("ALTER ROLE \"" + username + "\" CREATEROLE");
+        } catch(SQLException ex) {
+            throw new PlatformException(ex);
+        }
+
+        return serviceInstance;
 	}
+
+    private PostgresDbService connection(ServiceInstance serviceInstance, Plan plan) {
+        PostgresDbService jdbcService = new PostgresDbService();
+
+        if (plan.getPlatform() == Platform.EXISTING_SERVICE)
+            jdbcService.createConnection(existingEndpointBean.getUsername(), existingEndpointBean.getPassword(),
+                    existingEndpointBean.getDatabase(), existingEndpointBean.getHosts());
+
+        return jdbcService;
+    }
 }

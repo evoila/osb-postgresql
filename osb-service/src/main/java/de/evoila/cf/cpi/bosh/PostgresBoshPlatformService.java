@@ -15,33 +15,31 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 import rx.Observable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 @ConditionalOnBean(BoshProperties.class)
 public class PostgresBoshPlatformService extends BoshPlatformService {
-    private static final int defaultPort = 5678;
 
-    PostgresBoshPlatformService(PlatformRepository repository, CatalogService catalogService, ServicePortAvailabilityVerifier availabilityVerifier, BoshProperties boshProperties, Optional<DashboardClient> dashboardClient) {
+    private static final int defaultPort = 5432;
+
+    PostgresBoshPlatformService(PlatformRepository repository, CatalogService catalogService, ServicePortAvailabilityVerifier availabilityVerifier,
+                                BoshProperties boshProperties, Optional<DashboardClient> dashboardClient) {
         super(repository, catalogService, availabilityVerifier, boshProperties, dashboardClient, new PostgresDeploymentManager(boshProperties));
     }
 
     @Override
-    protected void runCreateErrands (ServiceInstance instance, Plan plan, Deployment deployment, Observable<List<ErrandSummary>> errands) throws PlatformException {
-    }
+    protected void runCreateErrands(ServiceInstance instance, Plan plan, Deployment deployment,
+                                    Observable<List<ErrandSummary>> errands) throws PlatformException {}
 
     @Override
-    protected void runUpdateErrands (ServiceInstance instance, Plan plan, Deployment deployment, Observable<List<ErrandSummary>> errands) throws PlatformException {
-    }
-
+    protected void runUpdateErrands(ServiceInstance instance, Plan plan, Deployment deployment,
+                                    Observable<List<ErrandSummary>> errands) throws PlatformException { }
 
     @Override
-    protected void updateHosts (ServiceInstance serviceInstance, Plan plan, Deployment deployment) {
+    protected void updateHosts(ServiceInstance serviceInstance, Plan plan, Deployment deployment) {
         List<Vm> vms = super.getVms(serviceInstance);
-        if(serviceInstance.getHosts() == null)
-            serviceInstance.setHosts(new ArrayList<>());
         serviceInstance.getHosts().clear();
 
         vms.forEach(vm -> serviceInstance.getHosts().add(super.toServerAddress(vm, defaultPort)));
