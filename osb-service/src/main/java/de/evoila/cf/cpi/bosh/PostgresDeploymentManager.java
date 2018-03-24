@@ -30,7 +30,7 @@ public class PostgresDeploymentManager extends DeploymentManager {
         log.debug("Updating Deployment Manifest, replacing parameters");
 
         HashMap<String, Object> manifestProperties = (HashMap<String, Object>) manifest
-                .getInstance_groups()
+                .getInstanceGroups()
                 .stream()
                 .filter(i -> {
                   if (i.getName().equals("postgres"))
