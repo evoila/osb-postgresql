@@ -118,7 +118,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
 		Map<String, Object> credentials = new HashMap<String, Object>();
 		credentials.put(URI, dbURL);
-		credentials.put(USERNAME, bindingId);
+		credentials.put(USERNAME, username);
 		credentials.put(PASSWORD, password);
 		credentials.put(DATABASE, database);
 
