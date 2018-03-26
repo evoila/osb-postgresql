@@ -64,14 +64,6 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
     }
 
     @Override
-    protected ServiceInstanceBinding bindService(String bindingId, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
-
-        Map<String, Object> credentials = createCredentials(bindingId, serviceInstance, plan, null);
-
-        return new ServiceInstanceBinding(bindingId, serviceInstance.getId(), credentials, null);
-    }
-
-    @Override
     protected void deleteBinding(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
         PostgresDbService jdbcService = connection(serviceInstance, plan);
 
@@ -86,8 +78,8 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
     }
 
     @Override
-    protected Map<String, Object> createCredentials(String bindingId, ServiceInstance serviceInstance,
-                                                    Plan plan, ServerAddress host) throws ServiceBrokerException {
+    protected Map<String, Object> createCredentials(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
+                                                    ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException {
 		PostgresDbService jdbcService = connection(serviceInstance, plan);
 
         String username = usernameRandomString.nextString();
