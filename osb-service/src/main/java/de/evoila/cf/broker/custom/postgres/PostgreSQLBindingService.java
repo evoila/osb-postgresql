@@ -3,23 +3,30 @@
  */
 package de.evoila.cf.broker.custom.postgres;
 
+import com.jcraft.jsch.JSchException;
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import de.evoila.cf.broker.util.RandomString;
 import de.evoila.cf.broker.util.ServiceInstanceUtils;
+import de.evoila.cf.cpi.bosh.InstanceGroupNotFoundException;
+import de.evoila.cf.cpi.bosh.PostgresBoshPlatformService;
 import de.evoila.cf.cpi.existing.PostgreSQLExistingServiceFactory;
+import io.bosh.client.deployments.Deployment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author Johannes Hiemer.
@@ -43,14 +50,19 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 	private PostgresCustomImplementation postgresCustomImplementation;
 	private PostgreSQLExistingServiceFactory existingServiceFactory;
 
-    @Autowired(required = false)
-    private ExistingEndpointBean existingEndpointBean;
+    private Optional<ExistingEndpointBean> existingEndpointBean;
+    private Optional<PostgresBoshPlatformService> postgresBoshPlatformService;
 
-	PostgreSQLBindingService(PostgresCustomImplementation customImplementation, PostgreSQLExistingServiceFactory existingServiceFactory){
+	PostgreSQLBindingService(PostgresCustomImplementation customImplementation,
+                             PostgreSQLExistingServiceFactory existingServiceFactory,
+                             Optional<ExistingEndpointBean> existingEndpointBean,
+                             Optional<PostgresBoshPlatformService> postgresBoshPlatformService){
 		Assert.notNull(customImplementation, "PostgresCustomImplementation may not be null");
 		Assert.notNull(existingServiceFactory, "PostgreSQLExistingServiceFactory may not be null");
 		this.existingServiceFactory = existingServiceFactory;
 		this.postgresCustomImplementation = customImplementation;
+		this.existingEndpointBean = existingEndpointBean;
+		this.postgresBoshPlatformService = postgresBoshPlatformService;
 	}
 
     @Override
@@ -102,9 +114,19 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 			jdbcService.createConnection(username, password, database, serviceInstance.getHosts());
 
 			postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, username, password);
+            if(plan.getPlatform() == Platform.BOSH && postgresBoshPlatformService.isPresent()) {
+                postgresBoshPlatformService.get().createPgPoolUser(serviceInstance);
+            }
 		} catch (SQLException e) {
-			throw new ServiceBrokerException("Could not update database");
-		} finally {
+		    log.error(String.format("Creating Binding(%s) failed while creating the ne postgres user. Could not update database", bindingId));
+            throw new ServiceBrokerException("Could not update database");
+		} catch (IOException | JSchException| NoSuchAlgorithmException e) {
+            log.error(String.format("Creating Binding(%s) failed while creating the pgpool user. Connections to postgresql vms fauiled", bindingId));
+            throw new ServiceBrokerException("Error creating pgpool user");
+        } catch (InstanceGroupNotFoundException e) {
+            log.error(String.format("Creating Binding(%s) failed while creating the pgpool user. %s", bindingId, e.getMessage()));
+            throw new ServiceBrokerException(String.format("Creating Binding(%s) failed while creating the pgpool user. %s", bindingId, e.getMessage()));
+        } finally {
             jdbcService.closeIfConnected();
         }
 
@@ -125,22 +147,29 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		return credentials;
 	}
 
-    private PostgresDbService connection(ServiceInstance serviceInstance, Plan plan) {
+    private PostgresDbService connection(ServiceInstance serviceInstance, Plan plan)  {
         PostgresDbService jdbcService = new PostgresDbService();
 
-        if(plan.getPlatform() == Platform.BOSH) {
+        if(plan.getPlatform() == Platform.BOSH && postgresBoshPlatformService.isPresent()) {
+
             List<ServerAddress> serverAddresses = serviceInstance.getHosts();
+            String ingressInstanceGroup= plan.getMetadata().getIngressInstanceGroup();
+            if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
+                serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),ingressInstanceGroup);
+            }
 
-            if (plan.getMetadata().getIngressInstanceGroup() != null &&
-                    plan.getMetadata().getIngressInstanceGroup().length() > 0)
-                serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),
-                        plan.getMetadata().getIngressInstanceGroup());
+            jdbcService.createConnection(serviceInstance.getUsername(),
+                                         serviceInstance.getPassword(),
+                                         "admin",
+                                         serverAddresses);
 
-            jdbcService.createConnection(serviceInstance.getUsername(), serviceInstance.getPassword(),
-                    "admin", serverAddresses);
-        } else if (plan.getPlatform() == Platform.EXISTING_SERVICE)
-            jdbcService.createConnection(existingEndpointBean.getUsername(), existingEndpointBean.getPassword(),
-                    existingEndpointBean.getDatabase(), serviceInstance.getHosts());
+
+        } else if (plan.getPlatform() == Platform.EXISTING_SERVICE && existingEndpointBean.isPresent()) {
+            ExistingEndpointBean existingEndpointBean = this.existingEndpointBean.get();
+            jdbcService.createConnection(existingEndpointBean.getUsername(),existingEndpointBean.getPassword(),
+                                         existingEndpointBean.getDatabase(),serviceInstance.getHosts()
+            );
+        }
 
         return jdbcService;
     }
