@@ -137,6 +137,11 @@
             <id>spring-repository</id>
             <url>https://repo.spring.io/libs-release</url>
         </repository>
+            <repository>
+                <id>st-snapshots</id>
+                <name>sonatype-snapshots</name>
+                <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            </repository>
     </repositories>
 
     <pluginRepositories>
