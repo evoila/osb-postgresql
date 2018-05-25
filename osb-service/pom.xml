@@ -10,7 +10,7 @@
             <version>1.2.0</version>
         </parent>
 
-	<artifactId>cf-service-broker-postgresql</artifactId>
+	<artifactId>osb-postgresql</artifactId>
 	<packaging>jar</packaging>
 	<name>ssb-postgresql</name>
 	<version>1.2.0</version>
