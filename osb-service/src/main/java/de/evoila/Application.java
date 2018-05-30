@@ -25,7 +25,6 @@ import java.util.Map;
  */
 @RefreshScope
 @SpringBootApplication
-@EnableAutoConfiguration(exclude = { RabbitAutoConfiguration.class, BusAutoConfiguration.class })
 public class Application {
 
 	@Bean(name = "customProperties")
