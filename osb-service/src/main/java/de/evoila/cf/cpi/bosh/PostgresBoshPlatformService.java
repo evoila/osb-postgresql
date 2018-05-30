@@ -80,7 +80,9 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
         OutputStreamWriter out = new OutputStreamWriter(shell.getOutputStream());
         out.write("sudo su");
         out.flush();
-        out.write(String.format("/var/vcap/packages/pgpool2/bin/pg_md5 --md5auth --config-file /var/vcap/jobs/pgpool/config/pgpool.conf --username=%s %s", instance.getUsername(), instance.getPassword()));
+        out.write(String.format("/var/vcap/packages/pgpool2/bin/pg_md5 --md5auth " +
+                "--config-file /var/vcap/jobs/pgpool/config/pgpool.conf --username=%s %s",
+                instance.getUsername(), instance.getPassword()));
         out.flush();;
         out.close();
     }
