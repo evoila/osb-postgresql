@@ -1,14 +1,12 @@
 ---
 # https://bosh.io/docs/cli-v2.html#deployment-mgmt
 
-name: postgres
+name: osb-bosh-postgresql
 
 releases:
-- name: osb-postgres
+- name: osb-bosh-postgresql
   version: latest
-- name: osb-haproxy
-  version: latest
-- name: osb-monitoring
+- name: osb-bosh-monitoring
   version: latest
 
 update:
@@ -20,56 +18,33 @@ update:
 stemcells:
 - alias: default
   os: ubuntu-trusty
-  version: 3468.13
+  version: latest
 
 instance_groups:
 - name: postgres
   instances: 2
-  vm_type: default
+  vm_type: small
   stemcell: default
   azs:
   - z1
   networks:
-  - name: default
-  persistent_disk: 0
+  - name: service
+  persistent_disk_type: 10GB
   jobs:
   - name: postgres
-    release: osb-postgres
-  - name: pgpool
-    release: osb-postgres
+    release: osb-bosh-postgresql
   - name: node_exporter
-    release: osb-monitoring
+    release: osb-bosh-monitoring
   - name: postgres_exporter
-    release: osb-monitoring
+    release: osb-bosh-monitoring
   properties:
-    pcp:
-      system_password: secret
-    pgpool:
-      debug: false
-      backend:
-        port: 6432
-      config:
-        init_max_childen: 250
-        enable_pool_hba: on
-        port: 5432
-      databases:
-      - name: admin
-        users:
-        - admin
-      hba:
-      - host all all 0.0.0.0/0 md5
-      - host all all ::/0 md5
-      users:
-      - username: admin
-        password: admin
-        admin: true
     postgres_exporter:
       user: admin
       password: admin
-      port: 6432
+      port: 5432
     postgres:
       config:
-        port: 6432
+        port: 5432
         max_connections: 500
         shared_buffers: 128MB
         temp_buffers: 8MB
@@ -84,57 +59,43 @@ instance_groups:
       - host all all ::/0 md5
       replication:
         enabled: true
+      databases:
+      - name: admin
+        users:
+        - admin
+      users:
+      - username: admin
+        password: admin
+        admin: true
 
-- name: haproxy
+- name: pgpool
   instances: 1
-  vm_type: default
+  vm_type: minimal
   stemcell: default
   azs:
   - z1
   networks:
-  - name: default
+  - name: service
   jobs:
-  - name: haproxy
-    release: osb-haproxy
+  - name: pgpool
+    release: osb-bosh-postgresql
   - name: node_exporter
-    release: osb-monitoring
-  - name: haproxy_exporter
-    release: osb-monitoring
+    release: osb-bosh-monitoring
   properties:
-    ha_proxy:
-      client_timeout: 10
-      server_timeout: 10
-      queue_timeout: 10
-      binding_ip: 0.0.0.0
-      disable_http: true
-      backend_port: 5432
-      stats_enable: true
-      stats_user: admin
-      stats_password: admin
-      tcp:
-        - name: pgsql
-          balance: roundrobin
-          port: 5432
-          check: "check"
-
-- name: smoke-tests
-  instances: 0
-  stemcell: default
-  vm_type: default
-  lifecycle: errand
-  azs:
-  - z1
-  networks:
-  - name: default
-  persistent_disk: 0
-  jobs:
-  - name: smoke-tests
-    release: osb-postgres
-    properties:
-      smoke-tests:
-        backend:
-          port: 6432
-        target:
-          password: if-ya-got-em
-          port: 5432
-          username: smoke-tests
+    pcp:
+      system_password: secret
+    pgpool:
+      debug: false
+      backend:
+        port: 5432
+      config:
+        init_max_childen: 250
+        enable_pool_hba: on
+        port: 5432
+      hba:
+      - host all all 0.0.0.0/0 md5
+      - host all all ::/0 md5
+      users:
+      - username: admin
+        password: admin
+        admin: true

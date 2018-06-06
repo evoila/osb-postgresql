@@ -28,23 +28,17 @@ public class PostgresDeploymentManager extends DeploymentManager {
 
         log.debug("Updating Deployment Manifest, replacing parameters");
 
-        HashMap<String, Object> manifestProperties = (HashMap<String, Object>) manifest
-                .getInstanceGroups()
-                .stream()
-                .filter(i -> {
-                  if (i.getName().equals("postgres"))
-                      return true;
-                  return false;
-                }).findFirst().get().getProperties();
+        Map<String, Object> postgresManifestProperties = manifestProperties("postgres", manifest);
+        Map<String, Object> pgpoolManifestProperties = manifestProperties("pgpool", manifest);
 
-        HashMap<String, Object> pcp = (HashMap<String, Object>) manifestProperties.get("pcp");
-        HashMap<String, Object> pgppool = (HashMap<String, Object>) manifestProperties.get("pgpool");
-        HashMap<String, Object> postgresExporter = (HashMap<String, Object>) manifestProperties.get("postgres_exporter");
+        HashMap<String, Object> pcp = (HashMap<String, Object>) pgpoolManifestProperties.get("pcp");
+        HashMap<String, Object> postgres = (HashMap<String, Object>) postgresManifestProperties.get("postgres");
+        HashMap<String, Object> postgresExporter = (HashMap<String, Object>) postgresManifestProperties.get("postgres_exporter");
 
         pcp.put("system_password", randomStringPcp.nextString());
 
         String password = randomStringPassword.nextString();
-        List<HashMap<String, Object>> users = (List<HashMap<String, Object>>) pgppool.get("users");
+        List<HashMap<String, Object>> users = (List<HashMap<String, Object>>) postgres.get("users");
 
         HashMap<String, Object> userProperties = users.get(0);
         String username = userProperties.get("username").toString();
@@ -56,6 +50,17 @@ public class PostgresDeploymentManager extends DeploymentManager {
         postgresExporter.put("password", password);
 
         this.updateInstanceGroupConfiguration(manifest, plan);
+    }
+
+    private Map<String, Object> manifestProperties(String instanceGroup, Manifest manifest) {
+        return manifest
+            .getInstanceGroups()
+            .stream()
+            .filter(i -> {
+                if (i.getName().equals(instanceGroup))
+                    return true;
+                return false;
+            }).findFirst().get().getProperties();
     }
 
 }

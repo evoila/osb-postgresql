@@ -143,7 +143,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         if(plan.getPlatform() == Platform.BOSH && postgresBoshPlatformService.isPresent()) {
 
             List<ServerAddress> serverAddresses = serviceInstance.getHosts();
-            String ingressInstanceGroup= plan.getMetadata().getIngressInstanceGroup();
+            String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
             if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
                 serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),ingressInstanceGroup);
             }
