@@ -65,21 +65,16 @@ public class PostgresDbService {
 		}
 	}
 
-	public Map<String, String> executeSelect(String query) throws SQLException {
+	public Map<String, String> executeSelect(String query, String column) throws SQLException {
 		Statement statement = connection.createStatement();
 
 		try {
+            Map<String, String> resultMap = new HashMap<>();
 			ResultSet result = statement.executeQuery(query);
-			ResultSetMetaData resultMetaData = result.getMetaData();
-			int columns = resultMetaData.getColumnCount();
 
-			Map<String, String> resultMap = new HashMap<String, String>(columns);
-
-			if (result.next()) {
-				for (int i = 1; i <= columns; i++) {
-					resultMap.put(resultMetaData.getColumnName(i), result.getString(i));
-				}
-			}
+			while(result.next()) {
+                resultMap.put(result.getString(column), result.getString(column));
+            }
 
 			return resultMap;
 		} catch (SQLException e) {

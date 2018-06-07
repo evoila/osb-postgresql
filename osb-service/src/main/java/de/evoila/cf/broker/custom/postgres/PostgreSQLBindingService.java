@@ -4,7 +4,6 @@
 package de.evoila.cf.broker.custom.postgres;
 
 import com.jcraft.jsch.JSchException;
-import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
@@ -22,9 +21,7 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * @author Johannes Hiemer.
@@ -46,20 +43,18 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
     private RandomString passwordRandomString = new RandomString(15);
 
 	private PostgresCustomImplementation postgresCustomImplementation;
+
 	private PostgreSQLExistingServiceFactory existingServiceFactory;
 
-    private Optional<ExistingEndpointBean> existingEndpointBean;
-    private Optional<PostgresBoshPlatformService> postgresBoshPlatformService;
+    private PostgresBoshPlatformService postgresBoshPlatformService;
 
 	PostgreSQLBindingService(PostgresCustomImplementation customImplementation,
                              PostgreSQLExistingServiceFactory existingServiceFactory,
-                             Optional<ExistingEndpointBean> existingEndpointBean,
-                             Optional<PostgresBoshPlatformService> postgresBoshPlatformService){
+                             PostgresBoshPlatformService postgresBoshPlatformService){
 		Assert.notNull(customImplementation, "PostgresCustomImplementation may not be null");
 		Assert.notNull(existingServiceFactory, "PostgreSQLExistingServiceFactory may not be null");
 		this.existingServiceFactory = existingServiceFactory;
 		this.postgresCustomImplementation = customImplementation;
-		this.existingEndpointBean = existingEndpointBean;
 		this.postgresBoshPlatformService = postgresBoshPlatformService;
 	}
 
@@ -75,7 +70,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
     @Override
     protected void deleteBinding(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
-        PostgresDbService jdbcService = connection(serviceInstance, plan);
+        PostgresDbService jdbcService = postgresCustomImplementation.connection(serviceInstance, plan);
 
         try {
             String username = binding.getCredentials().get(USERNAME).toString();
@@ -90,7 +85,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
     @Override
     protected Map<String, Object> createCredentials(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                     ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException {
-		PostgresDbService jdbcService = connection(serviceInstance, plan);
+		PostgresDbService jdbcService = postgresCustomImplementation.connection(serviceInstance, plan);
 
         String username = usernameRandomString.nextString();
         String password = passwordRandomString.nextString();
@@ -104,8 +99,8 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 			jdbcService.createConnection(username, password, database, serviceInstance.getHosts());
 
 			postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, username, password);
-            if(plan.getPlatform() == Platform.BOSH && postgresBoshPlatformService.isPresent()) {
-                postgresBoshPlatformService.get().createPgPoolUser(serviceInstance);
+            if(plan.getPlatform() == Platform.BOSH) {
+                postgresBoshPlatformService.createPgPoolUser(serviceInstance);
             }
 		} catch (SQLException e) {
 		    log.error(String.format("Creating Binding(%s) failed while creating the ne postgres user. Could not update database", bindingId));
@@ -136,32 +131,5 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
 		return credentials;
 	}
-
-    private PostgresDbService connection(ServiceInstance serviceInstance, Plan plan)  {
-        PostgresDbService jdbcService = new PostgresDbService();
-
-        if(plan.getPlatform() == Platform.BOSH && postgresBoshPlatformService.isPresent()) {
-
-            List<ServerAddress> serverAddresses = serviceInstance.getHosts();
-            String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
-            if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
-                serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),ingressInstanceGroup);
-            }
-
-            jdbcService.createConnection(serviceInstance.getUsername(),
-                                         serviceInstance.getPassword(),
-                                         "admin",
-                                         serverAddresses);
-
-
-        } else if (plan.getPlatform() == Platform.EXISTING_SERVICE && existingEndpointBean.isPresent()) {
-            ExistingEndpointBean existingEndpointBean = this.existingEndpointBean.get();
-            jdbcService.createConnection(existingEndpointBean.getUsername(),existingEndpointBean.getPassword(),
-                                         existingEndpointBean.getDatabase(),serviceInstance.getHosts()
-            );
-        }
-
-        return jdbcService;
-    }
 
 }
