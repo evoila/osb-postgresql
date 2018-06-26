@@ -7,6 +7,7 @@ import de.evoila.cf.broker.util.RandomString;
 import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,23 @@ public class PostgresDeploymentManager extends DeploymentManager {
         serviceInstance.setPassword(password);
 
         postgresExporter.put("password", password);
+
+        List<Map<String, Object>> databases = new ArrayList<>();
+
+        List<String> user= new ArrayList<>();
+        user.add("admin");
+
+        Map<String, Object> database = new HashMap<>();
+        database.put("name", "admin");
+        database.put("users", user);
+        databases.add(database);
+
+        database = new HashMap<>();
+        database.put("name", serviceInstance.getId());
+        database.put("users", user);
+        databases.add(database);
+
+        postgres.put("databases", databases);
 
         this.updateInstanceGroupConfiguration(manifest, plan);
     }

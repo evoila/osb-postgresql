@@ -74,7 +74,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
         try {
             String username = binding.getCredentials().get(USERNAME).toString();
-            postgresCustomImplementation.unbindRoleFromDatabase(jdbcService, username, username + "-fallback");
+            postgresCustomImplementation.unbindRoleFromDatabase(serviceInstance.getHosts(),jdbcService, username, "fallback-"+username);
         } catch (SQLException e) {
             throw new ServiceBrokerException("Could not remove from database");
         } finally {
@@ -98,7 +98,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		    jdbcService.closeIfConnected();
 			jdbcService.createConnection(username, password, database, serviceInstance.getHosts());
 
-			postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, username, password);
+			postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, username);
             if(plan.getPlatform() == Platform.BOSH) {
                 postgresBoshPlatformService.createPgPoolUser(serviceInstance);
             }
