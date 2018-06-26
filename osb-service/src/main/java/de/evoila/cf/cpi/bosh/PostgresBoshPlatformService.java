@@ -58,7 +58,7 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
 
     public void createPgPoolUser(ServiceInstance instance) throws IOException, JSchException, NoSuchAlgorithmException, InstanceGroupNotFoundException {
         Deployment deployment = super.getDeployment(instance);
-        Manifest manifest = super.getManifest(deployment);
+        Manifest manifest = super.getDeployedManifest(deployment.getName());
 
         Optional<InstanceGroup> group = manifest.getInstanceGroups()
               .stream()
