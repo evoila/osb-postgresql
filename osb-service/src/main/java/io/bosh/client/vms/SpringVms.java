@@ -118,7 +118,8 @@ public class SpringVms extends AbstractSpringOperations implements Vms {
         .flatMap(response -> tasks.trackToCompletion(getTaskId(response)))
         .map(body -> {
              Vm vm = listDetails(config.getDeploymentName()).toBlocking().first().stream().filter(filterVm -> {
-                 if (filterVm.getIndex() == config.getTarget().getIndexes())
+                 if (filterVm.getJobName().equals(config.getTarget().getJob()) &&
+                   filterVm.getIndex() == config.getTarget().getIndexes())
                      return true;
                  return false;
              }).findFirst().get();
