@@ -45,12 +45,10 @@ public class PostgresCustomImplementation {
 			throws SQLException {
 
 		if (isAdmin){
-			jdbcService.executeUpdate("CREATE ROLE \"" + username + "\"");
+			jdbcService.executeUpdate("CREATE ROLE \"" + username + "\" WITH LOGIN password '" + password + "'");
 		} else {
-			jdbcService.executeUpdate("CREATE ROLE \"" + username + "\" WITH INHERIT");
+			jdbcService.executeUpdate("CREATE ROLE \"" + username + "\" WITH INHERIT LOGIN password '" + password + "'");
 		}
-
-		jdbcService.executeUpdate("ALTER ROLE \"" + username + "\" LOGIN password '" + password + "'");
 
 		if (isAdmin){
 			jdbcService.executeUpdate("ALTER DATABASE \"" + database + "\" OWNER TO \"" + username + "\"");
