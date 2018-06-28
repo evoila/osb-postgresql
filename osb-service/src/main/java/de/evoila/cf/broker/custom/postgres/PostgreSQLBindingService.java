@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -100,17 +99,17 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
 			postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, username);
             if(plan.getPlatform() == Platform.BOSH) {
-                postgresBoshPlatformService.createPgPoolUser(serviceInstance);
+                postgresBoshPlatformService.createPgPoolUser(serviceInstance, username, password);
             }
 		} catch (SQLException e) {
-		    log.error(String.format("Creating Binding(%s) failed while creating the ne postgres user. Could not update database", bindingId));
+		    log.error(String.format("Creating Binding(%s) failed while creating the ne postgres user. Could not update database", bindingId), e);
             throw new ServiceBrokerException("Could not update database");
-		} catch (IOException | JSchException| NoSuchAlgorithmException e) {
-            log.error(String.format("Creating Binding(%s) failed while creating the pgpool user. Connections to postgresql vms fauiled", bindingId));
-            throw new ServiceBrokerException("Error creating pgpool user");
+		} catch (IOException | JSchException e) {
+            log.error(String.format("Creating Binding(%s) failed while creating the PgPool user. Connections to PostgreSQL VMs failed", bindingId), e);
+            throw new ServiceBrokerException("Error creating PgPool user");
         } catch (InstanceGroupNotFoundException e) {
-            log.error(String.format("Creating Binding(%s) failed while creating the pgpool user. %s", bindingId, e.getMessage()));
-            throw new ServiceBrokerException(String.format("Creating Binding(%s) failed while creating the pgpool user. %s", bindingId, e.getMessage()));
+            log.error(String.format("Creating Binding(%s) failed while creating the PgPool user. %s", bindingId), e);
+            throw new ServiceBrokerException(String.format("Creating Binding(%s) failed while creating the PgPool user. %s", bindingId));
         } finally {
             jdbcService.closeIfConnected();
         }
