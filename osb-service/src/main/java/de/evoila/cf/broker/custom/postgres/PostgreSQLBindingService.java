@@ -94,8 +94,12 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         String database = serviceInstance.getId();
 
 		try {
-            if(plan.getPlatform() == Platform.BOSH) {
-                postgresBoshPlatformService.createPgPoolUser(serviceInstance, username, password);
+		    if(postgresCustomImplementation.isPgpoolEnabled()){
+                if(plan.getPlatform() == Platform.BOSH) {
+                    postgresBoshPlatformService.createPgPoolUser(serviceInstance, plan, username, password);
+                } else if(plan.getPlatform() == Platform.EXISTING_SERVICE) {
+                    existingServiceFactory.createPgPoolUser(postgresBoshPlatformService,username,password);
+                }
             }
 
 		    postgresCustomImplementation.bindRoleToDatabase(jdbcService, username, password, database, false);

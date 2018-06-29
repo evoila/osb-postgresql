@@ -5,9 +5,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import de.evoila.cf.broker.bean.BoshProperties;
 import de.evoila.cf.broker.exception.PlatformException;
-import de.evoila.cf.broker.model.DashboardClient;
-import de.evoila.cf.broker.model.Plan;
-import de.evoila.cf.broker.model.ServiceInstance;
+import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.repository.PlatformRepository;
 import de.evoila.cf.broker.service.CatalogService;
 import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
@@ -32,8 +30,6 @@ import java.util.Optional;
 public class PostgresBoshPlatformService extends BoshPlatformService {
 
     private static final int defaultPort = 5432;
-    private static final String INSTANCE_GROUP = "postgres";
-    private static final String PG_POOL_INSTANCE_GROUP = "pgpool";
 
     PostgresBoshPlatformService(PlatformRepository repository, CatalogService catalogService, ServicePortAvailabilityVerifier availabilityVerifier,
                                 BoshProperties boshProperties, Optional<DashboardClient> dashboardClient) {
@@ -56,49 +52,27 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
         vms.forEach(vm -> serviceInstance.getHosts().add(super.toServerAddress(vm, defaultPort)));
     }
 
+
     @Override
-    public void postDeleteInstance(ServiceInstance serviceInstance) { }
-
-    public void createPgPoolUser(ServiceInstance instance, String username, String password)
-            throws IOException, JSchException, InstanceGroupNotFoundException {
-        Deployment deployment = super.getDeployment(instance);
-        Manifest manifest = super.getDeployedManifest(deployment.getName());
-
-        Optional<InstanceGroup> group = manifest.getInstanceGroups()
-              .stream()
-              .filter(i -> i.getName().equals(PG_POOL_INSTANCE_GROUP))
-              .findAny();
-        if(group.isPresent()){
-            int instance_cnt = group.get().getInstances();
-            for(int i = 0; i < instance_cnt; i++){
-                createPgPoolUser(instance, group.get(), i, username, password);
-            }
-        } else {
-            throw new InstanceGroupNotFoundException(instance, manifest, PG_POOL_INSTANCE_GROUP);
+    public ServiceInstance postCreateInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
+        boolean available;
+        try {
+            available = portAvailabilityVerifier.verifyServiceAvailability(serviceInstance, false);
+        } catch (Exception e) {
+            throw new PlatformException("Service instance is not reachable. Service may not be started on instance.",
+                    e);
         }
 
+        if (!available) {
+            throw new PlatformException("Service instance is not reachable. Service may not be started on instance.");
+        }
+
+        return serviceInstance;
     }
 
-    private void createPgPoolUser(ServiceInstance instance, InstanceGroup instanceGroup, int i, String username,
-                                  String password) throws JSchException {
-        Session session = getSshSession(instance, instanceGroup, i)
-                .toBlocking()
-                .first();
 
-        session.connect();
-        Channel channel = session.openChannel("shell");
-        channel.connect();
-
-        List<String> commands = Arrays.asList(
-                String.format("sudo /var/vcap/packages/pgpool2/bin/pg_md5 --md5auth " +
-                                "--config-file /var/vcap/jobs/pgpool/config/pgpool.conf --username=%s %s",
-                        username, password)
-        );
-
-        executeCommands(channel, commands);
-
-        close(channel, session);
-    }
+    @Override
+    public void postDeleteInstance(ServiceInstance serviceInstance) { }
 
     private void executeCommands(Channel channel, List<String> commands){
         try {
@@ -168,5 +142,74 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
         channel.disconnect();
         session.disconnect();
         log.info("Disconnected channel and session");
+    }
+
+    public void createPgPoolUser(ServiceInstance instance, Plan plan, String username, String password)
+            throws IOException, JSchException, InstanceGroupNotFoundException {
+
+        Deployment deployment = super.getDeployment(instance);
+        Manifest manifest = super.getDeployedManifest(deployment.getName());
+
+        Optional<InstanceGroup> group = manifest.getInstanceGroups()
+                .stream()
+                .filter(i -> i.getName().equals(plan.getMetadata().getIngressInstanceGroup()))
+                .findAny();
+        if (group.isPresent()) {
+            int instance_cnt = group.get().getInstances();
+            for (int i = 0; i < instance_cnt; i++) {
+                createPgPoolUser(instance, group.get(), i, username, password);
+            }
+        } else {
+            throw new InstanceGroupNotFoundException(instance, manifest, plan.getMetadata().getIngressInstanceGroup());
+        }
+    }
+
+    private void createPgPoolUser(ServiceInstance instance, InstanceGroup instanceGroup, int i, String username,
+                                  String password) throws JSchException {
+        Session session = getSshSession(instance, instanceGroup, i)
+                .toBlocking()
+                .first();
+
+        session.connect();
+        Channel channel = session.openChannel("shell");
+        channel.connect();
+
+        List<String> commands = Arrays.asList(
+                String.format("sudo /var/vcap/packages/pgpool2/bin/pg_md5 --md5auth " +
+                                "--config-file /var/vcap/jobs/pgpool/config/pgpool.conf --username=%s %s",
+                        username, password)
+        );
+
+        executeCommands(channel, commands);
+
+        close(channel, session);
+    }
+
+
+    public void createPgPoolUser(String deploymentName, String instanceName, List<ServerAddress> serverAddresses, String username, String password)
+            throws JSchException {
+
+        int instance_cnt = serverAddresses.size();
+
+        for (int i = 0; i < instance_cnt; i++) {
+
+            Session session = getSshSession(deploymentName, instanceName, i)
+                    .toBlocking()
+                    .first();
+
+            session.connect();
+            Channel channel = session.openChannel("shell");
+            channel.connect();
+
+            List<String> commands = Arrays.asList(
+                    String.format("sudo /var/vcap/packages/pgpool2/bin/pg_md5 --md5auth " +
+                                    "--config-file /var/vcap/jobs/pgpool/config/pgpool.conf --username=%s %s",
+                            username, password)
+            );
+
+            executeCommands(channel, commands);
+
+            close(channel, session);
+        }
     }
 }

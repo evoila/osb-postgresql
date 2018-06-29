@@ -56,11 +56,6 @@ public class PostgresDeploymentManager extends DeploymentManager {
         user.add("admin");
 
         Map<String, Object> database = new HashMap<>();
-        database.put("name", "admin");
-        database.put("users", user);
-        databases.add(database);
-
-        database = new HashMap<>();
         database.put("name", serviceInstance.getId());
         database.put("users", user);
         databases.add(database);

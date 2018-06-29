@@ -13,6 +13,7 @@ import de.evoila.cf.cpi.bosh.PostgresBoshPlatformService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
@@ -28,11 +29,18 @@ public class PostgresCustomImplementation {
 
     private Logger log = LoggerFactory.getLogger(PostgresCustomImplementation.class);
 
+	@Value("${pgpool.enabled}")
+	private boolean pgpoolEnabled;
+
     @Autowired
-    private ExistingEndpointBean existingEndpointBean;
+	private ExistingEndpointBean existingEndpointBean;
 
     @Autowired
     private PostgresBoshPlatformService postgresBoshPlatformService;
+
+    public boolean isPgpoolEnabled(){
+		return pgpoolEnabled;
+	}
 
 	public void setUpBindingUserPrivileges(PostgresDbService jdbcService, String username) throws SQLException {
 		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO \""+ username + "\"");
