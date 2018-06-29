@@ -20,7 +20,9 @@ import org.springframework.util.Assert;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author Johannes Hiemer.
@@ -73,7 +75,8 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
         try {
             String username = binding.getCredentials().get(USERNAME).toString();
-            postgresCustomImplementation.unbindRoleFromDatabase(serviceInstance.getHosts(),jdbcService, username, "fallback-"+username);
+
+            postgresCustomImplementation.unbindRoleFromDatabase(serviceInstance,plan,jdbcService, username, "fallback-"+username);
         } catch (SQLException e) {
             throw new ServiceBrokerException("Could not remove from database");
         } finally {
@@ -91,16 +94,18 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         String database = serviceInstance.getId();
 
 		try {
-		    postgresCustomImplementation.bindRoleToDatabase(jdbcService, username, password, database, false);
-
-		    // TODO: Why are we doin this?
-		    jdbcService.closeIfConnected();
-			jdbcService.createConnection(username, password, database, serviceInstance.getHosts());
-
-			postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, username);
             if(plan.getPlatform() == Platform.BOSH) {
                 postgresBoshPlatformService.createPgPoolUser(serviceInstance, username, password);
             }
+
+		    postgresCustomImplementation.bindRoleToDatabase(jdbcService, username, password, database, false);
+
+		    // close connection to admin db / open connection to bind db
+            // necessary to set db specific privileges
+		    jdbcService.closeIfConnected();
+			jdbcService.createConnection(username, password, database, postgresCustomImplementation.filterServerAddresses(serviceInstance, plan));
+
+			postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, username);
 		} catch (SQLException e) {
 		    log.error(String.format("Creating Binding(%s) failed while creating the ne postgres user. Could not update database", bindingId), e);
             throw new ServiceBrokerException("Could not update database");
@@ -114,9 +119,15 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
             jdbcService.closeIfConnected();
         }
 
-        String endpoint = ServiceInstanceUtils.connectionUrl(serviceInstance.getHosts());
+        List<ServerAddress> pgpool_hosts=serviceInstance.getHosts();
+        String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
+        if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
+            pgpool_hosts = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),ingressInstanceGroup);
+        }
 
-		// When host is not empty, it is a service key
+        String endpoint = ServiceInstanceUtils.connectionUrl(pgpool_hosts);
+
+        // When host is not empty, it is a service key
 		if (host != null)
 		    endpoint = host.getIp() + ":" + host.getPort();
 

@@ -45,12 +45,10 @@ public class PostgresCustomImplementation {
 			throws SQLException {
 
 		if (isAdmin){
-			jdbcService.executeUpdate("CREATE ROLE \"" + username + "\"");
+			jdbcService.executeUpdate("CREATE ROLE \"" + username + "\" WITH LOGIN password '" + password + "'");
 		} else {
-			jdbcService.executeUpdate("CREATE ROLE \"" + username + "\" WITH INHERIT");
+			jdbcService.executeUpdate("CREATE ROLE \"" + username + "\" WITH INHERIT LOGIN password '" + password + "'");
 		}
-
-		jdbcService.executeUpdate("ALTER ROLE \"" + username + "\" LOGIN password '" + password + "'");
 
 		if (isAdmin){
 			jdbcService.executeUpdate("ALTER DATABASE \"" + database + "\" OWNER TO \"" + username + "\"");
@@ -64,15 +62,15 @@ public class PostgresCustomImplementation {
 		}
 	}
 
-	public void unbindRoleFromDatabase(List<ServerAddress> serverAddresses,PostgresDbService jdbcService, String roleName, String fallBackRoleName) throws SQLException {
+	public void unbindRoleFromDatabase(ServiceInstance serviceInstance, Plan plan,PostgresDbService jdbcService, String roleName, String fallBackRoleName) throws SQLException {
 		//		jdbcService.executeUpdate("REVOKE \""+ fallBackRoleName + "\" FROM \"" + roleName + "\"")
 
 		jdbcService.executeUpdate("CREATE ROLE \"" + fallBackRoleName + "\" NOLOGIN");
 
 		Map<String, String> databases = jdbcService.executeSelect("SELECT datname FROM pg_database WHERE datistemplate = false", "datname");
 		for(Map.Entry<String, String> database : databases.entrySet()) {
-			PostgresDbService jdbcService_tmp = new PostgresDbService();
-			jdbcService_tmp.createConnection(existingEndpointBean.getUsername(),existingEndpointBean.getPassword(),database.getValue(),serverAddresses);
+
+			PostgresDbService jdbcService_tmp = this.connection(serviceInstance, plan,database.getValue());
 
 			jdbcService_tmp.executeUpdate("REASSIGN OWNED BY \"" + roleName + "\" TO \"" + fallBackRoleName + "\"");
 			jdbcService_tmp.executeUpdate("DROP OWNED BY \"" + roleName + "\"");
@@ -84,30 +82,46 @@ public class PostgresCustomImplementation {
 		jdbcService.executeUpdate("DROP ROLE \"" + roleName + "\"");
 	}
 
-    public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan)  {
-        PostgresDbService jdbcService = new PostgresDbService();
+	public List<ServerAddress> filterServerAddresses (ServiceInstance serviceInstance, Plan plan) {
+		List<ServerAddress> serverAddresses = serviceInstance.getHosts();
+		String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
+		if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
+			serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),ingressInstanceGroup);
+		}
+		return serverAddresses;
+	}
+
+    public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan, String database) {
+        List<ServerAddress> serverAddresses=serviceInstance.getHosts();
+
+		String username="";
+        String password="";
 
         if(plan.getPlatform() == Platform.BOSH) {
+            username=serviceInstance.getUsername();
+            password=serviceInstance.getPassword();
+            if(database==null) {
+				database = "admin";
+			}
+			serverAddresses = filterServerAddresses(serviceInstance,plan);
 
-            List<ServerAddress> serverAddresses = serviceInstance.getHosts();
-            String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
-            if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
-                serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),ingressInstanceGroup);
-            }
-
-            jdbcService.createConnection(serviceInstance.getUsername(),
-                    serviceInstance.getPassword(),
-                    "admin",
-                    serverAddresses);
-
-
-        } else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
-            jdbcService.createConnection(existingEndpointBean.getUsername(),existingEndpointBean.getPassword(),
-                    existingEndpointBean.getDatabase(),serviceInstance.getHosts()
-            );
+		} else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
+			username=existingEndpointBean.getUsername();
+			password=existingEndpointBean.getPassword();
+			database=existingEndpointBean.getDatabase();
         }
+
+		PostgresDbService jdbcService = new PostgresDbService();
+		jdbcService.createConnection(
+				username,
+				password,
+				database,
+				serverAddresses);
 
         return jdbcService;
     }
 
+	public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan) {
+		return connection(serviceInstance,plan,null);
+	}
 }

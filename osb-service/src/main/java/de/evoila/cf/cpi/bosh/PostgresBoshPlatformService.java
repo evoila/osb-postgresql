@@ -65,8 +65,8 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
     @Override
     public void postDeleteInstance(ServiceInstance serviceInstance) { }
 
-    public void createPgPoolUser(ServiceInstance instance, String username, String password) throws IOException, JSchException,
-            InstanceGroupNotFoundException {
+    public void createPgPoolUser(ServiceInstance instance, String username, String password)
+            throws IOException, JSchException, InstanceGroupNotFoundException {
         Deployment deployment = super.getDeployment(instance);
         Manifest manifest = super.getDeployedManifest(deployment.getName());
 
@@ -75,8 +75,8 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
               .filter(i -> i.getName().equals(PG_POOL_INSTANCE_GROUP))
               .findAny();
         if(group.isPresent()){
-            int instances = group.get().getInstances();
-            for(int i = 0; i < instances; i++){
+            int instance_cnt = group.get().getInstances();
+            for(int i = 0; i < instance_cnt; i++){
                 createPgPoolUser(instance, group.get(), i, username, password);
             }
         } else {
@@ -96,7 +96,6 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
         channel.connect();
 
         List<String> commands = Arrays.asList(
-                String.format("sudo touch /var/vcap/helloworld.txt"),
                 String.format("sudo /var/vcap/packages/pgpool2/bin/pg_md5 --md5auth " +
                                 "--config-file /var/vcap/jobs/pgpool/config/pgpool.conf --username=%s %s",
                         username, password)
