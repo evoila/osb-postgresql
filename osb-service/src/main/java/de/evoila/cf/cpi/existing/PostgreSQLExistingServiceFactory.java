@@ -107,7 +107,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 
     public void createPgPoolUser(PostgresBoshPlatformService postgresBoshPlatformService, String username, String password) throws JSchException {{
 		postgresBoshPlatformService.createPgPoolUser(
-			this.existingEndpointBean.getDeploymentName(),
+			this.existingEndpointBean.getDeployment(),
 			this.existingEndpointBean.getHosts().get(0).getName(),
 			this.existingEndpointBean.getHosts(),
 			username,
