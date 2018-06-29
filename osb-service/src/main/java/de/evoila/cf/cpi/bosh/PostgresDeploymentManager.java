@@ -6,6 +6,7 @@ import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.util.RandomString;
 import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
+import org.springframework.core.env.Environment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,8 +15,8 @@ import java.util.Map;
 
 public class PostgresDeploymentManager extends DeploymentManager {
 
-    public PostgresDeploymentManager(BoshProperties properties) {
-        super(properties);
+    public PostgresDeploymentManager(BoshProperties properties, Environment environment) {
+        super(properties, environment);
     }
 
     private RandomString randomStringPcp = new RandomString(15);
