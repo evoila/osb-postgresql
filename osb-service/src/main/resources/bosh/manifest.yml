@@ -85,7 +85,7 @@ instance_groups:
     pcp:
       system_password: secret
     pgpool:
-      pool_passwd: true
+      pool_passwd: pool_passwd
       debug: false
       backend:
         port: 5432
