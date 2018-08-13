@@ -22,7 +22,6 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author Johannes Hiemer.
@@ -70,7 +69,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
     }
 
     @Override
-    protected void deleteBinding(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
+    protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
         PostgresDbService jdbcService = postgresCustomImplementation.connection(serviceInstance, plan);
 
         try {
