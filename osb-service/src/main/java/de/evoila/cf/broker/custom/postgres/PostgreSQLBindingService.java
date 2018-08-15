@@ -122,7 +122,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
             jdbcService.closeIfConnected();
         }
 
-        List<ServerAddress> pgpool_hosts=serviceInstance.getHosts();
+        List<ServerAddress> pgpool_hosts = serviceInstance.getHosts();
         String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
         if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
             pgpool_hosts = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),ingressInstanceGroup);

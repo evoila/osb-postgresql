@@ -33,7 +33,7 @@ public class PcfExistingEndpointBeanImpl implements ExistingEndpointBean {
         return pcfHosts;
     }
 
-    @Value("${postgres.hosts}")
+    @Value("${pgpool.hosts}")
     public void setPcfHosts(List<String> pcfHosts) {
         for (String host : pcfHosts) {
             hosts.add(new ServerAddress("pgpool", host, this.port));
