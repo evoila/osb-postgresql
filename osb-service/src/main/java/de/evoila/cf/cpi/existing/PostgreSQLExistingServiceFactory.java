@@ -13,7 +13,6 @@ import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.util.RandomString;
 import de.evoila.cf.cpi.bosh.PostgresBoshPlatformService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
@@ -31,11 +30,15 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
     RandomString usernameRandomString = new RandomString(10);
     RandomString passwordRandomString = new RandomString(15);
 
-    @Autowired
     private PostgresCustomImplementation postgresCustomImplementation;
 
-	@Autowired
     private ExistingEndpointBean existingEndpointBean;
+
+	public PostgreSQLExistingServiceFactory(PostgresCustomImplementation postgresCustomImplementation,
+                                            ExistingEndpointBean existingEndpointBean) {
+	    this.postgresCustomImplementation = postgresCustomImplementation;
+	    this.existingEndpointBean = existingEndpointBean;
+    }
 
 	private void createDatabase(PostgresDbService connection, String database) throws PlatformException {
 		try {
