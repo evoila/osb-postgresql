@@ -24,7 +24,7 @@ public class PcfExistingEndpointBeanImpl implements ExistingEndpointBean {
 
     private List<ServerAddress> hosts = new ArrayList<>();
 
-    private int port;
+    private int port = 5432;
 
     private String username;
 
