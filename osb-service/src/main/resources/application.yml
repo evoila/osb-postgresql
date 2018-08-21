@@ -6,4 +6,10 @@ spring:
     mongodb:
       host: "${MONGODB_HOST}"
 haproxy:
-  uri: "https://${HAPROXY-AGENT_HOST}/agents/${HAPROXY-AGENT_ID}/schemas?type=listen"
+  uri: "https://${SERVICE_KEY_MANAGER}/agents/${HAPROXY_AGENT_ID}/schemas?type=listen"
+
+existing:
+  endpoint:
+    pcfHosts: "${PGPOOL_HOSTS}"
+    name: pgpool
+    port: 5432
