@@ -12,7 +12,6 @@ import de.evoila.cf.broker.util.ServiceInstanceUtils;
 import de.evoila.cf.cpi.bosh.PostgresBoshPlatformService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -32,11 +31,14 @@ public class PostgresCustomImplementation {
 	@Value("${pgpool.enabled}")
 	private boolean pgpoolEnabled;
 
-    @Autowired
 	private ExistingEndpointBean existingEndpointBean;
 
-    @Autowired
     private PostgresBoshPlatformService postgresBoshPlatformService;
+
+    public PostgresCustomImplementation(ExistingEndpointBean existingEndpointBean, PostgresBoshPlatformService postgresBoshPlatformService) {
+    	this.existingEndpointBean = existingEndpointBean;
+    	this.postgresBoshPlatformService = postgresBoshPlatformService;
+	}
 
     public boolean isPgpoolEnabled(){
 		return pgpoolEnabled;

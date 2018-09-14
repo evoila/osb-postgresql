@@ -3,9 +3,7 @@
  */
 package de.evoila.cf.broker.custom.postgres;
 
-import de.evoila.cf.broker.model.Plan;
 import de.evoila.cf.broker.model.ServerAddress;
-import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.util.ServiceInstanceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

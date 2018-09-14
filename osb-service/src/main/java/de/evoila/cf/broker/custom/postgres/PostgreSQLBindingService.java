@@ -6,6 +6,11 @@ package de.evoila.cf.broker.custom.postgres;
 import com.jcraft.jsch.JSchException;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.*;
+import de.evoila.cf.broker.repository.BindingRepository;
+import de.evoila.cf.broker.repository.RouteBindingRepository;
+import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
+import de.evoila.cf.broker.repository.ServiceInstanceRepository;
+import de.evoila.cf.broker.service.HAProxyService;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import de.evoila.cf.broker.util.RandomString;
 import de.evoila.cf.broker.util.ServiceInstanceUtils;
@@ -50,8 +55,12 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
 	PostgreSQLBindingService(PostgresCustomImplementation customImplementation,
                              PostgreSQLExistingServiceFactory existingServiceFactory,
-                             PostgresBoshPlatformService postgresBoshPlatformService){
-		Assert.notNull(customImplementation, "PostgresCustomImplementation may not be null");
+                             PostgresBoshPlatformService postgresBoshPlatformService,
+                             BindingRepository bindingRepository, ServiceDefinitionRepository serviceDefinitionRepository,
+                             ServiceInstanceRepository serviceInstanceRepository, RouteBindingRepository routeBindingRepository,
+                             HAProxyService haProxyService) {
+        super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, haProxyService);
+	    Assert.notNull(customImplementation, "PostgresCustomImplementation may not be null");
 		Assert.notNull(existingServiceFactory, "PostgreSQLExistingServiceFactory may not be null");
 		this.existingServiceFactory = existingServiceFactory;
 		this.postgresCustomImplementation = customImplementation;

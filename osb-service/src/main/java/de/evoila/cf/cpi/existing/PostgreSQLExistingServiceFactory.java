@@ -11,6 +11,8 @@ import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.Plan;
 import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.ServiceInstance;
+import de.evoila.cf.broker.repository.PlatformRepository;
+import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
 import de.evoila.cf.broker.util.RandomString;
 import de.evoila.cf.cpi.bosh.PostgresBoshPlatformService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -34,9 +36,10 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 
     private ExistingEndpointBean existingEndpointBean;
 
-	public PostgreSQLExistingServiceFactory(PostgresCustomImplementation postgresCustomImplementation,
-                                            ExistingEndpointBean existingEndpointBean) {
-	    this.postgresCustomImplementation = postgresCustomImplementation;
+	public PostgreSQLExistingServiceFactory(PostgresCustomImplementation postgresCustomImplementation, ExistingEndpointBean existingEndpointBean,
+											PlatformRepository platformRepository, ServicePortAvailabilityVerifier portAvailabilityVerifier) {
+		super(platformRepository, portAvailabilityVerifier, existingEndpointBean);
+		this.postgresCustomImplementation = postgresCustomImplementation;
 	    this.existingEndpointBean = existingEndpointBean;
     }
 

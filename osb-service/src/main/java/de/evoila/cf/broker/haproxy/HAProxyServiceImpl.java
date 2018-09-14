@@ -21,6 +21,10 @@ import java.util.List;
 @ConditionalOnBean(HAProxyConfiguration.class)
 public class HAProxyServiceImpl extends HAProxyService {
 
+	public HAProxyServiceImpl(HAProxyConfiguration haProxyConfiguration) {
+		super(haProxyConfiguration);
+	}
+
 	@Override
 	public Mode getMode(ServerAddress serverAddress) {
 		return Mode.TCP;
