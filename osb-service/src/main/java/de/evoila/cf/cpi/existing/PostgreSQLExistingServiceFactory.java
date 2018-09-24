@@ -53,20 +53,20 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 		}
 	}
 
-    private void deleteDatabase(PostgresDbService connection, String username, String database) throws PlatformException {
+    private void deleteDatabase(PostgresDbService connection, String username, String database, String admRole) throws PlatformException {
 		try {
 			String generalrole=database;
 			connection.executeUpdate("ALTER DATABASE\"" + database + "\" OWNER TO \"" + username + "\"");
-//			connection.executeUpdate("REASSIGN OWNED BY \"" + database + "\" TO \"" + username + "\"");
 			connection.executeUpdate("REVOKE ALL PRIVILEGES ON DATABASE \"" + database + "\" FROM \"" + username + "\"");
 			connection.executeUpdate("REVOKE CONNECT ON DATABASE \"" + database + "\" FROM \"" + username + "\"");
 			connection.executeUpdate("SELECT * FROM pg_stat_activity WHERE datname = '" + database + "';");
 			connection.executeUpdate("SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" + database + "' AND pid <> pg_backend_pid();");
 			connection.executeUpdate("UPDATE pg_database SET datallowconn = 'false' WHERE datname = '" + database + "';");
 			connection.executeUpdate("ALTER DATABASE\"" + database + "\" CONNECTION LIMIT 1;");
-//			connection.executeUpdate("DROP OWNED BY \"" + database+ "\"");
 			connection.executeUpdate("DROP DATABASE \"" + database + "\"");
 			connection.executeUpdate("DROP ROLE \"" + generalrole + "\"");
+			connection.executeUpdate("REVOKE ALL PRIVILEGES ON SCHEMA PUBLIC FROM \"" + admRole + "\"");
+			connection.executeUpdate("DROP ROLE \"" + admRole + "\"");
 		} catch (SQLException e) {
 			throw new PlatformException("Could not remove from database", e);
 		}
@@ -75,7 +75,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 	@Override
     public void deleteInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
 	    PostgresDbService postgresDbService = this.connection(serviceInstance, plan);
-	    deleteDatabase(postgresDbService, serviceInstance.getUsername(), serviceInstance.getId());
+	    deleteDatabase(postgresDbService, serviceInstance.getUsername(), serviceInstance.getId(), serviceInstance.getUsername());
 	}
 
 	@Override
