@@ -84,7 +84,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         try {
             String username = binding.getCredentials().get(USERNAME).toString();
 
-            postgresCustomImplementation.unbindRoleFromDatabase(serviceInstance,plan,jdbcService, username, "fallback-"+username);
+            postgresCustomImplementation.unbindRoleFromDatabase(serviceInstance,plan,jdbcService, username);
         } catch (SQLException e) {
             throw new ServiceBrokerException("Could not remove from database");
         } finally {
@@ -100,6 +100,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         String username = usernameRandomString.nextString();
         String password = passwordRandomString.nextString();
         String database = serviceInstance.getId();
+        String generalrole=database;
 
 		try {
 		    if(postgresCustomImplementation.isPgpoolEnabled()){
@@ -109,15 +110,14 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
                     existingServiceFactory.createPgPoolUser(postgresBoshPlatformService, username, password);
                 }
             }
+            postgresCustomImplementation.createGeneralRole(jdbcService, generalrole, database);
+		    postgresCustomImplementation.bindRoleToDatabase(serviceInstance, plan, jdbcService, username, password, database, generalrole, false);
 
-		    postgresCustomImplementation.bindRoleToDatabase(jdbcService, username, password, database, false);
-
-		    // close connection to admin db / open connection to bind db
-            // necessary to set db specific privileges
+		    // close connection to postgresql db / open connection to bind db
+            // necessary to set user specific privileges inside the db
 		    jdbcService.closeIfConnected();
 			jdbcService.createConnection(username, password, database, postgresCustomImplementation.filterServerAddresses(serviceInstance, plan));
-
-			postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, username);
+			postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, username, generalrole);
 		} catch (SQLException e) {
 		    log.error(String.format("Creating Binding(%s) failed while creating the ne postgres user. Could not update database", bindingId), e);
             throw new ServiceBrokerException("Could not update database");

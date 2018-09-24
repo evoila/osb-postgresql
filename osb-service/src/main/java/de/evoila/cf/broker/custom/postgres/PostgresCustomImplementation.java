@@ -44,20 +44,50 @@ public class PostgresCustomImplementation {
 		return pgpoolEnabled;
 	}
 
-	public void setUpBindingUserPrivileges(PostgresDbService jdbcService, String username) throws SQLException {
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO \""+ username + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO \""+ username + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public GRANT ALL PRIVILEGES ON FUNCTIONS TO \""+ username + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public GRANT ALL PRIVILEGES ON TYPES TO \""+ username + "\"");
+	public void createGeneralRole(PostgresDbService jdbcService, String generalrole, String database) throws SQLException {
+		jdbcService.executeUpdate("CREATE ROLE \"" + generalrole + "\" NOLOGIN");
+		jdbcService.executeUpdate("GRANT CREATE ON DATABASE \"" + database + "\" TO \"" + generalrole + "\"");
+		jdbcService.executeUpdate("GRANT CONNECT ON DATABASE \"" + database + "\" TO \"" + generalrole + "\"");
+	}
+
+	public void setUpBindingUserPrivileges(PostgresDbService jdbcService, String username, String generalrole) throws SQLException {
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO \"" + generalrole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO \"" + generalrole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON FUNCTIONS TO \"" + generalrole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON TYPES TO \"" + generalrole + "\"");
+
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" GRANT ALL PRIVILEGES ON TABLES TO \"" + generalrole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" GRANT ALL PRIVILEGES ON SEQUENCES TO \"" + generalrole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" GRANT ALL PRIVILEGES ON FUNCTIONS TO \"" + generalrole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" GRANT ALL PRIVILEGES ON TYPES TO \"" + generalrole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" GRANT ALL PRIVILEGES ON SCHEMAS TO \"" + generalrole + "\"");
+	}
+
+	public void breakDownBindingUserPrivileges(PostgresDbService jdbcService, String username, String generalrole) throws SQLException {
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public REVOKE ALL PRIVILEGES ON TABLES FROM \""+ generalrole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public REVOKE ALL PRIVILEGES ON SEQUENCES FROM \""+ generalrole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public REVOKE ALL PRIVILEGES ON FUNCTIONS FROM \""+ generalrole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public REVOKE ALL PRIVILEGES ON TYPES FROM \""+ generalrole + "\"");
+
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON TABLES FROM \""+ generalrole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON SEQUENCES FROM \""+ generalrole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON FUNCTIONS FROM \""+ generalrole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON TYPES FROM \""+ generalrole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON SCHEMAS FROM \""+ generalrole + "\"");
+
+		jdbcService.executeUpdate("REVOKE ALL PRIVILEGES ON SCHEMA public FROM \""+ username + "\"");
+		jdbcService.executeUpdate("REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM \""+ username + "\"");
+		jdbcService.executeUpdate("REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM \""+ username + "\"");
+		jdbcService.executeUpdate("REVOKE ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public FROM \""+ username + "\"");
 	}
 	
-	public void bindRoleToDatabase(PostgresDbService jdbcService, String username, String password, String database, boolean isAdmin)
+	public void bindRoleToDatabase(ServiceInstance serviceInstance, Plan plan, PostgresDbService jdbcService, String username, String password, String database, String generalRole, boolean isAdmin)
 			throws SQLException {
 
 		if (isAdmin){
-			jdbcService.executeUpdate("CREATE ROLE \"" + username + "\" WITH LOGIN password '" + password + "'");
+			jdbcService.executeUpdate("CREATE ROLE \"" + username + "\" WITH LOGIN password '" + password + "' IN ROLE \"" + generalRole + "\"");
 		} else {
-			jdbcService.executeUpdate("CREATE ROLE \"" + username + "\" WITH INHERIT LOGIN password '" + password + "'");
+			jdbcService.executeUpdate("CREATE ROLE \"" + username + "\" WITH INHERIT LOGIN password '" + password + "' IN ROLE \"" + generalRole + "\"");
 		}
 
 		if (isAdmin){
@@ -66,23 +96,18 @@ public class PostgresCustomImplementation {
 			jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO \""+ username + "\"");
 			jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public To \""+ username + "\"");
 			jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public To \""+ username + "\"");
-			
-		} else {
-			jdbcService.executeUpdate("GRANT CONNECT ON DATABASE \"" + database + "\" TO \"" + username + "\"");
 		}
 	}
 
-	public void unbindRoleFromDatabase(ServiceInstance serviceInstance, Plan plan,PostgresDbService jdbcService, String roleName, String fallBackRoleName) throws SQLException {
-		//		jdbcService.executeUpdate("REVOKE \""+ fallBackRoleName + "\" FROM \"" + roleName + "\"")
+	public void unbindRoleFromDatabase(ServiceInstance serviceInstance, Plan plan,PostgresDbService jdbcService, String roleName) throws SQLException {
+		Map<String, String> databases = jdbcService.executeSelect("SELECT datname FROM pg_database WHERE datistemplate = false and datname not like 'postgres'", "datname");
 
-		jdbcService.executeUpdate("CREATE ROLE \"" + fallBackRoleName + "\" NOLOGIN");
-
-		Map<String, String> databases = jdbcService.executeSelect("SELECT datname FROM pg_database WHERE datistemplate = false", "datname");
 		for(Map.Entry<String, String> database : databases.entrySet()) {
-
-			PostgresDbService jdbcService_tmp = this.connection(serviceInstance, plan,database.getValue());
-
-			jdbcService_tmp.executeUpdate("REASSIGN OWNED BY \"" + roleName + "\" TO \"" + fallBackRoleName + "\"");
+			PostgresDbService jdbcService_tmp = this.connection(serviceInstance, plan, database.getValue());
+			String generalRole=database.getValue();
+			breakDownBindingUserPrivileges(jdbcService_tmp, roleName, generalRole);
+			jdbcService_tmp.executeUpdate("CREATE ROLE \"" + generalRole + "\" NOLOGIN");
+			jdbcService_tmp.executeUpdate("REASSIGN OWNED BY \"" + roleName + "\" TO \"" + generalRole + "\"");
 			jdbcService_tmp.executeUpdate("DROP OWNED BY \"" + roleName + "\"");
 			jdbcService_tmp.executeUpdate("REVOKE ALL ON SCHEMA public FROM \"" + roleName + "\"");
 
@@ -118,7 +143,9 @@ public class PostgresCustomImplementation {
 		} else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
 			username=existingEndpointBean.getUsername();
 			password=existingEndpointBean.getPassword();
-			database=existingEndpointBean.getDatabase();
+			if(database==null) {
+				database = existingEndpointBean.getDatabase();
+			}
         }
 
 		PostgresDbService jdbcService = new PostgresDbService();
