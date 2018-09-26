@@ -49,7 +49,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 			connection.executeUpdate("REVOKE ALL PRIVILEGES ON DATABASE \"" + database + "\" FROM PUBLIC");
 			connection.executeUpdate("REVOKE CONNECT ON DATABASE \"" + database + "\" FROM PUBLIC");
 		} catch (SQLException e) {
-			throw new PlatformException("Could not add to database", e);
+			throw new PlatformException("Could not create database", e);
 		}
 	}
 
@@ -74,29 +74,43 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 
 	@Override
     public void deleteInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
-	    PostgresDbService postgresDbService = this.connection(serviceInstance, plan);
-	    deleteDatabase(postgresDbService, serviceInstance.getUsername(), serviceInstance.getId(), serviceInstance.getUsername());
+		String database=serviceInstance.getId();
+		PostgresDbService postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan, database);
+		try {
+		postgresCustomImplementation.dropAllExtensions(postgresDbService);
+		} catch (SQLException e) {
+			log.error(String.format("Extension drop (%s) failed while dropping the database %s", database), e);
+		}
+		postgresDbService.closeIfConnected();
+		postgresDbService = this.connection(serviceInstance, plan);
+	    deleteDatabase(postgresDbService, serviceInstance.getUsername(), database, serviceInstance.getUsername());
 	}
 
 	@Override
 	public ServiceInstance createInstance(ServiceInstance serviceInstance, Plan plan, Map<String, Object> parameters) throws PlatformException {
         String username = usernameRandomString.nextString();
         String password = passwordRandomString.nextString();
+		String database = serviceInstance.getId();
+		String generalRole = database;
 
 	    serviceInstance.setUsername(username);
         serviceInstance.setPassword(password);
 
 	    PostgresDbService postgresDbService = this.connection(serviceInstance, plan);
 
-        createDatabase(postgresDbService, serviceInstance.getId());
+        createDatabase(postgresDbService, database);
 
         try {
 			postgresCustomImplementation.createGeneralRole(postgresDbService, serviceInstance.getId(), serviceInstance.getId());
 			postgresCustomImplementation.bindRoleToDatabase(serviceInstance,plan,postgresDbService,
-					username, password, serviceInstance.getId(), serviceInstance.getId(),true);
+					username, password, database, generalRole,true);
 
-            postgresDbService.executeUpdate("ALTER ROLE \"" + username + "\" CREATEROLE");
-        } catch(SQLException ex) {
+//			// close connection to postgresql db / open connection to bind db
+//			// necessary for installing db specific extensions (as admin)
+			postgresDbService.closeIfConnected();
+			postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan, database);
+			postgresCustomImplementation.createExtensions(postgresDbService);
+		} catch(SQLException ex) {
             throw new PlatformException(ex);
         }
 

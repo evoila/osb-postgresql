@@ -8,10 +8,7 @@ import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
 import org.springframework.core.env.Environment;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class PostgresDeploymentManager extends DeploymentManager {
 
@@ -59,6 +56,9 @@ public class PostgresDeploymentManager extends DeploymentManager {
         Map<String, Object> database = new HashMap<>();
         database.put("name", serviceInstance.getId());
         database.put("users", user);
+
+        List<String> extensionsToInstall = Arrays.asList("postgis", "postgis_topology", "fuzzystrmatch", "address_standardizer", "postgis_tiger_geocoder");
+        database.put("extensions", extensionsToInstall);
         databases.add(database);
 
         postgres.put("databases", databases);
