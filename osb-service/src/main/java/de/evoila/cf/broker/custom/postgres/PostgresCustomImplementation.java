@@ -52,12 +52,42 @@ public class PostgresCustomImplementation {
 		return existingRoles.containsValue(roleName);
 	}
 
-	public void createGeneralRole(PostgresDbService jdbcService, String generalrole, String database) throws SQLException {
-		if(!checkIfRoleExists(jdbcService,generalrole)) {
+	public void setupRoleTrigger(ServiceInstance serviceInstance, Plan plan, String database, String generalrole) throws SQLException {
+		PostgresDbService jdbcService_tmp = this.connection(serviceInstance, plan, database);
+
+		String createFunction="CREATE OR REPLACE FUNCTION trg_set_owner() " +
+					 " RETURNS event_trigger " +
+					 " LANGUAGE plpgsql " +
+					 "AS $$ " +
+					 "DECLARE " +
+					 "  obj record; " +
+					 "  types varchar[] := ARRAY['TYPE','TABLE','SEQUENCE','INDEX','SCHEMA','FUNCTION','DOMAIN','VIEW']; " +
+					 "  type varchar; " +
+					 "BEGIN " +
+					 "  FOREACH type IN ARRAY types LOOP" +
+					 "    FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands() WHERE command_tag like 'CREATE ' || type LOOP " +
+					 "      EXECUTE format('ALTER %s %s OWNER TO \"%s\"', obj.object_type, obj.object_identity, '" + generalrole + "'); " +
+					 "    END LOOP; " +
+					 "  END LOOP; " +
+					 "END; " +
+					 "$$;";
+		String createTrigger="CREATE EVENT TRIGGER trg_set_owner " +
+							 "ON ddl_command_end " +
+							 "WHEN tag IN ('CREATE TYPE','CREATE TABLE','CREATE SEQUENCE','CREATE INDEX','CREATE SCHEMA','CREATE FUNCTION','CREATE DOMAIN','CREATE VIEW') " +
+							 "EXECUTE PROCEDURE trg_set_owner();";
+
+		jdbcService_tmp.executeUpdate(createFunction);
+		jdbcService_tmp.executeUpdate(createTrigger);
+		jdbcService_tmp.closeIfConnected();
+	}
+
+	public void createGeneralRole(ServiceInstance serviceInstance, Plan plan, PostgresDbService jdbcService, String generalrole, String database) throws SQLException {
+		if (!checkIfRoleExists(jdbcService, generalrole)) {
 			jdbcService.executeUpdate("CREATE ROLE \"" + generalrole + "\" NOLOGIN");
 			jdbcService.executeUpdate("GRANT CREATE ON DATABASE \"" + database + "\" TO \"" + generalrole + "\"");
 			jdbcService.executeUpdate("GRANT CONNECT ON DATABASE \"" + database + "\" TO \"" + generalrole + "\"");
 		}
+		setupRoleTrigger(serviceInstance, plan, database, generalrole);
 	}
 
 	public void createExtensions(PostgresDbService jdbcService) throws SQLException {

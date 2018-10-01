@@ -56,6 +56,8 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
     private void deleteDatabase(PostgresDbService connection, String username, String database, String admRole) throws PlatformException {
 		try {
 			String generalrole=database;
+
+
 			connection.executeUpdate("ALTER DATABASE\"" + database + "\" OWNER TO \"" + username + "\"");
 			connection.executeUpdate("REVOKE ALL PRIVILEGES ON DATABASE \"" + database + "\" FROM \"" + username + "\"");
 			connection.executeUpdate("REVOKE CONNECT ON DATABASE \"" + database + "\" FROM \"" + username + "\"");
@@ -64,6 +66,8 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 			connection.executeUpdate("UPDATE pg_database SET datallowconn = 'false' WHERE datname = '" + database + "';");
 			connection.executeUpdate("ALTER DATABASE\"" + database + "\" CONNECTION LIMIT 1;");
 			connection.executeUpdate("DROP DATABASE \"" + database + "\"");
+			connection.executeUpdate("DROP EVENT TRIGGER trg_set_owner");
+			connection.executeUpdate("DROP FUNCTION trg_set_owner");
 			connection.executeUpdate("DROP ROLE \"" + generalrole + "\"");
 			connection.executeUpdate("REVOKE ALL PRIVILEGES ON SCHEMA PUBLIC FROM \"" + admRole + "\"");
 			connection.executeUpdate("DROP ROLE \"" + admRole + "\"");
@@ -101,7 +105,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
         createDatabase(postgresDbService, database);
 
         try {
-			postgresCustomImplementation.createGeneralRole(postgresDbService, serviceInstance.getId(), serviceInstance.getId());
+			postgresCustomImplementation.createGeneralRole(serviceInstance, plan, postgresDbService, serviceInstance.getId(), serviceInstance.getId());
 			postgresCustomImplementation.bindRoleToDatabase(serviceInstance,plan,postgresDbService,
 					username, password, database, generalRole,true);
 

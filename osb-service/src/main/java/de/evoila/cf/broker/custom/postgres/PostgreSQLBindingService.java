@@ -110,8 +110,10 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
                     existingServiceFactory.createPgPoolUser(postgresBoshPlatformService, username, password);
                 }
             }
-            postgresCustomImplementation.createGeneralRole(jdbcService, generalrole, database);
+            postgresCustomImplementation.createGeneralRole(serviceInstance, plan, jdbcService, generalrole, database);
             postgresCustomImplementation.bindRoleToDatabase(serviceInstance, plan, jdbcService, username, password, database, generalrole, false);
+
+            jdbcService.closeIfConnected();
 
  		    // close connection to postgresql db / open connection to bind db
             // necessary to set user specific privileges inside the db
