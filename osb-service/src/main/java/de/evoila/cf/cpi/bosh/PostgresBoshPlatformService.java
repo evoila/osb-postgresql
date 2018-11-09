@@ -184,7 +184,7 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
         channel.connect();
 
         List<String> commands = Arrays.asList(
-                String.format("sudo /var/vcap/packages/pgpool2/bin/pg_md5 --md5auth " +
+                String.format("sudo /var/vcap/packages/pgpool/bin/pg_md5 --md5auth " +
                                 "--config-file /var/vcap/jobs/pgpool/config/pgpool.conf --username=%s %s",
                         username, password)
         );
@@ -211,7 +211,7 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
             channel.connect();
 
             List<String> commands = Arrays.asList(
-                    String.format("sudo /var/vcap/packages/pgpool2/bin/pg_md5 --md5auth " +
+                    String.format("sudo /var/vcap/packages/pgpool/bin/pg_md5 --md5auth " +
                                     "--config-file /var/vcap/jobs/pgpool/config/pgpool.conf --username=%s %s",
                             username, password)
             );
