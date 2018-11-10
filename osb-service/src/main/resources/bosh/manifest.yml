@@ -33,11 +33,16 @@ instance_groups:
   jobs:
   - name: postgres
     release: osb-bosh-postgresql
+  - name: backup-agent
+    release: osb-bosh-postgresql
   - name: node_exporter
     release: osb-bosh-monitoring
   - name: postgres_exporter
     release: osb-bosh-monitoring
   properties:
+    backup_agent:
+      user: "backup"
+      password: "rulez"
     postgres_exporter:
       user: admin
       password: admin
