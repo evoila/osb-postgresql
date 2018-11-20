@@ -9,10 +9,8 @@ import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.RouteBinding;
 import de.evoila.cf.broker.model.catalog.ServerAddress;
-import de.evoila.cf.broker.repository.BindingRepository;
-import de.evoila.cf.broker.repository.RouteBindingRepository;
-import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
-import de.evoila.cf.broker.repository.ServiceInstanceRepository;
+import de.evoila.cf.broker.repository.*;
+import de.evoila.cf.broker.service.AsyncBindingService;
 import de.evoila.cf.broker.service.HAProxyService;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import de.evoila.cf.broker.util.RandomString;
@@ -61,19 +59,16 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
                              PostgresBoshPlatformService postgresBoshPlatformService,
                              BindingRepository bindingRepository, ServiceDefinitionRepository serviceDefinitionRepository,
                              ServiceInstanceRepository serviceInstanceRepository, RouteBindingRepository routeBindingRepository,
-                             HAProxyService haProxyService) {
-        super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, haProxyService);
+                             HAProxyService haProxyService, JobRepository jobRepository,
+                             AsyncBindingService asyncBindingService, PlatformRepository platformRepository) {
+        super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository,
+                haProxyService, jobRepository, asyncBindingService, platformRepository);
 	    Assert.notNull(customImplementation, "PostgresCustomImplementation may not be null");
 		Assert.notNull(existingServiceFactory, "PostgreSQLExistingServiceFactory may not be null");
 		this.existingServiceFactory = existingServiceFactory;
 		this.postgresCustomImplementation = customImplementation;
 		this.postgresBoshPlatformService = postgresBoshPlatformService;
 	}
-
-    @Override
-    public ServiceInstanceBinding getServiceInstanceBinding(String id) {
-        throw new UnsupportedOperationException();
-    }
 
     @Override
     protected RouteBinding bindRoute(ServiceInstance serviceInstance, String route) {
