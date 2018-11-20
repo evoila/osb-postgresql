@@ -8,7 +8,7 @@ import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.custom.postgres.PostgresCustomImplementation;
 import de.evoila.cf.broker.custom.postgres.PostgresDbService;
 import de.evoila.cf.broker.exception.PlatformException;
-import de.evoila.cf.broker.model.Plan;
+import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.repository.PlatformRepository;

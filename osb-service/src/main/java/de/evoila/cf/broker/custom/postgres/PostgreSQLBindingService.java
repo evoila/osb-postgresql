@@ -6,6 +6,9 @@ package de.evoila.cf.broker.custom.postgres;
 import com.jcraft.jsch.JSchException;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.*;
+import de.evoila.cf.broker.model.catalog.plan.Plan;
+import de.evoila.cf.broker.model.RouteBinding;
+import de.evoila.cf.broker.model.catalog.ServerAddress;
 import de.evoila.cf.broker.repository.BindingRepository;
 import de.evoila.cf.broker.repository.RouteBindingRepository;
 import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
@@ -136,7 +139,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         List<ServerAddress> pgpool_hosts = serviceInstance.getHosts();
         String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
         if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
-            pgpool_hosts = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),ingressInstanceGroup);
+            pgpool_hosts = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);
         }
 
         String endpoint = ServiceInstanceUtils.connectionUrl(pgpool_hosts);
