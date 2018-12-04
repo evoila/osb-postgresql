@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -82,23 +83,28 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         try {
             String username = binding.getCredentials().get(USERNAME).toString();
 
-            postgresCustomImplementation.unbindRoleFromDatabase(serviceInstance,plan,jdbcService, username);
+            postgresCustomImplementation.unbindRoleFromDatabase(serviceInstance, plan, jdbcService, username);
         } catch (SQLException e) {
             throw new ServiceBrokerException("Could not remove from database");
         } finally {
             jdbcService.closeIfConnected();
         }
-    }
+	}
 
     @Override
     protected Map<String, Object> createCredentials(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                     ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException {
+
+        String database = serviceInstance.getId();
+	    String customBindingDatabase = (String) serviceInstanceBindingRequest.getParameters().get("database");
+        if (!StringUtils.isEmpty(customBindingDatabase))
+            database = customBindingDatabase;
+
 		PostgresDbService jdbcService = postgresCustomImplementation.connection(serviceInstance, plan);
 
         String username = usernameRandomString.nextString();
         String password = passwordRandomString.nextString();
-        String database = serviceInstance.getId();
-        String generalrole=database;
+        String generalrole = database;
 
 		try {
 		    if(postgresCustomImplementation.isPgpoolEnabled()){

@@ -43,51 +43,18 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 	    this.existingEndpointBean = existingEndpointBean;
     }
 
-	private void createDatabase(PostgresDbService connection, String database) throws PlatformException {
-		try {
-			connection.executeUpdate("CREATE DATABASE \"" + database + "\" ENCODING 'UTF8'");
-			connection.executeUpdate("REVOKE ALL PRIVILEGES ON DATABASE \"" + database + "\" FROM PUBLIC");
-			connection.executeUpdate("REVOKE CONNECT ON DATABASE \"" + database + "\" FROM PUBLIC");
-		} catch (SQLException e) {
-			throw new PlatformException("Could not create database", e);
-		}
-	}
-
-    private void deleteDatabase(PostgresDbService connection, String username, String database, String admRole) throws PlatformException {
-		try {
-			String generalrole=database;
-
-
-			connection.executeUpdate("ALTER DATABASE\"" + database + "\" OWNER TO \"" + username + "\"");
-			connection.executeUpdate("REVOKE ALL PRIVILEGES ON DATABASE \"" + database + "\" FROM \"" + username + "\"");
-			connection.executeUpdate("REVOKE CONNECT ON DATABASE \"" + database + "\" FROM \"" + username + "\"");
-			connection.executeUpdate("SELECT * FROM pg_stat_activity WHERE datname = '" + database + "';");
-			connection.executeUpdate("SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" + database + "' AND pid <> pg_backend_pid();");
-			connection.executeUpdate("UPDATE pg_database SET datallowconn = 'false' WHERE datname = '" + database + "';");
-			connection.executeUpdate("ALTER DATABASE\"" + database + "\" CONNECTION LIMIT 1;");
-			connection.executeUpdate("DROP DATABASE \"" + database + "\"");
-			connection.executeUpdate("DROP EVENT TRIGGER trg_set_owner");
-			connection.executeUpdate("DROP FUNCTION trg_set_owner");
-			connection.executeUpdate("DROP ROLE \"" + generalrole + "\"");
-			connection.executeUpdate("REVOKE ALL PRIVILEGES ON SCHEMA PUBLIC FROM \"" + admRole + "\"");
-			connection.executeUpdate("DROP ROLE \"" + admRole + "\"");
-		} catch (SQLException e) {
-			throw new PlatformException("Could not remove from database", e);
-		}
-	}
-
 	@Override
     public void deleteInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
 		String database=serviceInstance.getId();
 		PostgresDbService postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan, database);
 		try {
-		postgresCustomImplementation.dropAllExtensions(postgresDbService);
+		    postgresCustomImplementation.dropAllExtensions(postgresDbService);
 		} catch (SQLException e) {
 			log.error(String.format("Extension drop (%s) failed while dropping the database %s", database), e);
 		}
 		postgresDbService.closeIfConnected();
 		postgresDbService = this.connection(serviceInstance, plan);
-	    deleteDatabase(postgresDbService, serviceInstance.getUsername(), database, serviceInstance.getUsername());
+        postgresCustomImplementation.deleteDatabase(postgresDbService, serviceInstance.getUsername(), database, serviceInstance.getUsername());
 	}
 
 	@Override
@@ -102,15 +69,15 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 
 	    PostgresDbService postgresDbService = this.connection(serviceInstance, plan);
 
-        createDatabase(postgresDbService, database);
+        postgresCustomImplementation.createDatabase(postgresDbService, database);
 
         try {
 			postgresCustomImplementation.createGeneralRole(serviceInstance, plan, postgresDbService, serviceInstance.getId(), serviceInstance.getId());
 			postgresCustomImplementation.bindRoleToDatabase(serviceInstance,plan,postgresDbService,
 					username, password, database, generalRole,true);
 
-//			// close connection to postgresql db / open connection to bind db
-//			// necessary for installing db specific extensions (as admin)
+			// close connection to postgresql db / open connection to bind db
+			// necessary for installing db specific extensions (as admin)
 			postgresDbService.closeIfConnected();
 			postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan, database);
 			postgresCustomImplementation.createExtensions(postgresDbService);
@@ -137,8 +104,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 			this.existingEndpointBean.getHosts().get(0).getName(),
 			this.existingEndpointBean.getHosts(),
 			username,
-			password
-		);
+			password);
 		}
 	}
 }

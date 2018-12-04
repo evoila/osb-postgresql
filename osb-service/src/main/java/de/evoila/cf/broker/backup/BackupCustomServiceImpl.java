@@ -3,6 +3,7 @@ package de.evoila.cf.broker.backup;
 import de.evoila.cf.broker.bean.BackupTypeConfiguration;
 import de.evoila.cf.broker.custom.postgres.PostgresCustomImplementation;
 import de.evoila.cf.broker.custom.postgres.PostgresDbService;
+import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.exception.ServiceDefinitionDoesNotExistException;
 import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
@@ -43,11 +44,7 @@ public class BackupCustomServiceImpl implements BackupCustomService {
     @Override
     public Map<String, String> getItems(String serviceInstanceId) throws ServiceInstanceDoesNotExistException,
             ServiceDefinitionDoesNotExistException {
-        ServiceInstance instance = serviceInstanceRepository.getServiceInstance(serviceInstanceId);
-
-        if(instance == null || instance.getHosts().size() <= 0) {
-            throw new ServiceInstanceDoesNotExistException(serviceInstanceId);
-        }
+        ServiceInstance instance = this.validateServiceInstanceId(serviceInstanceId);
 
         Plan plan = serviceDefinitionRepository.getPlan(instance.getPlanId());
 
@@ -64,6 +61,32 @@ public class BackupCustomServiceImpl implements BackupCustomService {
         }
 
         return result;
+    }
+
+    @Override
+    public void createItem(String serviceInstanceId, String name, Map<String, Object> parameters) throws ServiceInstanceDoesNotExistException,
+            ServiceDefinitionDoesNotExistException, ServiceBrokerException {
+        ServiceInstance instance = this.validateServiceInstanceId(serviceInstanceId);
+
+        Plan plan = serviceDefinitionRepository.getPlan(instance.getPlanId());
+
+        PostgresDbService postgresDbService = postgresCustomImplementation.connection(instance, plan);
+
+        try {
+            postgresCustomImplementation.createDatabase(postgresDbService, name);
+        } catch (PlatformException ex) {
+            throw new ServiceBrokerException("Could not create Database", ex);
+        }
+    }
+
+    private ServiceInstance validateServiceInstanceId(String serviceInstanceId) throws ServiceInstanceDoesNotExistException {
+        ServiceInstance instance = serviceInstanceRepository.getServiceInstance(serviceInstanceId);
+
+        if(instance == null || instance.getHosts().size() <= 0) {
+            throw new ServiceInstanceDoesNotExistException(serviceInstanceId);
+        }
+
+        return instance;
     }
 
 }

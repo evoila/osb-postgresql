@@ -4,6 +4,7 @@
 package de.evoila.cf.broker.custom.postgres;
 
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
+import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.catalog.ServerAddress;
@@ -163,7 +164,7 @@ public class PostgresCustomImplementation {
 
 		for(Map.Entry<String, String> database : databases.entrySet()) {
 			PostgresDbService jdbcService_tmp = this.connection(serviceInstance, plan, database.getValue());
-			String generalRole=database.getValue();
+			String generalRole = database.getValue();
 			breakDownBindingUserPrivileges(jdbcService_tmp, roleName, generalRole);
 			if(!checkIfRoleExists(jdbcService,generalRole)) {
 				jdbcService_tmp.executeUpdate("CREATE ROLE \"" + generalRole + "\" NOLOGIN");
@@ -178,7 +179,7 @@ public class PostgresCustomImplementation {
 		jdbcService.executeUpdate("DROP ROLE \"" + roleName + "\"");
 	}
 
-	public List<ServerAddress> filterServerAddresses (ServiceInstance serviceInstance, Plan plan) {
+	public List<ServerAddress> filterServerAddresses(ServiceInstance serviceInstance, Plan plan) {
 		List<ServerAddress> serverAddresses = serviceInstance.getHosts();
 		String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
 		if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
@@ -186,6 +187,38 @@ public class PostgresCustomImplementation {
 		}
 		return serverAddresses;
 	}
+
+    public void createDatabase(PostgresDbService connection, String database) throws PlatformException {
+        try {
+            connection.executeUpdate("CREATE DATABASE \"" + database + "\" ENCODING 'UTF8'");
+            connection.executeUpdate("REVOKE ALL PRIVILEGES ON DATABASE \"" + database + "\" FROM PUBLIC");
+            connection.executeUpdate("REVOKE CONNECT ON DATABASE \"" + database + "\" FROM PUBLIC");
+        } catch (SQLException e) {
+            throw new PlatformException("Could not create database", e);
+        }
+    }
+
+    public void deleteDatabase(PostgresDbService connection, String username, String database, String admRole) throws PlatformException {
+        try {
+            String generalrole = database;
+
+            connection.executeUpdate("ALTER DATABASE\"" + database + "\" OWNER TO \"" + username + "\"");
+            connection.executeUpdate("REVOKE ALL PRIVILEGES ON DATABASE \"" + database + "\" FROM \"" + username + "\"");
+            connection.executeUpdate("REVOKE CONNECT ON DATABASE \"" + database + "\" FROM \"" + username + "\"");
+            connection.executeUpdate("SELECT * FROM pg_stat_activity WHERE datname = '" + database + "';");
+            connection.executeUpdate("SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" + database + "' AND pid <> pg_backend_pid();");
+            connection.executeUpdate("UPDATE pg_database SET datallowconn = 'false' WHERE datname = '" + database + "';");
+            connection.executeUpdate("ALTER DATABASE\"" + database + "\" CONNECTION LIMIT 1;");
+            connection.executeUpdate("DROP DATABASE \"" + database + "\"");
+            connection.executeUpdate("DROP EVENT TRIGGER trg_set_owner");
+            connection.executeUpdate("DROP FUNCTION trg_set_owner");
+            connection.executeUpdate("DROP ROLE \"" + generalrole + "\"");
+            connection.executeUpdate("REVOKE ALL PRIVILEGES ON SCHEMA PUBLIC FROM \"" + admRole + "\"");
+            connection.executeUpdate("DROP ROLE \"" + admRole + "\"");
+        } catch (SQLException e) {
+            throw new PlatformException("Could not remove from database", e);
+        }
+    }
 
     public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan, String database) {
         List<ServerAddress> serverAddresses=serviceInstance.getHosts();
