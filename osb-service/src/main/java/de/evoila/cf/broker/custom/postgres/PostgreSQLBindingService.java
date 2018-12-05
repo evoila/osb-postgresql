@@ -96,9 +96,13 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
                                                     ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException {
 
         String database = serviceInstance.getId();
-	    String customBindingDatabase = (String) serviceInstanceBindingRequest.getParameters().get("database");
-        if (!StringUtils.isEmpty(customBindingDatabase))
-            database = customBindingDatabase;
+        if (serviceInstanceBindingRequest.getParameters() != null) {
+            String customBindingDatabase = (String) serviceInstanceBindingRequest.getParameters().get("database");
+
+            if (!StringUtils.isEmpty(customBindingDatabase))
+                database = customBindingDatabase;
+        }
+
 
 		PostgresDbService jdbcService = postgresCustomImplementation.connection(serviceInstance, plan);
 
