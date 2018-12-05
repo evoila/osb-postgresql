@@ -1,6 +1,6 @@
 package de.evoila.cf.broker.backup;
 
-import de.evoila.cf.broker.bean.BackupTypeConfiguration;
+import de.evoila.cf.broker.bean.BackupConfiguration;
 import de.evoila.cf.broker.custom.postgres.PostgresCustomImplementation;
 import de.evoila.cf.broker.custom.postgres.PostgresDbService;
 import de.evoila.cf.broker.exception.PlatformException;
@@ -20,10 +20,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-@ConditionalOnBean(BackupTypeConfiguration.class)
+@ConditionalOnBean(BackupConfiguration.class)
 public class BackupCustomServiceImpl implements BackupCustomService {
 
-    BackupTypeConfiguration backupTypeConfiguration;
+    BackupConfiguration backupTypeConfiguration;
 
     ServiceInstanceRepository serviceInstanceRepository;
 
@@ -31,7 +31,7 @@ public class BackupCustomServiceImpl implements BackupCustomService {
 
     ServiceDefinitionRepository serviceDefinitionRepository;
 
-    public BackupCustomServiceImpl(BackupTypeConfiguration backupTypeConfiguration,
+    public BackupCustomServiceImpl(BackupConfiguration backupTypeConfiguration,
                                    ServiceInstanceRepository serviceInstanceRepository,
                                    PostgresCustomImplementation postgresCustomImplementation,
                                    ServiceDefinitionRepository serviceDefinitionRepository) {
