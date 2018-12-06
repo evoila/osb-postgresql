@@ -54,7 +54,7 @@ public class PostgresCustomImplementation {
 	}
 
 	public void setupRoleTrigger(ServiceInstance serviceInstance, Plan plan, String database, String generalrole) throws SQLException {
-		PostgresDbService jdbcService_tmp = this.connection(serviceInstance, plan, database);
+		PostgresDbService jdbcService_tmp = this.connection(serviceInstance, plan, database, false);
 
 		String createFunction="CREATE OR REPLACE FUNCTION trg_set_owner() " +
 					 " RETURNS event_trigger " +
@@ -163,7 +163,7 @@ public class PostgresCustomImplementation {
 		Map<String, String> databases = jdbcService.executeSelect("SELECT datname FROM pg_database WHERE datistemplate = false and datname not like 'postgres'", "datname");
 
 		for(Map.Entry<String, String> database : databases.entrySet()) {
-			PostgresDbService jdbcService_tmp = this.connection(serviceInstance, plan, database.getValue());
+			PostgresDbService jdbcService_tmp = this.connection(serviceInstance, plan, database.getValue(), false);
 			String generalRole = database.getValue();
 			breakDownBindingUserPrivileges(jdbcService_tmp, roleName, generalRole);
 			if(!checkIfRoleExists(jdbcService,generalRole)) {
@@ -220,29 +220,39 @@ public class PostgresCustomImplementation {
         }
     }
 
-    public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan, String database) {
+    public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan, String database,
+                                        boolean useServiceInstanceCredentialsForExistingConnection) {
         List<ServerAddress> serverAddresses=serviceInstance.getHosts();
 
-		String username="";
-        String password="";
+		String username = "";
+        String password = "";
 
         if(plan.getPlatform() == Platform.BOSH) {
-            username=serviceInstance.getUsername();
-            password=serviceInstance.getPassword();
-            if(database==null) {
+            username = serviceInstance.getUsername();
+            password = serviceInstance.getPassword();
+            if(database == null) {
 				database = "admin";
 			}
 			serverAddresses = filterServerAddresses(serviceInstance,plan);
 
 		} else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
-			username=existingEndpointBean.getUsername();
-			password=existingEndpointBean.getPassword();
-			if(database==null) {
-				database = existingEndpointBean.getDatabase();
-			}
-			if(serviceInstance.getHosts().size() == 0){
-				serverAddresses=existingEndpointBean.getHosts();
-			}
+            if(serviceInstance.getHosts().size() == 0){
+                serverAddresses = existingEndpointBean.getHosts();
+            }
+
+            if (useServiceInstanceCredentialsForExistingConnection) {
+                username = serviceInstance.getUsername();
+                password = serviceInstance.getPassword();
+                database = serviceInstance.getId();
+            } else {
+                username = existingEndpointBean.getUsername();
+                password = existingEndpointBean.getPassword();
+
+                if(database == null) {
+                    database = existingEndpointBean.getDatabase();
+                }
+            }
+
 		}
 
 		PostgresDbService jdbcService = new PostgresDbService();
@@ -256,6 +266,6 @@ public class PostgresCustomImplementation {
     }
 
 	public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan) {
-		return connection(serviceInstance,plan,null);
+		return connection(serviceInstance, plan, null, false);
 	}
 }
