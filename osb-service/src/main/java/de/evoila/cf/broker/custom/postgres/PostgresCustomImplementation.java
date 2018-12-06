@@ -54,7 +54,7 @@ public class PostgresCustomImplementation {
 	}
 
 	public void setupRoleTrigger(ServiceInstance serviceInstance, Plan plan, String database, String generalrole) throws SQLException {
-		PostgresDbService jdbcService_tmp = this.connection(serviceInstance, plan, database, false);
+		PostgresDbService jdbcService_tmp = this.connection(serviceInstance, plan, database);
 
 		String createFunction="CREATE OR REPLACE FUNCTION trg_set_owner() " +
 					 " RETURNS event_trigger " +
@@ -163,7 +163,7 @@ public class PostgresCustomImplementation {
 		Map<String, String> databases = jdbcService.executeSelect("SELECT datname FROM pg_database WHERE datistemplate = false and datname not like 'postgres'", "datname");
 
 		for(Map.Entry<String, String> database : databases.entrySet()) {
-			PostgresDbService jdbcService_tmp = this.connection(serviceInstance, plan, database.getValue(), false);
+			PostgresDbService jdbcService_tmp = this.connection(serviceInstance, plan, database.getValue());
 			String generalRole = database.getValue();
 			breakDownBindingUserPrivileges(jdbcService_tmp, roleName, generalRole);
 			if(!checkIfRoleExists(jdbcService,generalRole)) {
@@ -220,8 +220,7 @@ public class PostgresCustomImplementation {
         }
     }
 
-    public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan, String database,
-                                        boolean useServiceInstanceCredentialsForExistingConnection) {
+    public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan, String database) {
         List<ServerAddress> serverAddresses=serviceInstance.getHosts();
 
 		String username = "";
@@ -240,17 +239,11 @@ public class PostgresCustomImplementation {
                 serverAddresses = existingEndpointBean.getHosts();
             }
 
-            if (useServiceInstanceCredentialsForExistingConnection) {
-                username = serviceInstance.getUsername();
-                password = serviceInstance.getPassword();
-                database = serviceInstance.getId();
-            } else {
-                username = existingEndpointBean.getUsername();
-                password = existingEndpointBean.getPassword();
+            username = existingEndpointBean.getUsername();
+            password = existingEndpointBean.getPassword();
 
-                if(database == null) {
-                    database = existingEndpointBean.getDatabase();
-                }
+            if(database == null) {
+                database = existingEndpointBean.getDatabase();
             }
 
 		}
@@ -266,6 +259,6 @@ public class PostgresCustomImplementation {
     }
 
 	public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan) {
-		return connection(serviceInstance, plan, null, false);
+		return connection(serviceInstance, plan, null);
 	}
 }

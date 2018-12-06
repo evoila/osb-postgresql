@@ -46,7 +46,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 	@Override
     public void deleteInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
 		String database=serviceInstance.getId();
-		PostgresDbService postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan, database, false);
+		PostgresDbService postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan, database);
 		try {
 		    postgresCustomImplementation.dropAllExtensions(postgresDbService);
 		} catch (SQLException e) {
@@ -79,7 +79,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 			// close connection to postgresql db / open connection to bind db
 			// necessary for installing db specific extensions (as admin)
 			postgresDbService.closeIfConnected();
-			postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan, database, false);
+			postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan, database);
 			postgresCustomImplementation.createExtensions(postgresDbService);
 		} catch(SQLException ex) {
             throw new PlatformException(ex);

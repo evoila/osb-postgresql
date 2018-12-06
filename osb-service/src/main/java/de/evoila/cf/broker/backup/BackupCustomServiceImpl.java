@@ -49,17 +49,21 @@ public class BackupCustomServiceImpl implements BackupCustomService {
 
         Plan plan = serviceDefinitionRepository.getPlan(instance.getPlanId());
 
-        PostgresDbService postgresDbService = postgresCustomImplementation.connection(instance, plan,
-                instance.getId(), true);
-
         Map<String, String> result = new HashMap<>();
-        try {
-            Map<String, String> databases = postgresDbService.executeSelect("SELECT datname FROM pg_database", "datname");
+        if (plan.getPlatform().equals(Platform.BOSH)) {
+            PostgresDbService postgresDbService = postgresCustomImplementation.connection(instance, plan,
+                    instance.getId());
 
-            for(Map.Entry<String, String> database : databases.entrySet())
-                result.put(database.getValue(), database.getValue());
-        } catch(SQLException ex) {
-            new ServiceBrokerException("Could not load databases", ex);
+            try {
+                Map<String, String> databases = postgresDbService.executeSelect("SELECT datname FROM pg_database", "datname");
+
+                for(Map.Entry<String, String> database : databases.entrySet())
+                    result.put(database.getValue(), database.getValue());
+            } catch(SQLException ex) {
+                new ServiceBrokerException("Could not load databases", ex);
+            }
+        } else if (plan.getPlatform().equals(Platform.EXISTING_SERVICE)) {
+            result.put(serviceInstanceId, serviceInstanceId);
         }
 
         return result;
