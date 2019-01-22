@@ -3,6 +3,7 @@ package de.evoila.cf.cpi.bosh;
 import de.evoila.cf.broker.bean.BoshProperties;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.ServiceInstance;
+import de.evoila.cf.broker.util.MapUtils;
 import de.evoila.cf.broker.util.RandomString;
 import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
@@ -10,6 +11,9 @@ import org.springframework.core.env.Environment;
 
 import java.util.*;
 
+/**
+ * @author Marco Hennig, Johannes Hiemer.
+ */
 public class PostgresDeploymentManager extends DeploymentManager {
 
     public PostgresDeploymentManager(BoshProperties properties, Environment environment) {
@@ -20,48 +24,61 @@ public class PostgresDeploymentManager extends DeploymentManager {
     private RandomString randomStringPassword = new RandomString(15);
 
     @Override
-    protected void replaceParameters(ServiceInstance serviceInstance, Manifest manifest, Plan plan, Map<String, Object> customParameters) {
+    protected void replaceParameters(ServiceInstance serviceInstance, Manifest manifest, Plan plan, Map<String,
+            Object> customParameters, boolean isUpdate) {
         HashMap<String, Object> properties = new HashMap<>();
         if (customParameters != null && !customParameters.isEmpty())
             properties.putAll(customParameters);
 
-        log.debug("Updating Deployment Manifest, replacing parameters");
+        if (!isUpdate) {
+            log.debug("Updating Deployment Manifest, replacing parameters");
 
-        Map<String, Object> postgresManifestProperties = manifestProperties("postgres", manifest);
-        Map<String, Object> pgpoolManifestProperties = manifestProperties("pgpool", manifest);
+            Map<String, Object> postgresManifestProperties = manifestProperties("postgres", manifest);
+            Map<String, Object> pgpoolManifestProperties = manifestProperties("pgpool", manifest);
 
-        HashMap<String, Object> pcp = (HashMap<String, Object>) pgpoolManifestProperties.get("pcp");
-        HashMap<String, Object> postgres = (HashMap<String, Object>) postgresManifestProperties.get("postgres");
-        HashMap<String, Object> postgresExporter = (HashMap<String, Object>) postgresManifestProperties.get("postgres_exporter");
+            HashMap<String, Object> pcp = (HashMap<String, Object>) pgpoolManifestProperties.get("pcp");
+            HashMap<String, Object> postgres = (HashMap<String, Object>) postgresManifestProperties.get("postgres");
+            HashMap<String, Object> postgresExporter = (HashMap<String, Object>) postgresManifestProperties.get("postgres_exporter");
 
-        pcp.put("system_password", randomStringPcp.nextString());
+            pcp.put("system_password", randomStringPcp.nextString());
 
-        String password = randomStringPassword.nextString();
-        List<HashMap<String, Object>> users = (List<HashMap<String, Object>>) postgres.get("users");
+            String password = randomStringPassword.nextString();
+            List<HashMap<String, Object>> users = (List<HashMap<String, Object>>) postgres.get("users");
 
-        HashMap<String, Object> userProperties = users.get(0);
-        String username = userProperties.get("username").toString();
-        userProperties.put("password", password);
+            HashMap<String, Object> userProperties = users.get(0);
+            String username = userProperties.get("username").toString();
+            userProperties.put("password", password);
 
-        serviceInstance.setUsername(username);
-        serviceInstance.setPassword(password);
+            serviceInstance.setUsername(username);
+            serviceInstance.setPassword(password);
 
-        postgresExporter.put("password", password);
+            postgresExporter.put("password", password);
 
-        List<Map<String, Object>> databases = new ArrayList<>();
+            List<Map<String, Object>> databases = new ArrayList<>();
 
-        List<String> user= new ArrayList<>();
-        user.add("admin");
+            List<String> user = new ArrayList<>();
+            user.add("admin");
 
-        Map<String, Object> database = new HashMap<>();
-        database.put("name", serviceInstance.getId());
-        database.put("users", user);
+            Map<String, Object> database = new HashMap<>();
+            database.put("name", serviceInstance.getId());
+            database.put("users", user);
 
-        List<String> extensionsToInstall = Arrays.asList("postgis", "postgis_topology", "fuzzystrmatch", "address_standardizer", "postgis_tiger_geocoder");
-        database.put("extensions", extensionsToInstall);
-        databases.add(database);
+            List<String> extensionsToInstall = Arrays.asList("postgis", "postgis_topology",
+                    "fuzzystrmatch", "address_standardizer",
+                    "postgis_tiger_geocoder");
+            database.put("extensions", extensionsToInstall);
+            databases.add(database);
 
-        postgres.put("databases", databases);
+            postgres.put("databases", databases);
+        } else if (isUpdate && customParameters != null && !customParameters.isEmpty()) {
+            for (Map.Entry parameter : customParameters.entrySet()) {
+                Map<String, Object> manifestProperties = manifestProperties(parameter.getKey().toString(), manifest);
+
+                if (manifestProperties != null)
+                    MapUtils.deepMerge(manifestProperties, customParameters);
+            }
+
+        }
 
         this.updateInstanceGroupConfiguration(manifest, plan);
     }

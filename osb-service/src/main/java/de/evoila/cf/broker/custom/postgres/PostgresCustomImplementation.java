@@ -82,19 +82,19 @@ public class PostgresCustomImplementation {
 		jdbcService_tmp.closeIfConnected();
 	}
 
-	public void createGeneralRole(ServiceInstance serviceInstance, Plan plan, PostgresDbService jdbcService, String generalrole, String database) throws SQLException {
-		if (!checkIfRoleExists(jdbcService, generalrole)) {
-			jdbcService.executeUpdate("CREATE ROLE \"" + generalrole + "\" NOLOGIN");
-			jdbcService.executeUpdate("GRANT CREATE ON DATABASE \"" + database + "\" TO \"" + generalrole + "\"");
-			jdbcService.executeUpdate("GRANT CONNECT ON DATABASE \"" + database + "\" TO \"" + generalrole + "\"");
+	public void createGeneralRole(ServiceInstance serviceInstance, Plan plan, PostgresDbService jdbcService, String generalRole, String database) throws SQLException {
+		if (!checkIfRoleExists(jdbcService, generalRole)) {
+			jdbcService.executeUpdate("CREATE ROLE \"" + generalRole + "\" NOLOGIN");
+			jdbcService.executeUpdate("GRANT CREATE ON DATABASE \"" + database + "\" TO \"" + generalRole + "\"");
+			jdbcService.executeUpdate("GRANT CONNECT ON DATABASE \"" + database + "\" TO \"" + generalRole + "\"");
 		}
-		setupRoleTrigger(serviceInstance, plan, database, generalrole);
+		setupRoleTrigger(serviceInstance, plan, database, generalRole);
 	}
 
 	public void createExtensions(PostgresDbService jdbcService) throws SQLException {
 		Map<String, String> availableExtensions = jdbcService.executeSelect("SELECT name FROM pg_available_extensions", "name");
 
-		for(String extension:extensionsToInstall) {
+		for (String extension : extensionsToInstall) {
 			if (availableExtensions.containsValue(extension)) {
 				jdbcService.executeUpdate("CREATE EXTENSION IF NOT EXISTS \"" + extension + "\"");
 			}
@@ -109,30 +109,30 @@ public class PostgresCustomImplementation {
 		}
 	}
 
-	public void setUpBindingUserPrivileges(PostgresDbService jdbcService, String username, String generalrole) throws SQLException {
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO \"" + generalrole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO \"" + generalrole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON FUNCTIONS TO \"" + generalrole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON TYPES TO \"" + generalrole + "\"");
+	public void setUpBindingUserPrivileges(PostgresDbService jdbcService, String username, String generalRole) throws SQLException {
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO \"" + generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO \"" + generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON FUNCTIONS TO \"" + generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON TYPES TO \"" + generalRole + "\"");
 
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" GRANT ALL PRIVILEGES ON TABLES TO \"" + generalrole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" GRANT ALL PRIVILEGES ON SEQUENCES TO \"" + generalrole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" GRANT ALL PRIVILEGES ON FUNCTIONS TO \"" + generalrole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" GRANT ALL PRIVILEGES ON TYPES TO \"" + generalrole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" GRANT ALL PRIVILEGES ON SCHEMAS TO \"" + generalrole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" GRANT ALL PRIVILEGES ON TABLES TO \"" + generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" GRANT ALL PRIVILEGES ON SEQUENCES TO \"" + generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" GRANT ALL PRIVILEGES ON FUNCTIONS TO \"" + generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" GRANT ALL PRIVILEGES ON TYPES TO \"" + generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" GRANT ALL PRIVILEGES ON SCHEMAS TO \"" + generalRole + "\"");
 	}
 
-	public void breakDownBindingUserPrivileges(PostgresDbService jdbcService, String username, String generalrole) throws SQLException {
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public REVOKE ALL PRIVILEGES ON TABLES FROM \""+ generalrole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public REVOKE ALL PRIVILEGES ON SEQUENCES FROM \""+ generalrole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public REVOKE ALL PRIVILEGES ON FUNCTIONS FROM \""+ generalrole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public REVOKE ALL PRIVILEGES ON TYPES FROM \""+ generalrole + "\"");
+	public void breakDownBindingUserPrivileges(PostgresDbService jdbcService, String username, String generalRole) throws SQLException {
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public REVOKE ALL PRIVILEGES ON TABLES FROM \""+ generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public REVOKE ALL PRIVILEGES ON SEQUENCES FROM \""+ generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public REVOKE ALL PRIVILEGES ON FUNCTIONS FROM \""+ generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public REVOKE ALL PRIVILEGES ON TYPES FROM \""+ generalRole + "\"");
 
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON TABLES FROM \""+ generalrole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON SEQUENCES FROM \""+ generalrole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON FUNCTIONS FROM \""+ generalrole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON TYPES FROM \""+ generalrole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON SCHEMAS FROM \""+ generalrole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON TABLES FROM \""+ generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON SEQUENCES FROM \""+ generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON FUNCTIONS FROM \""+ generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON TYPES FROM \""+ generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON SCHEMAS FROM \""+ generalRole + "\"");
 
 		jdbcService.executeUpdate("REVOKE ALL PRIVILEGES ON SCHEMA public FROM \""+ username + "\"");
 		jdbcService.executeUpdate("REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM \""+ username + "\"");
@@ -190,7 +190,7 @@ public class PostgresCustomImplementation {
 
     public void createDatabase(PostgresDbService connection, String database) throws PlatformException {
         try {
-            connection.executeUpdate("CREATE DATABASE \"" + database + "\" ENCODING 'UTF8'");
+            connection.executeUpdate("CREATE DATABASE \"" + database + "\" ENCODING 'SQL_ASCII'");
             connection.executeUpdate("REVOKE ALL PRIVILEGES ON DATABASE \"" + database + "\" FROM PUBLIC");
             connection.executeUpdate("REVOKE CONNECT ON DATABASE \"" + database + "\" FROM PUBLIC");
         } catch (SQLException e) {

@@ -50,10 +50,15 @@ instance_groups:
     postgres:
       config:
         port: 5432
+        authentication_timeout: 30
+        max_locks_per_transaction: 64
+        max_pred_locks_per_transaction: 64
+        max_pred_locks_per_relation: -2
+        max_pred_locks_per_page: 2
         max_connections: 500
+        max_files_per_process: 1000
         shared_buffers: 128MB
         temp_buffers: 8MB
-        max_files_per_process: 1000
         lc_messages: 'en_US.UTF-8'
         lc_monetary: 'en_US.UTF-8'
         lc_numeric:  'en_US.UTF-8'
@@ -91,17 +96,17 @@ instance_groups:
       system_password: secret
     pgpool:
       pool_passwd: pool_passwd
-      debug: false
       backend:
         port: 5432
-      config:
-        init_max_childen: 250
-        enable_pool_hba: on
-        port: 5432
+      max_pool: 15
+      listen_backlog_multiplier: 2
+      num_init_children: 32
+      child_life_time: 300
+      child_max_connections: 0
+      connection_life_time: 900
+      client_idle_limit: 90
+      enable_pool_hba: on
+      load_balance_mode: true
       hba:
-      - host all all 0.0.0.0/0 md5
-      - host all all ::/0 md5
-      users:
-      - username: admin
-        password: admin
-        admin: true
+        - host all all 0.0.0.0/0 md5
+        - host all all ::/0 md5

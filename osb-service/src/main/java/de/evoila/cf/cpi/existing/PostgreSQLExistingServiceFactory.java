@@ -22,7 +22,7 @@ import java.sql.SQLException;
 import java.util.Map;
 
 /**
- * @author Christian Brinker, evoila.
+ * @author Christian Brinker, Johannes Hiemer, Marco Hennig.
  *
  */
 @Service
@@ -57,7 +57,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
         postgresCustomImplementation.deleteDatabase(postgresDbService, serviceInstance.getUsername(), database, serviceInstance.getUsername());
 	}
 
-	@Override
+    @Override
 	public ServiceInstance createInstance(ServiceInstance serviceInstance, Plan plan, Map<String, Object> parameters) throws PlatformException {
         String username = usernameRandomString.nextString();
         String password = passwordRandomString.nextString();
@@ -87,6 +87,11 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 
         return serviceInstance;
 	}
+
+    @Override
+    public ServiceInstance getInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
+        return serviceInstance;
+    }
 
     public void createPgPoolUser(PostgresBoshPlatformService postgresBoshPlatformService, String username, String password) throws JSchException {{
 		postgresBoshPlatformService.createPgPoolUser(

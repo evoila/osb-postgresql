@@ -26,6 +26,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * @author Johannes Hiemer, Yannic Remmet, Marco Hennig.
+ */
 @Service
 @ConditionalOnBean(BoshProperties.class)
 public class PostgresBoshPlatformService extends BoshPlatformService {
@@ -123,11 +126,10 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
         log.info("Disconnected channel and session");
     }
 
-    public void createPgPoolUser(ServiceInstance instance, Plan plan, String username, String password)
+    public void createPgPoolUser(ServiceInstance serviceInstance, Plan plan, String username, String password)
             throws IOException, JSchException, InstanceGroupNotFoundException {
 
-        Deployment deployment = super.getDeployment(instance);
-        Manifest manifest = super.getDeployedManifest(deployment.getName());
+        Manifest manifest = super.getDeployedManifest(serviceInstance);
 
         Optional<InstanceGroup> group = manifest.getInstanceGroups()
                 .stream()
@@ -136,10 +138,10 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
         if (group.isPresent()) {
             int instance_cnt = group.get().getInstances();
             for (int i = 0; i < instance_cnt; i++) {
-                createPgPoolUser(instance, group.get(), i, username, password);
+                createPgPoolUser(serviceInstance, group.get(), i, username, password);
             }
         } else {
-            throw new InstanceGroupNotFoundException(instance, manifest, plan.getMetadata().getIngressInstanceGroup());
+            throw new InstanceGroupNotFoundException(serviceInstance, manifest, plan.getMetadata().getIngressInstanceGroup());
         }
     }
 
