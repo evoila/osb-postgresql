@@ -69,25 +69,6 @@ public class BackupCustomServiceImpl implements BackupCustomService {
         return result;
     }
 
-    @Override
-    public void createItem(String serviceInstanceId, String name, Map<String, Object> parameters) throws ServiceInstanceDoesNotExistException,
-            ServiceDefinitionDoesNotExistException, ServiceBrokerException {
-        ServiceInstance instance = this.validateServiceInstanceId(serviceInstanceId);
-
-        Plan plan = serviceDefinitionRepository.getPlan(instance.getPlanId());
-
-        if (plan.getPlatform().equals(Platform.BOSH)) {
-            PostgresDbService postgresDbService = postgresCustomImplementation.connection(instance, plan);
-
-            try {
-                postgresCustomImplementation.createDatabase(postgresDbService, name);
-            } catch (PlatformException ex) {
-                throw new ServiceBrokerException("Could not create Database", ex);
-            }
-        } else
-            throw new ServiceBrokerException("Creating items is not allowed in shared plans");
-    }
-
     private ServiceInstance validateServiceInstanceId(String serviceInstanceId) throws ServiceInstanceDoesNotExistException {
         ServiceInstance instance = serviceInstanceRepository.getServiceInstance(serviceInstanceId);
 

@@ -190,7 +190,7 @@ public class PostgresCustomImplementation {
 
     public void createDatabase(PostgresDbService connection, String database) throws PlatformException {
         try {
-            connection.executeUpdate("CREATE DATABASE \"" + database + "\" ENCODING 'SQL_ASCII'");
+            connection.executeUpdate("CREATE DATABASE \"" + database + "\" ENCODING 'UTF8'");
             connection.executeUpdate("REVOKE ALL PRIVILEGES ON DATABASE \"" + database + "\" FROM PUBLIC");
             connection.executeUpdate("REVOKE CONNECT ON DATABASE \"" + database + "\" FROM PUBLIC");
         } catch (SQLException e) {
