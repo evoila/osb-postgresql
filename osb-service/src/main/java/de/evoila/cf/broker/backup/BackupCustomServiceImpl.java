@@ -20,6 +20,9 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author Johannes Hiemer.
+ */
 @Service
 @ConditionalOnBean(BackupConfiguration.class)
 public class BackupCustomServiceImpl implements BackupCustomService {
