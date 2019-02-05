@@ -128,36 +128,36 @@ public class PostgresCustomImplementation {
 		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public REVOKE ALL PRIVILEGES ON FUNCTIONS FROM \""+ generalRole + "\"");
 		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" IN SCHEMA public REVOKE ALL PRIVILEGES ON TYPES FROM \""+ generalRole + "\"");
 
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON TABLES FROM \""+ generalRole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON SEQUENCES FROM \""+ generalRole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON FUNCTIONS FROM \""+ generalRole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON TYPES FROM \""+ generalRole + "\"");
-		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON SCHEMAS FROM \""+ generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON TABLES FROM \"" + generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON SEQUENCES FROM \"" + generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON FUNCTIONS FROM \"" + generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON TYPES FROM \"" + generalRole + "\"");
+		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username +"\" REVOKE ALL ON SCHEMAS FROM \"" + generalRole + "\"");
 
-		jdbcService.executeUpdate("REVOKE ALL PRIVILEGES ON SCHEMA public FROM \""+ username + "\"");
-		jdbcService.executeUpdate("REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM \""+ username + "\"");
-		jdbcService.executeUpdate("REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM \""+ username + "\"");
-		jdbcService.executeUpdate("REVOKE ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public FROM \""+ username + "\"");
+		jdbcService.executeUpdate("REVOKE ALL PRIVILEGES ON SCHEMA public FROM \"" + username + "\"");
+		jdbcService.executeUpdate("REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM \"" + username + "\"");
+		jdbcService.executeUpdate("REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM \"" + username + "\"");
+		jdbcService.executeUpdate("REVOKE ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public FROM \"" + username + "\"");
 	}
 	
-	public void bindRoleToDatabase(ServiceInstance serviceInstance, Plan plan, PostgresDbService jdbcService, String username, String password, String database, String generalRole, boolean isAdmin)
+	public void bindRoleToDatabase(ServiceInstance serviceInstance, Plan plan, PostgresDbService jdbcService, String username, String password,
+                                   String database, String generalRole, boolean isAdmin)
 			throws SQLException {
 
 		if (isAdmin){
 			jdbcService.executeUpdate("CREATE ROLE \"" + username + "\" WITH LOGIN password '" + password + "' IN ROLE \"" + generalRole + "\"");
+
+            jdbcService.executeUpdate("ALTER DATABASE \"" + database + "\" OWNER TO \"" + username + "\"");
+            jdbcService.executeUpdate("ALTER ROLE \"" + username + "\" CREATEROLE");
 		} else {
 			jdbcService.executeUpdate("CREATE ROLE \"" + username + "\" WITH INHERIT LOGIN password '" + password + "' IN ROLE \"" + generalRole + "\"");
 		}
 
-		if (isAdmin){
-			jdbcService.executeUpdate("ALTER DATABASE \"" + database + "\" OWNER TO \"" + username + "\"");
-			jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON SCHEMA public TO \""+ username + "\"");
-			jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO \""+ username + "\"");
-			jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public To \""+ username + "\"");
-			jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public To \""+ username + "\"");
-			jdbcService.executeUpdate("ALTER ROLE \"" + username + "\" CREATEROLE");
-		}
-	}
+        jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON SCHEMA public TO \"" + username + "\"");
+        jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO \"" + username + "\"");
+        jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public To \"" + username + "\"");
+        jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public To \"" + username + "\"");
+    }
 
 	public void unbindRoleFromDatabase(ServiceInstance serviceInstance, Plan plan,PostgresDbService jdbcService, String roleName) throws SQLException {
 		Map<String, String> databases = jdbcService.executeSelect("SELECT datname FROM pg_database WHERE datistemplate = false and datname not like 'postgres'", "datname");
