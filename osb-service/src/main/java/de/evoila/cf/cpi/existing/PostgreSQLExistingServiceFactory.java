@@ -65,9 +65,8 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 
     @Override
 	public ServiceInstance createInstance(ServiceInstance serviceInstance, Plan plan, Map<String, Object> parameters) throws PlatformException {
-        UsernamePasswordCredential serviceInstanceUsernamePasswordCredential = credentialStore
-                .createUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
-        credentialStore.getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
+	    credentialStore.createUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
+        UsernamePasswordCredential serviceInstanceUsernamePasswordCredential = credentialStore.getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
 
         serviceInstance.setUsername(serviceInstanceUsernamePasswordCredential.getUsername());
 
