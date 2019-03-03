@@ -10,9 +10,12 @@ import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
 import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.ServiceInstance;
+import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
 import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
 import de.evoila.cf.broker.repository.ServiceInstanceRepository;
 import de.evoila.cf.broker.service.BackupCustomService;
+import de.evoila.cf.cpi.CredentialConstants;
+import de.evoila.cf.security.credentials.CredentialStore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
@@ -27,35 +30,40 @@ import java.util.Map;
 @ConditionalOnBean(BackupConfiguration.class)
 public class BackupCustomServiceImpl implements BackupCustomService {
 
-    BackupConfiguration backupTypeConfiguration;
+    private BackupConfiguration backupTypeConfiguration;
 
-    ServiceInstanceRepository serviceInstanceRepository;
+    private ServiceInstanceRepository serviceInstanceRepository;
 
-    PostgresCustomImplementation postgresCustomImplementation;
+    private PostgresCustomImplementation postgresCustomImplementation;
 
-    ServiceDefinitionRepository serviceDefinitionRepository;
+    private ServiceDefinitionRepository serviceDefinitionRepository;
+
+    private CredentialStore credentialStore;
 
     public BackupCustomServiceImpl(BackupConfiguration backupTypeConfiguration,
                                    ServiceInstanceRepository serviceInstanceRepository,
                                    PostgresCustomImplementation postgresCustomImplementation,
-                                   ServiceDefinitionRepository serviceDefinitionRepository) {
+                                   ServiceDefinitionRepository serviceDefinitionRepository,
+                                   CredentialStore credentialStore) {
         this.backupTypeConfiguration = backupTypeConfiguration;
         this.serviceInstanceRepository = serviceInstanceRepository;
         this.postgresCustomImplementation = postgresCustomImplementation;
         this.serviceDefinitionRepository = serviceDefinitionRepository;
+        this.credentialStore = credentialStore;
     }
 
     @Override
     public Map<String, String> getItems(String serviceInstanceId) throws ServiceInstanceDoesNotExistException,
             ServiceDefinitionDoesNotExistException {
-        ServiceInstance instance = this.validateServiceInstanceId(serviceInstanceId);
+        ServiceInstance serviceInstance = this.validateServiceInstanceId(serviceInstanceId);
 
-        Plan plan = serviceDefinitionRepository.getPlan(instance.getPlanId());
+        Plan plan = serviceDefinitionRepository.getPlan(serviceInstance.getPlanId());
 
         Map<String, String> result = new HashMap<>();
         if (plan.getPlatform().equals(Platform.BOSH)) {
-            PostgresDbService postgresDbService = postgresCustomImplementation.connection(instance, plan,
-                    instance.getId());
+            UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
+            PostgresDbService postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan, usernamePasswordCredential,
+                    serviceInstance.getId());
 
             try {
                 Map<String, String> databases = postgresDbService.executeSelect("SELECT datname FROM pg_database", "datname");

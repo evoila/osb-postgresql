@@ -3,10 +3,13 @@ package de.evoila.cf.cpi.bosh;
 import de.evoila.cf.broker.bean.BoshProperties;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.ServiceInstance;
+import de.evoila.cf.broker.model.credential.PasswordCredential;
+import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
 import de.evoila.cf.broker.util.MapUtils;
-import de.evoila.cf.broker.util.RandomString;
+import de.evoila.cf.cpi.CredentialConstants;
 import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
+import de.evoila.cf.security.credentials.CredentialStore;
 import org.springframework.core.env.Environment;
 
 import java.util.*;
@@ -16,12 +19,14 @@ import java.util.*;
  */
 public class PostgresDeploymentManager extends DeploymentManager {
 
-    public PostgresDeploymentManager(BoshProperties properties, Environment environment) {
-        super(properties, environment);
-    }
+    private CredentialStore credentialStore;
 
-    private RandomString randomStringPcp = new RandomString(15);
-    private RandomString randomStringPassword = new RandomString(15);
+    public PostgresDeploymentManager(BoshProperties properties,
+                                     Environment environment,
+                                     CredentialStore credentialStore) {
+        super(properties, environment);
+        this.credentialStore = credentialStore;
+    }
 
     @Override
     protected void replaceParameters(ServiceInstance serviceInstance, Manifest manifest, Plan plan, Map<String,
@@ -40,24 +45,27 @@ public class PostgresDeploymentManager extends DeploymentManager {
             HashMap<String, Object> postgres = (HashMap<String, Object>) postgresManifestProperties.get("postgres");
             HashMap<String, Object> postgresExporter = (HashMap<String, Object>) postgresManifestProperties.get("postgres_exporter");
 
-            pcp.put("system_password", randomStringPcp.nextString());
+            PasswordCredential systemPassword = credentialStore.createPassword(serviceInstance, CredentialConstants.PGPOOL_SYSTEM_PASSWORD);
+            pcp.put("system_password", systemPassword.getPassword());
 
-            String password = randomStringPassword.nextString();
             List<HashMap<String, Object>> users = (List<HashMap<String, Object>>) postgres.get("users");
 
             HashMap<String, Object> userProperties = users.get(0);
-            String username = userProperties.get("username").toString();
-            userProperties.put("password", password);
 
-            serviceInstance.setUsername(username);
-            serviceInstance.setPassword(password);
+            UsernamePasswordCredential usernamePasswordCredential = credentialStore.createUser(serviceInstance,
+                    CredentialConstants.ROOT_CREDENTIALS);
+            userProperties.put("username", usernamePasswordCredential.getUsername());
+            userProperties.put("password", usernamePasswordCredential.getPassword());
 
-            postgresExporter.put("password", password);
+            serviceInstance.setUsername(usernamePasswordCredential.getUsername());
+
+            postgresExporter.put("user", usernamePasswordCredential.getUsername());
+            postgresExporter.put("password", usernamePasswordCredential.getPassword());
 
             List<Map<String, Object>> databases = new ArrayList<>();
 
             List<String> user = new ArrayList<>();
-            user.add("admin");
+            user.add(usernamePasswordCredential.getUsername());
 
             Map<String, Object> database = new HashMap<>();
             database.put("name", serviceInstance.getId());

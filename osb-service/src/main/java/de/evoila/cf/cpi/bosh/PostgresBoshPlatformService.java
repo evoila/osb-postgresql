@@ -11,8 +11,10 @@ import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.repository.PlatformRepository;
 import de.evoila.cf.broker.service.CatalogService;
 import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
+import de.evoila.cf.cpi.CredentialConstants;
 import de.evoila.cf.cpi.bosh.deployment.manifest.InstanceGroup;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
+import de.evoila.cf.security.credentials.CredentialStore;
 import io.bosh.client.deployments.Deployment;
 import io.bosh.client.vms.Vm;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -35,14 +37,19 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
 
     private static final int defaultPort = 5432;
 
+    private CredentialStore credentialStore;
+
     PostgresBoshPlatformService(PlatformRepository repository, CatalogService catalogService,
                                 ServicePortAvailabilityVerifier availabilityVerifier,
-                                BoshProperties boshProperties, Optional<DashboardClient> dashboardClient,
+                                BoshProperties boshProperties,
+                                CredentialStore credentialStore,
+                                Optional<DashboardClient> dashboardClient,
                                 Environment environment) {
         super(repository,
                 catalogService, availabilityVerifier,
                 boshProperties, dashboardClient,
-                new PostgresDeploymentManager(boshProperties, environment));
+                new PostgresDeploymentManager(boshProperties, environment, credentialStore));
+        this.credentialStore = credentialStore;
     }
 
     @Override
@@ -54,7 +61,10 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
     }
 
     @Override
-    public void postDeleteInstance(ServiceInstance serviceInstance) { }
+    public void postDeleteInstance(ServiceInstance serviceInstance) {
+        credentialStore.deleteCredentials(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
+        credentialStore.deleteCredentials(serviceInstance, CredentialConstants.PGPOOL_SYSTEM_PASSWORD);
+    }
 
     private void executeCommands(Channel channel, List<String> commands){
         try {

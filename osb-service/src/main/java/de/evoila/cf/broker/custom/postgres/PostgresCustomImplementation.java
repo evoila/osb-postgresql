@@ -9,6 +9,7 @@ import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.catalog.ServerAddress;
 import de.evoila.cf.broker.model.ServiceInstance;
+import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
 import de.evoila.cf.broker.util.ServiceInstanceUtils;
 import de.evoila.cf.cpi.bosh.PostgresBoshPlatformService;
 import org.slf4j.Logger;
@@ -53,10 +54,10 @@ public class PostgresCustomImplementation {
 		return existingRoles.containsValue(roleName);
 	}
 
-	public void setupRoleTrigger(ServiceInstance serviceInstance, Plan plan, String database, String generalrole) throws SQLException {
-		PostgresDbService jdbcService_tmp = this.connection(serviceInstance, plan, database);
+	public void setupRoleTrigger(PostgresDbService jdbcDbService,
+                                 String database, String generalrole) throws SQLException {
 
-		String createFunction="CREATE OR REPLACE FUNCTION trg_set_owner() " +
+		String createFunction = "CREATE OR REPLACE FUNCTION trg_set_owner() " +
 					 " RETURNS event_trigger " +
 					 " LANGUAGE plpgsql " +
 					 "AS $$ " +
@@ -72,23 +73,22 @@ public class PostgresCustomImplementation {
 					 "  END LOOP; " +
 					 "END; " +
 					 "$$;";
-		String createTrigger="CREATE EVENT TRIGGER trg_set_owner " +
+		String createTrigger = "CREATE EVENT TRIGGER trg_set_owner " +
 							 "ON ddl_command_end " +
 							 "WHEN tag IN ('CREATE TYPE','CREATE TABLE','CREATE SEQUENCE','CREATE INDEX','CREATE SCHEMA','CREATE FUNCTION','CREATE DOMAIN','CREATE VIEW') " +
 							 "EXECUTE PROCEDURE trg_set_owner();";
 
-		jdbcService_tmp.executeUpdate(createFunction);
-		jdbcService_tmp.executeUpdate(createTrigger);
-		jdbcService_tmp.closeIfConnected();
+		jdbcDbService.executeUpdate(createFunction);
+		jdbcDbService.executeUpdate(createTrigger);
 	}
 
-	public void createGeneralRole(ServiceInstance serviceInstance, Plan plan, PostgresDbService jdbcService, String generalRole, String database) throws SQLException {
+	public void createGeneralRole(PostgresDbService jdbcService, String generalRole, String database) throws SQLException {
 		if (!checkIfRoleExists(jdbcService, generalRole)) {
 			jdbcService.executeUpdate("CREATE ROLE \"" + generalRole + "\" NOLOGIN");
 			jdbcService.executeUpdate("GRANT CREATE ON DATABASE \"" + database + "\" TO \"" + generalRole + "\"");
 			jdbcService.executeUpdate("GRANT CONNECT ON DATABASE \"" + database + "\" TO \"" + generalRole + "\"");
 		}
-		setupRoleTrigger(serviceInstance, plan, database, generalRole);
+		setupRoleTrigger(jdbcService, database, generalRole);
 	}
 
 	public void createExtensions(PostgresDbService jdbcService) throws SQLException {
@@ -140,11 +140,10 @@ public class PostgresCustomImplementation {
 		jdbcService.executeUpdate("REVOKE ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public FROM \"" + username + "\"");
 	}
 	
-	public void bindRoleToDatabase(ServiceInstance serviceInstance, Plan plan, PostgresDbService jdbcService, String username, String password,
-                                   String database, String generalRole, boolean isAdmin)
-			throws SQLException {
+	public void bindRoleToDatabase(PostgresDbService jdbcService, String username, String password,
+                                   String database, String generalRole, boolean isAdmin) throws SQLException {
 
-		if (isAdmin){
+		if (isAdmin) {
 			jdbcService.executeUpdate("CREATE ROLE \"" + username + "\" WITH LOGIN password '" + password + "' IN ROLE \"" + generalRole + "\"");
 
             jdbcService.executeUpdate("ALTER DATABASE \"" + database + "\" OWNER TO \"" + username + "\"");
@@ -159,21 +158,20 @@ public class PostgresCustomImplementation {
         jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public To \"" + username + "\"");
     }
 
-	public void unbindRoleFromDatabase(ServiceInstance serviceInstance, Plan plan,PostgresDbService jdbcService, String roleName) throws SQLException {
+	public void unbindRoleFromDatabase(PostgresDbService jdbcService, String roleName) throws SQLException {
 		Map<String, String> databases = jdbcService.executeSelect("SELECT datname FROM pg_database WHERE datistemplate = false and datname not like 'postgres'", "datname");
 
-		for(Map.Entry<String, String> database : databases.entrySet()) {
-			PostgresDbService jdbcService_tmp = this.connection(serviceInstance, plan, database.getValue());
+		for (Map.Entry<String, String> database : databases.entrySet()) {
 			String generalRole = database.getValue();
-			breakDownBindingUserPrivileges(jdbcService_tmp, roleName, generalRole);
-			if(!checkIfRoleExists(jdbcService,generalRole)) {
-				jdbcService_tmp.executeUpdate("CREATE ROLE \"" + generalRole + "\" NOLOGIN");
-			}
-			jdbcService_tmp.executeUpdate("REASSIGN OWNED BY \"" + roleName + "\" TO \"" + generalRole + "\"");
-			jdbcService_tmp.executeUpdate("DROP OWNED BY \"" + roleName + "\"");
-			jdbcService_tmp.executeUpdate("REVOKE ALL ON SCHEMA public FROM \"" + roleName + "\"");
+			breakDownBindingUserPrivileges(jdbcService, roleName, generalRole);
 
-			jdbcService_tmp.closeIfConnected();
+			if (!checkIfRoleExists(jdbcService,generalRole)) {
+                jdbcService.executeUpdate("CREATE ROLE \"" + generalRole + "\" NOLOGIN");
+			}
+
+            jdbcService.executeUpdate("REASSIGN OWNED BY \"" + roleName + "\" TO \"" + generalRole + "\"");
+            jdbcService.executeUpdate("DROP OWNED BY \"" + roleName + "\"");
+            jdbcService.executeUpdate("REVOKE ALL ON SCHEMA public FROM \"" + roleName + "\"");
 		}
 
 		jdbcService.executeUpdate("DROP ROLE \"" + roleName + "\"");
@@ -220,29 +218,31 @@ public class PostgresCustomImplementation {
         }
     }
 
-    public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan, String database) {
-        List<ServerAddress> serverAddresses=serviceInstance.getHosts();
+    public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan,
+                                        UsernamePasswordCredential usernamePasswordCredential,
+                                        String database) {
+        List<ServerAddress> serverAddresses = serviceInstance.getHosts();
 
 		String username = "";
         String password = "";
 
-        if(plan.getPlatform() == Platform.BOSH) {
-            username = serviceInstance.getUsername();
-            password = serviceInstance.getPassword();
-            if(database == null) {
-				database = "admin";
+        if (plan.getPlatform() == Platform.BOSH) {
+            username = usernamePasswordCredential.getUsername();
+            password = usernamePasswordCredential.getPassword();
+            if (database == null) {
+				database = usernamePasswordCredential.getUsername();
 			}
 			serverAddresses = filterServerAddresses(serviceInstance,plan);
 
 		} else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
-            if(serviceInstance.getHosts().size() == 0){
+            if (serviceInstance.getHosts().size() == 0){
                 serverAddresses = existingEndpointBean.getHosts();
             }
 
             username = existingEndpointBean.getUsername();
             password = existingEndpointBean.getPassword();
 
-            if(database == null) {
+            if (database == null) {
                 database = existingEndpointBean.getDatabase();
             }
 
@@ -258,7 +258,7 @@ public class PostgresCustomImplementation {
         return jdbcService;
     }
 
-	public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan) {
-		return connection(serviceInstance, plan, null);
+	public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan, UsernamePasswordCredential usernamePasswordCredential) {
+		return connection(serviceInstance, plan, usernamePasswordCredential, null);
 	}
 }
