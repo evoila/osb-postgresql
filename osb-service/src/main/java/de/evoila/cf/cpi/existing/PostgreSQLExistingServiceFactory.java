@@ -46,12 +46,9 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 
 	@Override
     public void deleteInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
-        UsernamePasswordCredential serviceInstanceUsernamePasswordCredential = credentialStore.getUser(serviceInstance,
-                CredentialConstants.ROOT_CREDENTIALS);
-
 		String database = serviceInstance.getId();
 		PostgresDbService postgresDbService = postgresCustomImplementation
-                .connection(serviceInstance, plan, serviceInstanceUsernamePasswordCredential, database);
+                .connection(serviceInstance, plan, null, database);
 		try {
 		    postgresCustomImplementation.dropAllExtensions(postgresDbService);
 		} catch (SQLException e) {
@@ -61,6 +58,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 		postgresDbService.closeIfConnected();
 		postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan, null);
         postgresCustomImplementation.deleteDatabase(postgresDbService, serviceInstance.getUsername(), database, serviceInstance.getUsername());
+        credentialStore.deleteCredentials(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
 	}
 
     @Override

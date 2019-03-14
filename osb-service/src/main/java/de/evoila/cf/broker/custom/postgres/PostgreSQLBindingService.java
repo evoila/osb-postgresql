@@ -167,7 +167,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
             UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, binding.getId());
 
             postgresCustomImplementation.unbindRoleFromDatabase(jdbcService, usernamePasswordCredential.getUsername());
-            credentialStore.deleteCredentials(serviceInstance, usernamePasswordCredential.getUsername());
+            credentialStore.deleteCredentials(serviceInstance, binding.getId());
         } catch (SQLException e) {
             throw new ServiceBrokerException("Could not remove from database");
         } finally {
