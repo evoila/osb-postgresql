@@ -78,25 +78,6 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
     }
 
     @Override
-    protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
-        UsernamePasswordCredential serviceInstanceUsernamePasswordCredential = credentialStore
-                .getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
-
-        PostgresDbService jdbcService = postgresCustomImplementation.connection(serviceInstance, plan, serviceInstanceUsernamePasswordCredential);
-
-        try {
-            UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, binding.getId());
-
-            postgresCustomImplementation.unbindRoleFromDatabase(jdbcService, usernamePasswordCredential.getUsername());
-            credentialStore.deleteCredentials(serviceInstance, usernamePasswordCredential.getUsername());
-        } catch (SQLException e) {
-            throw new ServiceBrokerException("Could not remove from database");
-        } finally {
-            jdbcService.closeIfConnected();
-        }
-	}
-
-    @Override
     protected Map<String, Object> createCredentials(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                     ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException {
         UsernamePasswordCredential serviceInstanceUsernamePasswordCredential = credentialStore
@@ -166,7 +147,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         String dbURL = String.format("postgres://%s:%s@%s/%s", usernamePasswordCredential.getUsername(),
                 usernamePasswordCredential.getPassword(), endpoint, database);
 
-		Map<String, Object> credentials = new HashMap<String, Object>();
+		Map<String, Object> credentials = new HashMap<>();
 		credentials.put(URI, dbURL);
 		credentials.put(USERNAME, usernamePasswordCredential.getUsername());
 		credentials.put(PASSWORD, usernamePasswordCredential.getPassword());
@@ -174,5 +155,24 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
 		return credentials;
 	}
+
+    @Override
+    protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
+        UsernamePasswordCredential serviceInstanceUsernamePasswordCredential = credentialStore
+                .getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
+
+        PostgresDbService jdbcService = postgresCustomImplementation.connection(serviceInstance, plan, serviceInstanceUsernamePasswordCredential);
+
+        try {
+            UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, binding.getId());
+
+            postgresCustomImplementation.unbindRoleFromDatabase(jdbcService, usernamePasswordCredential.getUsername());
+            credentialStore.deleteCredentials(serviceInstance, usernamePasswordCredential.getUsername());
+        } catch (SQLException e) {
+            throw new ServiceBrokerException("Could not remove from database");
+        } finally {
+            jdbcService.closeIfConnected();
+        }
+    }
 
 }
