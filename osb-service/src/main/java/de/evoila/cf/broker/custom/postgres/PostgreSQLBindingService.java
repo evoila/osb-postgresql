@@ -19,6 +19,7 @@ import de.evoila.cf.cpi.existing.PostgreSQLExistingServiceFactory;
 import de.evoila.cf.security.credentials.CredentialStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -59,7 +60,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
                              PostgresBoshPlatformService postgresBoshPlatformService,
                              BindingRepository bindingRepository, ServiceDefinitionRepository serviceDefinitionRepository,
                              ServiceInstanceRepository serviceInstanceRepository, RouteBindingRepository routeBindingRepository,
-                             HAProxyService haProxyService, JobRepository jobRepository,
+                             @Autowired( required = false ) HAProxyService haProxyService, JobRepository jobRepository,
                              AsyncBindingService asyncBindingService, PlatformRepository platformRepository,
                              CredentialStore credentialStore) {
         super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository,
