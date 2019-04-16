@@ -146,8 +146,7 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
                 .filter(i -> i.getName().equals(plan.getMetadata().getIngressInstanceGroup()))
                 .findAny();
         if (group.isPresent()) {
-            int instance_cnt = group.get().getInstances();
-            for (int i = 0; i < instance_cnt; i++) {
+            for (int i = 0; i < group.get().getInstances(); i++) {
                 createPgPoolUser(serviceInstance, group.get(), i, username, password);
             }
         } else {
@@ -180,9 +179,7 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
     public void createPgPoolUser(String deploymentName, String instanceName, List<ServerAddress> serverAddresses, String username, String password)
             throws JSchException {
 
-        int instance_cnt = serverAddresses.size();
-
-        for (int i = 0; i < instance_cnt; i++) {
+        for (int i = 0; i < serverAddresses.size(); i++) {
 
             Session session = getSshSession(deploymentName, instanceName, i)
                     .toBlocking()

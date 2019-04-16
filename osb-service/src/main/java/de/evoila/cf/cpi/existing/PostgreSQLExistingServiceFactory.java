@@ -21,7 +21,6 @@ import java.util.Map;
 
 /**
  * @author Christian Brinker, Johannes Hiemer, Marco Hennig.
- *
  */
 @Service
 @ConditionalOnBean(ExistingEndpointBean.class)
