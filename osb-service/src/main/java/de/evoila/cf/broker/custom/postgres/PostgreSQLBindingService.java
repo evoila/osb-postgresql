@@ -91,7 +91,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         UsernamePasswordCredential serviceInstanceUsernamePasswordCredential = credentialStore
                 .getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
 
-        String database = serviceInstance.getId();
+        String database = PostgreSQLUtils.dbName(serviceInstance.getId());
         if (serviceInstanceBindingRequest.getParameters() != null) {
             String customBindingDatabase = (String) serviceInstanceBindingRequest.getParameters().get("database");
 
@@ -111,7 +111,8 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
                     postgresBoshPlatformService.createPgPoolUser(serviceInstance, ingressInstanceGroup,
                             usernamePasswordCredential);
 
-                    jdbcService = postgresCustomImplementation.connection(serviceInstance, plan, serviceInstanceUsernamePasswordCredential);
+                    jdbcService = postgresCustomImplementation.connection(serviceInstance, plan,
+                            serviceInstanceUsernamePasswordCredential, database);
                 } else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
                     existingServiceFactory.createPgPoolUser(postgresBoshPlatformService,
                             ingressInstanceGroup, hosts, usernamePasswordCredential);
@@ -126,7 +127,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
  		    // close connection to postgresql db / open connection to bind db
             // necessary to set user specific privileges inside the db
 			jdbcService.createConnection(usernamePasswordCredential.getUsername(),
-                    usernamePasswordCredential.getPassword(), database, postgresCustomImplementation.filterServerAddresses(serviceInstance, plan));
+                    usernamePasswordCredential.getPassword(), database, hosts);
 			postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, usernamePasswordCredential.getUsername(), generalrole);
 		} catch (SQLException e) {
 		    log.error(String.format("Creating Binding(%s) failed while creating the ne postgres user. Could not update database", bindingId), e);

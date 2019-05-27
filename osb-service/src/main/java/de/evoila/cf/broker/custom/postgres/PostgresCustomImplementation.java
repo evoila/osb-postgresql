@@ -174,15 +174,6 @@ public class PostgresCustomImplementation {
 		jdbcService.executeUpdate("DROP ROLE \"" + roleName + "\"");
 	}
 
-	public List<ServerAddress> filterServerAddresses(ServiceInstance serviceInstance, Plan plan) {
-		List<ServerAddress> serverAddresses = serviceInstance.getHosts();
-		String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
-		if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
-			serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(),ingressInstanceGroup);
-		}
-		return serverAddresses;
-	}
-
     public void createDatabase(PostgresDbService connection, String database) throws PlatformException {
         try {
             connection.executeUpdate("CREATE DATABASE \"" + database + "\" ENCODING 'UTF8'");
@@ -218,22 +209,19 @@ public class PostgresCustomImplementation {
     public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan,
                                         UsernamePasswordCredential usernamePasswordCredential,
                                         String database) {
-        List<ServerAddress> serverAddresses = serviceInstance.getHosts();
+        String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
+        List<ServerAddress> serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);;
 
         if (plan.getPlatform() == Platform.BOSH) {
             if (database == null)
 				database = usernamePasswordCredential.getUsername();
 
-			serverAddresses = filterServerAddresses(serviceInstance,plan);
-
 		} else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
-            if (serviceInstance.getHosts().size() == 0)
-                serverAddresses = existingEndpointBean.getHosts();
+            if (database == null)
+                database = existingEndpointBean.getDatabase();
 
             usernamePasswordCredential = new UsernamePasswordCredential(existingEndpointBean.getUsername(),
                     existingEndpointBean.getPassword());
-            if (database == null)
-                database = existingEndpointBean.getDatabase();
 		}
 
 		PostgresDbService jdbcService = new PostgresDbService();

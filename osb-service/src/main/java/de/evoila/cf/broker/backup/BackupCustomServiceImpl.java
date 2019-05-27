@@ -1,6 +1,7 @@
 package de.evoila.cf.broker.backup;
 
 import de.evoila.cf.broker.bean.BackupConfiguration;
+import de.evoila.cf.broker.custom.postgres.PostgreSQLUtils;
 import de.evoila.cf.broker.custom.postgres.PostgresCustomImplementation;
 import de.evoila.cf.broker.custom.postgres.PostgresDbService;
 import de.evoila.cf.broker.exception.PlatformException;
@@ -63,7 +64,7 @@ public class BackupCustomServiceImpl implements BackupCustomService {
         if (plan.getPlatform().equals(Platform.BOSH)) {
             UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
             PostgresDbService postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan, usernamePasswordCredential,
-                    serviceInstance.getId());
+                    PostgreSQLUtils.dbName(serviceInstance.getId()));
 
             try {
                 Map<String, String> databases = postgresDbService.executeSelect("SELECT datname FROM pg_database", "datname");

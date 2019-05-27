@@ -2,6 +2,7 @@ package de.evoila.cf.cpi.existing;
 
 import com.jcraft.jsch.JSchException;
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
+import de.evoila.cf.broker.custom.postgres.PostgreSQLUtils;
 import de.evoila.cf.broker.custom.postgres.PostgresCustomImplementation;
 import de.evoila.cf.broker.custom.postgres.PostgresDbService;
 import de.evoila.cf.broker.exception.PlatformException;
@@ -48,7 +49,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 
 	@Override
     public void deleteInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
-		String database = serviceInstance.getId();
+		String database = PostgreSQLUtils.dbName(serviceInstance.getId());
 		PostgresDbService postgresDbService = postgresCustomImplementation
                 .connection(serviceInstance, plan, null, database);
 		try {
@@ -80,19 +81,19 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 
         serviceInstance.setUsername(serviceInstanceUsernamePasswordCredential.getUsername());
 
-		String database = serviceInstance.getId();
-		String generalRole = database;
+		String database = PostgreSQLUtils.dbName(serviceInstance.getId());
 
+		serviceInstance.setHosts(existingEndpointBean.getHosts());
 	    PostgresDbService postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan,
                 new UsernamePasswordCredential(existingEndpointBean.getUsername(), existingEndpointBean.getPassword()));
         postgresCustomImplementation.createDatabase(postgresDbService, database);
 
         try {
-			postgresCustomImplementation.createGeneralRole(postgresDbService, serviceInstance.getId(), serviceInstance.getId());
+			postgresCustomImplementation.createGeneralRole(postgresDbService, database, database);
 			postgresCustomImplementation.bindRoleToDatabase(postgresDbService,
 					serviceInstanceUsernamePasswordCredential.getUsername(),
                     serviceInstanceUsernamePasswordCredential.getPassword(),
-                    database, generalRole,true);
+                    database, database,true);
 
 			// close connection to postgresql db / open connection to bind db
 			// necessary for installing db specific extensions (as admin)
