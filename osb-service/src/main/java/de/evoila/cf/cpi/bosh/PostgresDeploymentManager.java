@@ -54,19 +54,18 @@ public class PostgresDeploymentManager extends DeploymentManager {
             List<HashMap<String, Object>> users = (List<HashMap<String, Object>>) postgres.get("users");
 
             HashMap<String, Object> userProperties = users.get(0);
-            credentialStore.createUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
-            UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
+            UsernamePasswordCredential usernamePasswordCredential =credentialStore.createUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
             userProperties.put("username", usernamePasswordCredential.getUsername());
             userProperties.put("password", usernamePasswordCredential.getPassword());
 
             HashMap<String, Object> backupUserProperties = users.get(1);
-            credentialStore.createUser(serviceInstance, DefaultCredentialConstants.BACKUP_CREDENTIALS);
-            UsernamePasswordCredential backupUsernamePasswordCredential = credentialStore.getUser(serviceInstance, DefaultCredentialConstants.BACKUP_CREDENTIALS);
+            UsernamePasswordCredential backupUsernamePasswordCredential = credentialStore.createUser(serviceInstance,
+                    DefaultCredentialConstants.BACKUP_CREDENTIALS);
             backupUserProperties.put("username", backupUsernamePasswordCredential.getUsername());
             backupUserProperties.put("password", backupUsernamePasswordCredential.getPassword());
 
-            credentialStore.createUser(serviceInstance, DefaultCredentialConstants.BACKUP_AGENT_CREDENTIALS);
-            UsernamePasswordCredential backupAgentusernamePasswordCredential = credentialStore.getUser(serviceInstance, DefaultCredentialConstants.BACKUP_AGENT_CREDENTIALS);
+            UsernamePasswordCredential backupAgentusernamePasswordCredential = credentialStore.createUser(serviceInstance,
+                    DefaultCredentialConstants.BACKUP_AGENT_CREDENTIALS);
             backupAgent.put("username", backupAgentusernamePasswordCredential.getUsername());
             backupAgent.put("password", backupAgentusernamePasswordCredential.getPassword());
 
