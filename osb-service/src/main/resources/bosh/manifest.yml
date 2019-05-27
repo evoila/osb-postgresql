@@ -41,8 +41,8 @@ instance_groups:
     release: osb-bosh-monitoring
   properties:
     backup_agent:
-      user: "backup"
-      password: "rulez"
+      username: backup
+      password: rulez
     postgres_exporter:
       user: admin
       password: admin
@@ -76,6 +76,9 @@ instance_groups:
       users:
       - username: admin
         password: admin
+        admin: true
+      - username: backup
+        password: backup
         admin: true
 
 - name: pgpool

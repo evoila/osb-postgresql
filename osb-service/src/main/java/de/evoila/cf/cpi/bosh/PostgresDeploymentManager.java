@@ -10,6 +10,7 @@ import de.evoila.cf.cpi.CredentialConstants;
 import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
 import de.evoila.cf.security.credentials.CredentialStore;
+import de.evoila.cf.security.credentials.DefaultCredentialConstants;
 import org.springframework.core.env.Environment;
 
 import java.util.*;
@@ -44,6 +45,7 @@ public class PostgresDeploymentManager extends DeploymentManager {
             HashMap<String, Object> pcp = (HashMap<String, Object>) pgpoolManifestProperties.get("pcp");
             HashMap<String, Object> postgres = (HashMap<String, Object>) postgresManifestProperties.get("postgres");
             HashMap<String, Object> postgresExporter = (HashMap<String, Object>) postgresManifestProperties.get("postgres_exporter");
+            HashMap<String, Object> backupAgent = (HashMap<String, Object>) postgresManifestProperties.get("backup_agent");
 
             PasswordCredential systemPassword = credentialStore.createPassword(serviceInstance, CredentialConstants.PGPOOL_SYSTEM_PASSWORD);
             pcp.put("system_password", systemPassword.getPassword());
@@ -51,11 +53,21 @@ public class PostgresDeploymentManager extends DeploymentManager {
             List<HashMap<String, Object>> users = (List<HashMap<String, Object>>) postgres.get("users");
 
             HashMap<String, Object> userProperties = users.get(0);
-
             UsernamePasswordCredential usernamePasswordCredential = credentialStore.createUser(serviceInstance,
                     CredentialConstants.ROOT_CREDENTIALS);
             userProperties.put("username", usernamePasswordCredential.getUsername());
             userProperties.put("password", usernamePasswordCredential.getPassword());
+
+            HashMap<String, Object> backupUserProperties = users.get(1);
+            UsernamePasswordCredential backupUsernamePasswordCredential = credentialStore.createUser(serviceInstance,
+                    DefaultCredentialConstants.BACKUP_CREDENTIALS);
+            backupUserProperties.put("username", backupUsernamePasswordCredential.getUsername());
+            backupUserProperties.put("password", backupUsernamePasswordCredential.getPassword());
+
+            UsernamePasswordCredential backupAgentusernamePasswordCredential = credentialStore.createUser(serviceInstance,
+                    DefaultCredentialConstants.BACKUP_AGENT_CREDENTIALS);
+            backupAgent.put("username", backupAgentusernamePasswordCredential.getUsername());
+            backupAgent.put("password", backupAgentusernamePasswordCredential.getPassword());
 
             serviceInstance.setUsername(usernamePasswordCredential.getUsername());
 
@@ -73,7 +85,7 @@ public class PostgresDeploymentManager extends DeploymentManager {
 
             List<String> extensionsToInstall = Arrays.asList("postgis", "postgis_topology",
                     "fuzzystrmatch", "address_standardizer",
-                    "postgis_tiger_geocoder");
+                    "postgis_tiger_geocoder", "pg_trgm");
             database.put("extensions", extensionsToInstall);
             databases.add(database);
 

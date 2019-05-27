@@ -15,6 +15,7 @@ import de.evoila.cf.cpi.CredentialConstants;
 import de.evoila.cf.cpi.bosh.deployment.manifest.InstanceGroup;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
 import de.evoila.cf.security.credentials.CredentialStore;
+import de.evoila.cf.security.credentials.DefaultCredentialConstants;
 import io.bosh.client.deployments.Deployment;
 import io.bosh.client.vms.Vm;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -64,6 +65,8 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
     public void postDeleteInstance(ServiceInstance serviceInstance) {
         credentialStore.deleteCredentials(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
         credentialStore.deleteCredentials(serviceInstance, CredentialConstants.PGPOOL_SYSTEM_PASSWORD);
+        credentialStore.deleteCredentials(serviceInstance, DefaultCredentialConstants.BACKUP_CREDENTIALS);
+        credentialStore.deleteCredentials(serviceInstance, DefaultCredentialConstants.BACKUP_AGENT_CREDENTIALS);
     }
 
     private void executeCommands(Channel channel, List<String> commands){
