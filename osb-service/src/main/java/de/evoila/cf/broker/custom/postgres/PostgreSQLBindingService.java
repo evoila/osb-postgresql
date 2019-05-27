@@ -26,6 +26,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +82,12 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
     @Override
     protected Map<String, Object> createCredentials(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                     ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException {
+        List<ServerAddress> hosts = new ArrayList<>();
+        String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
+        if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
+            hosts = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);
+        }
+
         UsernamePasswordCredential serviceInstanceUsernamePasswordCredential = credentialStore
                 .getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
 
@@ -92,7 +99,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
                 database = customBindingDatabase;
         }
 
-		PostgresDbService jdbcService = postgresCustomImplementation.connection(serviceInstance, plan, serviceInstanceUsernamePasswordCredential);
+		PostgresDbService jdbcService = null;
 
         credentialStore.createUser(serviceInstance, bindingId);
         UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, bindingId);
@@ -101,13 +108,14 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		try {
 		    if (postgresCustomImplementation.isPgpoolEnabled()) {
                 if (plan.getPlatform() == Platform.BOSH) {
-                    postgresBoshPlatformService.createPgPoolUser(serviceInstance, plan,
-                            usernamePasswordCredential.getUsername(),
-                            usernamePasswordCredential.getPassword());
+                    postgresBoshPlatformService.createPgPoolUser(serviceInstance, ingressInstanceGroup,
+                            usernamePasswordCredential);
+
+                    jdbcService = postgresCustomImplementation.connection(serviceInstance, plan, serviceInstanceUsernamePasswordCredential);
                 } else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
                     existingServiceFactory.createPgPoolUser(postgresBoshPlatformService,
-                            usernamePasswordCredential.getUsername(),
-                            usernamePasswordCredential.getPassword());
+                            ingressInstanceGroup, hosts, usernamePasswordCredential);
+                    jdbcService = postgresCustomImplementation.connection(serviceInstance, plan, null);
                 }
             }
             postgresCustomImplementation.createGeneralRole(jdbcService, generalrole, database);
@@ -133,13 +141,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
             jdbcService.closeIfConnected();
         }
 
-        List<ServerAddress> pgpoolHosts = serviceInstance.getHosts();
-        String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
-        if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
-            pgpoolHosts = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);
-        }
-
-        String endpoint = ServiceInstanceUtils.connectionUrl(pgpoolHosts);
+        String endpoint = ServiceInstanceUtils.connectionUrl(hosts);
 
         // When host is not empty, it is a service key
 		if (host != null)

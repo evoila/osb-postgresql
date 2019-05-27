@@ -5,6 +5,7 @@ import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.custom.postgres.PostgresCustomImplementation;
 import de.evoila.cf.broker.custom.postgres.PostgresDbService;
 import de.evoila.cf.broker.exception.PlatformException;
+import de.evoila.cf.broker.model.catalog.ServerAddress;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
@@ -13,10 +14,12 @@ import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
 import de.evoila.cf.cpi.CredentialConstants;
 import de.evoila.cf.cpi.bosh.PostgresBoshPlatformService;
 import de.evoila.cf.security.credentials.CredentialStore;
+import de.evoila.cf.security.credentials.DefaultCredentialConstants;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -58,19 +61,30 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 		postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan, null);
         postgresCustomImplementation.deleteDatabase(postgresDbService, serviceInstance.getUsername(), database, serviceInstance.getUsername());
         credentialStore.deleteCredentials(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
+        credentialStore.deleteCredentials(serviceInstance, DefaultCredentialConstants.BACKUP_AGENT_CREDENTIALS);
+        credentialStore.deleteCredentials(serviceInstance, DefaultCredentialConstants.BACKUP_CREDENTIALS);
 	}
 
     @Override
 	public ServiceInstance createInstance(ServiceInstance serviceInstance, Plan plan, Map<String, Object> parameters) throws PlatformException {
+
+	    if (existingEndpointBean.getBackupCredentials() != null)
+	        credentialStore.createUser(serviceInstance, DefaultCredentialConstants.BACKUP_AGENT_CREDENTIALS,
+                existingEndpointBean.getBackupCredentials().getUsername(), existingEndpointBean.getBackupCredentials().getPassword());
+
 	    credentialStore.createUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
         UsernamePasswordCredential serviceInstanceUsernamePasswordCredential = credentialStore.getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
+
+        credentialStore.createUser(serviceInstance, DefaultCredentialConstants.BACKUP_CREDENTIALS, serviceInstanceUsernamePasswordCredential.getUsername(),
+                serviceInstanceUsernamePasswordCredential.getPassword());
 
         serviceInstance.setUsername(serviceInstanceUsernamePasswordCredential.getUsername());
 
 		String database = serviceInstance.getId();
 		String generalRole = database;
 
-	    PostgresDbService postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan, null);
+	    PostgresDbService postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan,
+                new UsernamePasswordCredential(existingEndpointBean.getUsername(), existingEndpointBean.getPassword()));
         postgresCustomImplementation.createDatabase(postgresDbService, database);
 
         try {
@@ -83,7 +97,8 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 			// close connection to postgresql db / open connection to bind db
 			// necessary for installing db specific extensions (as admin)
 			postgresDbService.closeIfConnected();
-			postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan, null, database);
+			postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan,
+                    new UsernamePasswordCredential(existingEndpointBean.getUsername(), existingEndpointBean.getPassword()), database);
 			postgresCustomImplementation.createExtensions(postgresDbService);
 		} catch(SQLException ex) {
             throw new PlatformException(ex);
@@ -97,13 +112,12 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
         return serviceInstance;
     }
 
-    public void createPgPoolUser(PostgresBoshPlatformService postgresBoshPlatformService, String username, String password) throws JSchException {{
+    public void createPgPoolUser(PostgresBoshPlatformService postgresBoshPlatformService,
+                                 String instanceIngressGroup, List<ServerAddress> hosts,
+                                 UsernamePasswordCredential usernamePasswordCredential) throws JSchException {
+
 		postgresBoshPlatformService.createPgPoolUser(
-			this.existingEndpointBean.getDeployment(),
-			this.existingEndpointBean.getHosts().get(0).getName(),
-			this.existingEndpointBean.getHosts(),
-			username,
-			password);
-		}
+			this.existingEndpointBean.getDeployment(), instanceIngressGroup, hosts,
+			usernamePasswordCredential.getUsername(), usernamePasswordCredential.getPassword());
 	}
 }

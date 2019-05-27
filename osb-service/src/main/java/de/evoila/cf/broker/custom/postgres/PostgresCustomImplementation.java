@@ -1,6 +1,3 @@
-/**
- * 
- */
 package de.evoila.cf.broker.custom.postgres;
 
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
@@ -223,35 +220,26 @@ public class PostgresCustomImplementation {
                                         String database) {
         List<ServerAddress> serverAddresses = serviceInstance.getHosts();
 
-		String username = "";
-        String password = "";
-
         if (plan.getPlatform() == Platform.BOSH) {
-            username = usernamePasswordCredential.getUsername();
-            password = usernamePasswordCredential.getPassword();
-            if (database == null) {
+            if (database == null)
 				database = usernamePasswordCredential.getUsername();
-			}
+
 			serverAddresses = filterServerAddresses(serviceInstance,plan);
 
 		} else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
-            if (serviceInstance.getHosts().size() == 0){
+            if (serviceInstance.getHosts().size() == 0)
                 serverAddresses = existingEndpointBean.getHosts();
-            }
 
-            username = existingEndpointBean.getUsername();
-            password = existingEndpointBean.getPassword();
-
-            if (database == null) {
+            usernamePasswordCredential = new UsernamePasswordCredential(existingEndpointBean.getUsername(),
+                    existingEndpointBean.getPassword());
+            if (database == null)
                 database = existingEndpointBean.getDatabase();
-            }
-
 		}
 
 		PostgresDbService jdbcService = new PostgresDbService();
 		jdbcService.createConnection(
-				username,
-				password,
+				usernamePasswordCredential.getUsername(),
+				usernamePasswordCredential.getPassword(),
 				database,
 				serverAddresses);
 

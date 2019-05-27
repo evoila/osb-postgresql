@@ -8,6 +8,7 @@ import de.evoila.cf.broker.model.DashboardClient;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.catalog.ServerAddress;
 import de.evoila.cf.broker.model.ServiceInstance;
+import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
 import de.evoila.cf.broker.repository.PlatformRepository;
 import de.evoila.cf.broker.service.CatalogService;
 import de.evoila.cf.broker.service.availability.ServicePortAvailabilityVerifier;
@@ -139,27 +140,29 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
         log.info("Disconnected channel and session");
     }
 
-    public void createPgPoolUser(ServiceInstance serviceInstance, Plan plan, String username, String password)
+    public void createPgPoolUser(ServiceInstance serviceInstance, String ingressInstanceGroup, UsernamePasswordCredential usernamePasswordCredential)
             throws IOException, JSchException, InstanceGroupNotFoundException {
 
         Manifest manifest = super.getDeployedManifest(serviceInstance);
 
         Optional<InstanceGroup> group = manifest.getInstanceGroups()
                 .stream()
-                .filter(i -> i.getName().equals(plan.getMetadata().getIngressInstanceGroup()))
+                .filter(i -> i.getName().equals(ingressInstanceGroup))
                 .findAny();
+
         if (group.isPresent()) {
             for (int i = 0; i < group.get().getInstances(); i++) {
-                createPgPoolUser(serviceInstance, group.get(), i, username, password);
+                createPgPoolUser(serviceInstance, ingressInstanceGroup, i, usernamePasswordCredential.getUsername(),
+                        usernamePasswordCredential.getPassword());
             }
         } else {
-            throw new InstanceGroupNotFoundException(serviceInstance, manifest, plan.getMetadata().getIngressInstanceGroup());
+            throw new InstanceGroupNotFoundException(serviceInstance, manifest, ingressInstanceGroup);
         }
     }
 
-    private void createPgPoolUser(ServiceInstance instance, InstanceGroup instanceGroup, int i, String username,
+    private void createPgPoolUser(ServiceInstance instance, String instanceGroupName, int i, String username,
                                   String password) throws JSchException {
-        Session session = getSshSession(instance, instanceGroup, i)
+        Session session = getSshSession(instance, instanceGroupName, i)
                 .toBlocking()
                 .first();
 
@@ -177,7 +180,6 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
 
         close(channel, session);
     }
-
 
     public void createPgPoolUser(String deploymentName, String instanceName, List<ServerAddress> serverAddresses, String username, String password)
             throws JSchException {
