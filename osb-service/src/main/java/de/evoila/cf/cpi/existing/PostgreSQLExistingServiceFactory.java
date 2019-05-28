@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Christian Brinker, Johannes Hiemer, Marco Hennig.
@@ -84,12 +85,16 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 		String database = PostgreSQLUtils.dbName(serviceInstance.getId());
 
 		serviceInstance.setHosts(existingEndpointBean.getHosts());
-	    PostgresDbService postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan,
-                new UsernamePasswordCredential(existingEndpointBean.getUsername(), existingEndpointBean.getPassword()));
-        postgresCustomImplementation.createDatabase(postgresDbService, database);
 
         try {
-			postgresCustomImplementation.createGeneralRole(postgresDbService, database, database);
+            PostgresDbService postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan,
+                    new UsernamePasswordCredential(existingEndpointBean.getUsername(), existingEndpointBean.getPassword()));
+
+            postgresCustomImplementation.createDatabase(postgresDbService, database);
+
+            TimeUnit.SECONDS.sleep(10);
+
+            postgresCustomImplementation.createGeneralRole(postgresDbService, database, database);
 			postgresCustomImplementation.bindRoleToDatabase(postgresDbService,
 					serviceInstanceUsernamePasswordCredential.getUsername(),
                     serviceInstanceUsernamePasswordCredential.getPassword(),
@@ -101,7 +106,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 			postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan,
                     new UsernamePasswordCredential(existingEndpointBean.getUsername(), existingEndpointBean.getPassword()), database);
 			postgresCustomImplementation.createExtensions(postgresDbService);
-		} catch(SQLException ex) {
+		} catch(SQLException | InterruptedException ex) {
             throw new PlatformException(ex);
         }
 
