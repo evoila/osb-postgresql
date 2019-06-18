@@ -15,6 +15,7 @@ ca.pem
 .buildpath
 .metadata
 .classpath
+.idea
 .factorypath
 .settings/
 .project

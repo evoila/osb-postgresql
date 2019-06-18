@@ -92,6 +92,8 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 
             postgresCustomImplementation.createDatabase(postgresDbService, database);
 
+            // This is fucking ugly, but necessary due to the fact that replication in the PostgreSQL
+            // Backend takes some time for streaming replication
             TimeUnit.SECONDS.sleep(10);
 
             postgresCustomImplementation.createGeneralRole(postgresDbService, database, database);

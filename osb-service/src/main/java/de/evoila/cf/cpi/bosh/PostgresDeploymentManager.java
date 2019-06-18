@@ -51,37 +51,37 @@ public class PostgresDeploymentManager extends DeploymentManager {
             PasswordCredential systemPassword = credentialStore.createPassword(serviceInstance, CredentialConstants.PGPOOL_SYSTEM_PASSWORD);
             pcp.put("system_password", systemPassword.getPassword());
 
-            List<HashMap<String, Object>> users = (List<HashMap<String, Object>>) postgres.get("users");
-
-            HashMap<String, Object> userProperties = users.get(0);
-            UsernamePasswordCredential usernamePasswordCredential =credentialStore.createUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
+            List<HashMap<String, Object>> adminUsers = (List<HashMap<String, Object>>) postgres.get("admin_users");
+            HashMap<String, Object> userProperties = adminUsers.get(0);
+            UsernamePasswordCredential usernamePasswordCredential = credentialStore.createUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
             userProperties.put("username", usernamePasswordCredential.getUsername());
             userProperties.put("password", usernamePasswordCredential.getPassword());
+            serviceInstance.setUsername(usernamePasswordCredential.getUsername());
 
-            HashMap<String, Object> backupUserProperties = users.get(1);
+            UsernamePasswordCredential exporterCredential = credentialStore.createUser(serviceInstance,
+                    DefaultCredentialConstants.EXPORTER_CREDENTIALS);
+            postgresExporter.put("user", exporterCredential.getUsername());
+            postgresExporter.put("password", exporterCredential.getPassword());
+            HashMap<String, Object> exporterProperties = adminUsers.get(1);
+            exporterProperties.put("username", exporterCredential.getUsername());
+            exporterProperties.put("password", exporterCredential.getPassword());
+
+
+            UsernamePasswordCredential backupAgentUsernamePasswordCredential = credentialStore.createUser(serviceInstance,
+                    DefaultCredentialConstants.BACKUP_AGENT_CREDENTIALS);
+            backupAgent.put("username", backupAgentUsernamePasswordCredential.getUsername());
+            backupAgent.put("password", backupAgentUsernamePasswordCredential.getPassword());
+
+            List<HashMap<String, Object>> backupUsers = (List<HashMap<String, Object>>) postgres.get("backup_users");
+            HashMap<String, Object> backupUserProperties = backupUsers.get(0);
             UsernamePasswordCredential backupUsernamePasswordCredential = credentialStore.createUser(serviceInstance,
                     DefaultCredentialConstants.BACKUP_CREDENTIALS);
             backupUserProperties.put("username", backupUsernamePasswordCredential.getUsername());
             backupUserProperties.put("password", backupUsernamePasswordCredential.getPassword());
 
-            UsernamePasswordCredential backupAgentusernamePasswordCredential = credentialStore.createUser(serviceInstance,
-                    DefaultCredentialConstants.BACKUP_AGENT_CREDENTIALS);
-            backupAgent.put("username", backupAgentusernamePasswordCredential.getUsername());
-            backupAgent.put("password", backupAgentusernamePasswordCredential.getPassword());
-
-            serviceInstance.setUsername(usernamePasswordCredential.getUsername());
-
-            postgresExporter.put("user", usernamePasswordCredential.getUsername());
-            postgresExporter.put("password", usernamePasswordCredential.getPassword());
-
             List<Map<String, Object>> databases = new ArrayList<>();
-
-            List<String> user = new ArrayList<>();
-            user.add(usernamePasswordCredential.getUsername());
-
             Map<String, Object> database = new HashMap<>();
             database.put("name", PostgreSQLUtils.dbName(serviceInstance.getId()));
-            database.put("users", user);
 
             List<String> extensionsToInstall = Arrays.asList("postgis", "postgis_topology",
                     "fuzzystrmatch", "address_standardizer",

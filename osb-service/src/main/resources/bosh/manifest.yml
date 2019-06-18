@@ -20,6 +20,12 @@ stemcells:
   os: ubuntu-trusty
   version: latest
 
+variables:
+- name: transport_ssh
+  type: ssh
+- name: pcp_password
+  type: password
+
 instance_groups:
 - name: postgres
   instances: 2
@@ -48,38 +54,48 @@ instance_groups:
       password: admin
       port: 5432
     postgres:
-      config:
-        port: 5432
-        authentication_timeout: 30
-        max_locks_per_transaction: 64
-        max_pred_locks_per_transaction: 64
-        max_pred_locks_per_relation: -2
-        max_pred_locks_per_page: 2
-        max_connections: 500
-        max_files_per_process: 1000
+      resource:
         shared_buffers: 128MB
         temp_buffers: 8MB
-        lc_messages: 'en_US.UTF-8'
-        lc_monetary: 'en_US.UTF-8'
-        lc_numeric:  'en_US.UTF-8'
-        lc_time:     'en_US.UTF-8'
+        encoding:
+          lc_messages: 'en_US.UTF-8'
+          lc_monetary: 'en_US.UTF-8'
+          lc_numeric:  'en_US.UTF-8'
+          lc_time:     'en_US.UTF-8'
+      config:
+        port: 5432
+        max_connections: 400
+        max_files_per_process: 1000
         shared_preload_libraries: 'pg_stat_statements'
+      archive_cleanup:
+        threshold: 10
       hba:
-      - host all all 0.0.0.0/0 md5
-      - host all all ::/0 md5
+        - host all all 0.0.0.0/0 md5
+        - host all all ::/0 md5
       replication:
+        archive_mode: 'on'
         enabled: true
-      databases:
-      - name: admin
-        users:
-        - admin
+        password: replication_rulez
+      admin_users:
+        - username: admin
+          password: rulez
+          admin: true
+        - username: exporter
+          password: rulez
+          admin: false
+      backup_users:
+        - username: backup
+          password: rulez
       users:
-      - username: admin
-        password: admin
-        admin: true
-      - username: backup
-        password: backup
-        admin: true
+        - username: sample
+          password: rulez
+          admin: true
+      databases:
+        - name: sample
+          users:
+            - sample
+          extensions:
+            - citext
 
 - name: pgpool
   instances: 1
@@ -96,20 +112,20 @@ instance_groups:
     release: osb-bosh-monitoring
   properties:
     pcp:
-      system_password: secret
+      system_password: ((pcp_password))
     pgpool:
       pool_passwd: pool_passwd
+      debug: on
       backend:
         port: 5432
-      max_pool: 15
-      listen_backlog_multiplier: 2
+      max_pool: 4
       num_init_children: 32
-      child_life_time: 300
-      child_max_connections: 0
-      connection_life_time: 900
-      client_idle_limit: 90
       enable_pool_hba: on
-      load_balance_mode: true
+      load_balance_mode: off
+      master_slave_mode: on
+      master_slave_sub_mode: stream
+      client_idle_limit: 10
+      connection_life_time: 10
       hba:
         - host all all 0.0.0.0/0 md5
-        - host all all ::/0 md5 
+        - host all all ::/0 md5
