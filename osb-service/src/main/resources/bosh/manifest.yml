@@ -77,25 +77,25 @@ instance_groups:
         enabled: true
         password: replication_rulez
       admin_users:
-        - username: admin
-          password: rulez
-          admin: true
-        - username: exporter
-          password: rulez
-          admin: false
+      - username: admin
+        password: rulez
+        admin: true
+      - username: exporter
+        password: rulez
+        admin: false
       backup_users:
-        - username: backup
-          password: rulez
+      - username: backup
+        password: rulez
       users:
-        - username: sample
-          password: rulez
-          admin: true
+      - username: sample
+        password: rulez
+        admin: true
       databases:
-        - name: sample
-          users:
-            - sample
-          extensions:
-            - citext
+      - name: sample
+        users:
+        - sample
+        extensions:
+        - citext
 
 - name: pgpool
   instances: 1
@@ -127,5 +127,5 @@ instance_groups:
       client_idle_limit: 10
       connection_life_time: 10
       hba:
-        - host all all 0.0.0.0/0 md5
-        - host all all ::/0 md5
+      - host all all 0.0.0.0/0 md5
+      - host all all ::/0 md5

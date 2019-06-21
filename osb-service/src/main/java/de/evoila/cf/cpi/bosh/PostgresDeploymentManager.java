@@ -79,14 +79,23 @@ public class PostgresDeploymentManager extends DeploymentManager {
             backupUserProperties.put("username", backupUsernamePasswordCredential.getUsername());
             backupUserProperties.put("password", backupUsernamePasswordCredential.getPassword());
 
+            List<HashMap<String, Object>> users = (List<HashMap<String, Object>>) postgres.get("users");
+            HashMap<String, Object> defaultUserProperties = users.get(0);
+            UsernamePasswordCredential defaultUsernamePasswordCredential = credentialStore.createUser(serviceInstance,
+                    CredentialConstants.USER_CREDENTIALS);
+            defaultUserProperties.put("username", defaultUsernamePasswordCredential.getUsername());
+            defaultUserProperties.put("password", defaultUsernamePasswordCredential.getPassword());
+
+            List<String> databaseUsers = new ArrayList<>();
+            databaseUsers.add(defaultUsernamePasswordCredential.getUsername());
+
             List<Map<String, Object>> databases = new ArrayList<>();
             Map<String, Object> database = new HashMap<>();
             database.put("name", PostgreSQLUtils.dbName(serviceInstance.getId()));
-
-            List<String> extensionsToInstall = Arrays.asList("postgis", "postgis_topology",
+            database.put("users", databaseUsers);
+            database.put("extensions", Arrays.asList("postgis", "postgis_topology",
                     "fuzzystrmatch", "address_standardizer",
-                    "postgis_tiger_geocoder", "pg_trgm");
-            database.put("extensions", extensionsToInstall);
+                    "postgis_tiger_geocoder", "pg_trgm"));
             databases.add(database);
 
             postgres.put("databases", databases);
