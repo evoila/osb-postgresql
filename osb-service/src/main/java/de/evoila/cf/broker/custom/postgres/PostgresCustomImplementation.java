@@ -192,7 +192,7 @@ public class PostgresCustomImplementation {
             connection.executeUpdate("REVOKE ALL PRIVILEGES ON DATABASE \"" + database + "\" FROM \"" + username + "\"");
             connection.executeUpdate("REVOKE CONNECT ON DATABASE \"" + database + "\" FROM \"" + username + "\"");
             connection.executeUpdate("SELECT * FROM pg_stat_activity WHERE datname = '" + database + "';");
-            connection.executeUpdate("SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" + database + "' AND pid <> pg_backend_pid();");
+            //connection.executeUpdate("SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" + database + "' AND pid <> pg_backend_pid();");
             connection.executeUpdate("UPDATE pg_database SET datallowconn = 'false' WHERE datname = '" + database + "';");
             connection.executeUpdate("ALTER DATABASE\"" + database + "\" CONNECTION LIMIT 1;");
             connection.executeUpdate("DROP DATABASE \"" + database + "\"");
