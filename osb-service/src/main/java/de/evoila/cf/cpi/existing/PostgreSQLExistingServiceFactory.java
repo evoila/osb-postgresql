@@ -52,7 +52,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
     public void deleteInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
 		String database = PostgreSQLUtils.dbName(serviceInstance.getId());
 		PostgresDbService postgresDbService = postgresCustomImplementation
-                .connection(serviceInstance, plan, null, database);
+                .extendedConnection(serviceInstance, plan, null, database);
 		try {
 		    postgresCustomImplementation.dropAllExtensions(postgresDbService);
 		} catch (SQLException e) {
@@ -60,7 +60,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 		}
 
 		postgresDbService.closeIfConnected();
-		postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan, null);
+		postgresDbService = postgresCustomImplementation.simpleConnection(serviceInstance, plan, null);
         postgresCustomImplementation.deleteDatabase(postgresDbService, serviceInstance.getUsername(), database, serviceInstance.getUsername());
         credentialStore.deleteCredentials(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
         credentialStore.deleteCredentials(serviceInstance, DefaultCredentialConstants.BACKUP_AGENT_CREDENTIALS);
@@ -87,7 +87,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 		serviceInstance.setHosts(existingEndpointBean.getHosts());
 
         try {
-            PostgresDbService postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan,
+            PostgresDbService postgresDbService = postgresCustomImplementation.extendedConnection(serviceInstance, plan,
                     new UsernamePasswordCredential(existingEndpointBean.getUsername(), existingEndpointBean.getPassword()));
 
             postgresCustomImplementation.createDatabase(postgresDbService, database);
@@ -105,7 +105,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 			// close connection to postgresql db / open connection to bind db
 			// necessary for installing db specific extensions (as admin)
 			postgresDbService.closeIfConnected();
-			postgresDbService = postgresCustomImplementation.connection(serviceInstance, plan,
+			postgresDbService = postgresCustomImplementation.extendedConnection(serviceInstance, plan,
                     new UsernamePasswordCredential(existingEndpointBean.getUsername(), existingEndpointBean.getPassword()), database);
 			postgresCustomImplementation.createExtensions(postgresDbService);
 		} catch(SQLException | InterruptedException ex) {

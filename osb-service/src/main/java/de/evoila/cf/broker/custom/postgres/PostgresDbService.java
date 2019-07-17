@@ -12,6 +12,7 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * @author Johannes Hiemer
@@ -23,19 +24,41 @@ public class PostgresDbService {
 
 	private Connection connection;
 
-	public boolean createConnection(String username, String password, String database, List<ServerAddress> serverAddresses) {
+	public boolean createConnection(String database, List<ServerAddress> serverAddresses, Properties properties) {
 		String connectionUrl = ServiceInstanceUtils.connectionUrl(serverAddresses);
 
-	    try {
+		try {
 			Class.forName("org.postgresql.Driver");
 			String url = "jdbc:postgresql://" + connectionUrl + "/" + database;
-			connection = DriverManager.getConnection(url, username, password);
+
+			connection = DriverManager.getConnection(url, properties);
+
 		} catch (ClassNotFoundException | SQLException e) {
 			log.info("Could not establish connection", e);
 			return false;
 		}
 
 		return true;
+	}
+
+	public boolean createExtendedConnection(String username, String password, String database, List<ServerAddress> serverAddresses) {
+		String connectionUrl = ServiceInstanceUtils.connectionUrl(serverAddresses);
+		Properties properties = new Properties();
+		properties.setProperty("user",username);
+		properties.setProperty("password",password);
+
+		return createConnection(database, serverAddresses, properties);
+	}
+
+	public boolean createSimpleConnection(String username, String password, String database, List<ServerAddress> serverAddresses) {
+		String connectionUrl = ServiceInstanceUtils.connectionUrl(serverAddresses);
+
+		Properties properties = new Properties();
+		properties.setProperty("user",username);
+		properties.setProperty("password",password);
+		properties.setProperty("preferQueryMode","simple");
+
+		return createConnection(database, serverAddresses, properties);
 	}
 
 	public boolean isConnected() throws SQLException {

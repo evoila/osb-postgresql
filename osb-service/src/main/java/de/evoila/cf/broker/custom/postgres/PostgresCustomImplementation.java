@@ -155,21 +155,26 @@ public class PostgresCustomImplementation {
         jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public To \"" + username + "\"");
     }
 
-	public void unbindRoleFromDatabase(PostgresDbService jdbcService, String roleName) throws SQLException {
+	public void unbindRoleFromDatabase(ServiceInstance serviceInstance, Plan plan, PostgresDbService jdbcService, UsernamePasswordCredential usernamePasswordCredential) throws SQLException {
+        String roleName = usernamePasswordCredential.getUsername();
+
 		Map<String, String> databases = jdbcService.executeSelect("SELECT datname FROM pg_database WHERE datistemplate = false and datname not like 'postgres'", "datname");
 
 		for (Map.Entry<String, String> database : databases.entrySet()) {
+            PostgresDbService jdbcService_tmp = this.extendedConnection(serviceInstance, plan, usernamePasswordCredential, database.getValue());
+
 			String generalRole = database.getValue();
-			breakDownBindingUserPrivileges(jdbcService, roleName, generalRole);
+			breakDownBindingUserPrivileges(jdbcService_tmp, roleName, generalRole);
 
 			if (!checkIfRoleExists(jdbcService,generalRole)) {
-                jdbcService.executeUpdate("CREATE ROLE \"" + generalRole + "\" NOLOGIN");
+                jdbcService_tmp.executeUpdate("CREATE ROLE \"" + generalRole + "\" NOLOGIN");
 			}
 
-            jdbcService.executeUpdate("REASSIGN OWNED BY \"" + roleName + "\" TO \"" + generalRole + "\"");
-            jdbcService.executeUpdate("DROP OWNED BY \"" + roleName + "\"");
-            jdbcService.executeUpdate("REVOKE ALL ON SCHEMA public FROM \"" + roleName + "\"");
-		}
+            jdbcService_tmp.executeUpdate("REASSIGN OWNED BY \"" + roleName + "\" TO \"" + generalRole + "\"");
+            jdbcService_tmp.executeUpdate("DROP OWNED BY \"" + roleName + "\"");
+            jdbcService_tmp.executeUpdate("REVOKE ALL ON SCHEMA public FROM \"" + roleName + "\"");
+            jdbcService_tmp.closeIfConnected();
+        }
 
 		jdbcService.executeUpdate("DROP ROLE \"" + roleName + "\"");
 	}
@@ -188,13 +193,18 @@ public class PostgresCustomImplementation {
         try {
             String generalrole = database;
 
-            connection.executeUpdate("ALTER DATABASE\"" + database + "\" OWNER TO \"" + username + "\"");
+            connection.executeUpdate("ALTER DATABASE \"" + database + "\" OWNER TO \"" + username + "\"");
             connection.executeUpdate("REVOKE ALL PRIVILEGES ON DATABASE \"" + database + "\" FROM \"" + username + "\"");
             connection.executeUpdate("REVOKE CONNECT ON DATABASE \"" + database + "\" FROM \"" + username + "\"");
             connection.executeUpdate("SELECT * FROM pg_stat_activity WHERE datname = '" + database + "';");
-            //connection.executeUpdate("SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" + database + "' AND pid <> pg_backend_pid();");
+
+            Map<String, String> sessionsToKill = connection.executeSelect("SELECT pg_stat_activity.pid as pid FROM pg_stat_activity WHERE pg_stat_activity.datname = '" + database + "' AND pid <> pg_backend_pid()","pid");
+            for (Map.Entry<String, String> session : sessionsToKill.entrySet()) {
+                connection.executeUpdate("SELECT pg_terminate_backend(" + session.getValue() + ") FROM pg_stat_activity");
+            }
+
             connection.executeUpdate("UPDATE pg_database SET datallowconn = 'false' WHERE datname = '" + database + "';");
-            connection.executeUpdate("ALTER DATABASE\"" + database + "\" CONNECTION LIMIT 1;");
+            connection.executeUpdate("ALTER DATABASE \"" + database + "\" CONNECTION LIMIT 1;");
             connection.executeUpdate("DROP DATABASE \"" + database + "\"");
             connection.executeUpdate("DROP EVENT TRIGGER trg_set_owner");
             connection.executeUpdate("DROP FUNCTION trg_set_owner");
@@ -208,7 +218,7 @@ public class PostgresCustomImplementation {
 
     public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan,
                                         UsernamePasswordCredential usernamePasswordCredential,
-                                        String database) {
+                                        String database, boolean simple) {
         String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
         List<ServerAddress> serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);;
 
@@ -225,16 +235,33 @@ public class PostgresCustomImplementation {
 		}
 
 		PostgresDbService jdbcService = new PostgresDbService();
-		jdbcService.createConnection(
-				usernamePasswordCredential.getUsername(),
-				usernamePasswordCredential.getPassword(),
-				database,
-				serverAddresses);
-
+        if (simple) {
+            jdbcService.createSimpleConnection(
+                    usernamePasswordCredential.getUsername(),
+                    usernamePasswordCredential.getPassword(),
+                    database,
+                    serverAddresses);
+        } else {
+            jdbcService.createExtendedConnection(
+                    usernamePasswordCredential.getUsername(),
+                    usernamePasswordCredential.getPassword(),
+                    database,
+                    serverAddresses);
+        }
         return jdbcService;
     }
 
-	public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan, UsernamePasswordCredential usernamePasswordCredential) {
-		return connection(serviceInstance, plan, usernamePasswordCredential, null);
-	}
+    public PostgresDbService extendedConnection(ServiceInstance serviceInstance, Plan plan,
+                                        UsernamePasswordCredential usernamePasswordCredential,
+                                        String database) {
+        return connection(serviceInstance, plan, usernamePasswordCredential, database, false);
+    }
+
+	public PostgresDbService extendedConnection(ServiceInstance serviceInstance, Plan plan, UsernamePasswordCredential usernamePasswordCredential) {
+        return connection(serviceInstance, plan, usernamePasswordCredential, null, false);
+    }
+
+    public PostgresDbService simpleConnection(ServiceInstance serviceInstance, Plan plan, UsernamePasswordCredential usernamePasswordCredential) {
+        return connection(serviceInstance, plan, usernamePasswordCredential, null, true);
+    }
 }

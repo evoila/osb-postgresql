@@ -111,12 +111,12 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
                     postgresBoshPlatformService.createPgPoolUser(serviceInstance, ingressInstanceGroup,
                             usernamePasswordCredential);
 
-                    jdbcService = postgresCustomImplementation.connection(serviceInstance, plan,
+                    jdbcService = postgresCustomImplementation.extendedConnection(serviceInstance, plan,
                             serviceInstanceUsernamePasswordCredential, database);
                 } else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
                     existingServiceFactory.createPgPoolUser(postgresBoshPlatformService,
                             ingressInstanceGroup, hosts, usernamePasswordCredential);
-                    jdbcService = postgresCustomImplementation.connection(serviceInstance, plan, null);
+                    jdbcService = postgresCustomImplementation.extendedConnection(serviceInstance, plan, null);
                 }
             }
             postgresCustomImplementation.createGeneralRole(jdbcService, generalrole, database);
@@ -126,7 +126,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
  		    // close connection to postgresql db / open connection to bind db
             // necessary to set user specific privileges inside the db
-			jdbcService.createConnection(usernamePasswordCredential.getUsername(),
+			jdbcService.createExtendedConnection(usernamePasswordCredential.getUsername(),
                     usernamePasswordCredential.getPassword(), database, hosts);
 			postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, usernamePasswordCredential.getUsername(), generalrole);
 		} catch (SQLException e) {
@@ -165,12 +165,12 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         UsernamePasswordCredential serviceInstanceUsernamePasswordCredential = credentialStore
                 .getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
 
-        PostgresDbService jdbcService = postgresCustomImplementation.connection(serviceInstance, plan, serviceInstanceUsernamePasswordCredential);
+        PostgresDbService jdbcService = postgresCustomImplementation.extendedConnection(serviceInstance, plan, serviceInstanceUsernamePasswordCredential);
 
         try {
             UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, binding.getId());
 
-            postgresCustomImplementation.unbindRoleFromDatabase(jdbcService, usernamePasswordCredential.getUsername());
+            postgresCustomImplementation.unbindRoleFromDatabase(serviceInstance,plan, jdbcService, usernamePasswordCredential);
             credentialStore.deleteCredentials(serviceInstance, binding.getId());
         } catch (SQLException e) {
             throw new ServiceBrokerException("Could not remove from database");
