@@ -2,13 +2,17 @@ package de.evoila.cf.broker.custom.postgres;
 
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.exception.PlatformException;
+import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.catalog.ServerAddress;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
 import de.evoila.cf.broker.util.ServiceInstanceUtils;
+import de.evoila.cf.cpi.CredentialConstants;
 import de.evoila.cf.cpi.bosh.PostgresBoshPlatformService;
+import de.evoila.cf.security.credentials.CredentialStore;
+import javafx.geometry.Pos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,8 +38,6 @@ public class PostgresCustomImplementation {
 	private ExistingEndpointBean existingEndpointBean;
 
     private PostgresBoshPlatformService postgresBoshPlatformService;
-
-    private List<String> extensionsToInstall = Arrays.asList("fuzzystrmatch", "postgis", "postgis_topology", "address_standardizer", "postgis_tiger_geocoder");
 
 	public PostgresCustomImplementation(ExistingEndpointBean existingEndpointBean, PostgresBoshPlatformService postgresBoshPlatformService) {
     	this.existingEndpointBean = existingEndpointBean;
@@ -88,9 +90,10 @@ public class PostgresCustomImplementation {
 		setupRoleTrigger(jdbcService, database, generalRole);
 	}
 
-	public void createExtensions(PostgresDbService jdbcService) throws SQLException {
+    public void createExtensions(PostgresDbService jdbcService) throws SQLException {
 		Map<String, String> availableExtensions = jdbcService.executeSelect("SELECT name FROM pg_available_extensions", "name");
 
+        List<String> extensionsToInstall = Arrays.asList("fuzzystrmatch", "postgis", "postgis_topology", "address_standardizer", "postgis_tiger_geocoder");
 		for (String extension : extensionsToInstall) {
 			if (availableExtensions.containsValue(extension)) {
 				jdbcService.executeUpdate("CREATE EXTENSION IF NOT EXISTS \"" + extension + "\"");
@@ -155,21 +158,40 @@ public class PostgresCustomImplementation {
         jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public To \"" + username + "\"");
     }
 
-	public void unbindRoleFromDatabase(ServiceInstance serviceInstance, Plan plan, PostgresDbService jdbcService, UsernamePasswordCredential usernamePasswordCredential) throws SQLException {
+	public void unbindRoleFromDatabase(CredentialStore credentialStore,ServiceInstance serviceInstance, Plan plan, PostgresDbService jdbcService, UsernamePasswordCredential usernamePasswordCredential) throws SQLException {
+        // jdbcService connection: service user -> service db
         String roleName = usernamePasswordCredential.getUsername();
 
 		Map<String, String> databases = jdbcService.executeSelect("SELECT datname FROM pg_database WHERE datistemplate = false and datname not like 'postgres'", "datname");
 
 		for (Map.Entry<String, String> database : databases.entrySet()) {
-            PostgresDbService jdbcService_tmp = this.extendedConnection(serviceInstance, plan, usernamePasswordCredential, database.getValue());
+            // jdbcService_tmp connection:
+            //   service user -> each database in the instance
+            //   necessary because privileges have to be unbound from within the database
+            PostgresDbService jdbcService_tmp = null;
 
-			String generalRole = database.getValue();
-			breakDownBindingUserPrivileges(jdbcService_tmp, roleName, generalRole);
+            if (plan.getPlatform() == Platform.BOSH) {
+                jdbcService_tmp=this.createSimpleConnection("BREAKDOWN_PRIVILEGES",
+                        serviceInstance,
+                        plan,
+                        database.getValue(),
+                        credentialStore.getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS)
+                        );
+            } else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
+                jdbcService_tmp = this.createExtendedConnection("GET_DBLIST_DELETE_DB",
+                        serviceInstance,
+                        plan,
+                        database.getValue(),
+                        null);
+            }
 
-			if (!checkIfRoleExists(jdbcService,generalRole)) {
+            String generalRole = database.getValue();
+
+            if (!checkIfRoleExists(jdbcService,generalRole)) {
                 jdbcService_tmp.executeUpdate("CREATE ROLE \"" + generalRole + "\" NOLOGIN");
-			}
+            }
 
+			breakDownBindingUserPrivileges(jdbcService_tmp, roleName, generalRole);
             jdbcService_tmp.executeUpdate("REASSIGN OWNED BY \"" + roleName + "\" TO \"" + generalRole + "\"");
             jdbcService_tmp.executeUpdate("DROP OWNED BY \"" + roleName + "\"");
             jdbcService_tmp.executeUpdate("REVOKE ALL ON SCHEMA public FROM \"" + roleName + "\"");
@@ -195,16 +217,16 @@ public class PostgresCustomImplementation {
 
             connection.executeUpdate("ALTER DATABASE \"" + database + "\" OWNER TO \"" + username + "\"");
             connection.executeUpdate("REVOKE ALL PRIVILEGES ON DATABASE \"" + database + "\" FROM \"" + username + "\"");
-            connection.executeUpdate("REVOKE CONNECT ON DATABASE \"" + database + "\" FROM \"" + username + "\"");
-            connection.executeUpdate("SELECT * FROM pg_stat_activity WHERE datname = '" + database + "';");
+            connection.executeUpdate("REVOKE CONNECT ON DATABASE \"" + database + "\" FROM PUBLIC");
+            connection.executeUpdate("ALTER DATABASE \"" + database + "\" CONNECTION LIMIT 1;");
 
+            connection.executeUpdate("SELECT * FROM pg_stat_activity WHERE datname = '" + database + "';");
             Map<String, String> sessionsToKill = connection.executeSelect("SELECT pg_stat_activity.pid as pid FROM pg_stat_activity WHERE pg_stat_activity.datname = '" + database + "' AND pid <> pg_backend_pid()","pid");
             for (Map.Entry<String, String> session : sessionsToKill.entrySet()) {
                 connection.executeUpdate("SELECT pg_terminate_backend(" + session.getValue() + ") FROM pg_stat_activity");
             }
 
             connection.executeUpdate("UPDATE pg_database SET datallowconn = 'false' WHERE datname = '" + database + "';");
-            connection.executeUpdate("ALTER DATABASE \"" + database + "\" CONNECTION LIMIT 1;");
             connection.executeUpdate("DROP DATABASE \"" + database + "\"");
             connection.executeUpdate("DROP EVENT TRIGGER trg_set_owner");
             connection.executeUpdate("DROP FUNCTION trg_set_owner");
@@ -216,52 +238,66 @@ public class PostgresCustomImplementation {
         }
     }
 
-    public PostgresDbService connection(ServiceInstance serviceInstance, Plan plan,
-                                        UsernamePasswordCredential usernamePasswordCredential,
-                                        String database, boolean simple) {
-        String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
-        List<ServerAddress> serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);;
+    public PostgresConnectionParameter prepareConnectionParameter(String action,ServiceInstance serviceInstance, Plan plan, String database,
+                                                                  UsernamePasswordCredential usernamePasswordCredential) {
+        PostgresConnectionParameter connectionParameter = new PostgresConnectionParameter();
+        connectionParameter.setServerAddresses(serviceInstance, plan);
+        connectionParameter.setUsernamePasswordCredential(serviceInstance, plan, usernamePasswordCredential, existingEndpointBean);
 
-        if (plan.getPlatform() == Platform.BOSH) {
-            if (database == null)
-				database = usernamePasswordCredential.getUsername();
 
-		} else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
-            if (database == null)
-                database = existingEndpointBean.getDatabase();
-
-            usernamePasswordCredential = new UsernamePasswordCredential(existingEndpointBean.getUsername(),
-                    existingEndpointBean.getPassword());
-		}
-
-		PostgresDbService jdbcService = new PostgresDbService();
-        if (simple) {
-            jdbcService.createSimpleConnection(
-                    usernamePasswordCredential.getUsername(),
-                    usernamePasswordCredential.getPassword(),
-                    database,
-                    serverAddresses);
+        if (database == null) {
+            log.error("HIER - PREP_START - "+action+": USER="+connectionParameter.getUsernamePasswordCredential().getUsername()+" DB=null");
+            switch (plan.getPlatform()) {
+                case BOSH:
+                    database = PostgreSQLUtils.dbName(serviceInstance.getId());
+                    break;
+                case EXISTING_SERVICE:
+                    database = existingEndpointBean.getDatabase();
+                    break;
+            }
         } else {
-            jdbcService.createExtendedConnection(
-                    usernamePasswordCredential.getUsername(),
-                    usernamePasswordCredential.getPassword(),
-                    database,
-                    serverAddresses);
+            log.error("HIER - PREP_START - "+action+": USER="+connectionParameter.getUsernamePasswordCredential().getUsername()+" DB="+database);
         }
+
+        log.error("HIER - PREP_END - "+action+": USER="+connectionParameter.getUsernamePasswordCredential().getUsername()+" DB="+database);
+
+        connectionParameter.setDatabase(database);
+        return connectionParameter;
+    }
+
+    public PostgresDbService establishSimpleConnection(String action, PostgresConnectionParameter connectionParameter) {
+        PostgresDbService jdbcService = new PostgresDbService();
+        log.error("HIER - SIM - "+action+": "+connectionParameter.getUsernamePasswordCredential().getUsername() + " / " + connectionParameter.getDatabase()+ "-"+connectionParameter.getUsernamePasswordCredential().getPassword());
+
+        jdbcService.createSimpleConnection(
+                connectionParameter.getUsernamePasswordCredential().getUsername(),
+                connectionParameter.getUsernamePasswordCredential().getPassword(),
+                connectionParameter.getDatabase(),
+                connectionParameter.getServerAddresses());
         return jdbcService;
     }
 
-    public PostgresDbService extendedConnection(ServiceInstance serviceInstance, Plan plan,
-                                        UsernamePasswordCredential usernamePasswordCredential,
-                                        String database) {
-        return connection(serviceInstance, plan, usernamePasswordCredential, database, false);
+    public PostgresDbService establishExtendedConnection(String action, PostgresConnectionParameter connectionParameter) {
+        PostgresDbService jdbcService = new PostgresDbService();
+        log.error("HIER - EXT - "+action+": "+connectionParameter.getUsernamePasswordCredential().getUsername() + " / " + connectionParameter.getDatabase() + "-"+connectionParameter.getUsernamePasswordCredential().getPassword());
+
+        jdbcService.createExtendedConnection(
+                connectionParameter.getUsernamePasswordCredential().getUsername(),
+                connectionParameter.getUsernamePasswordCredential().getPassword(),
+                connectionParameter.getDatabase(),
+                connectionParameter.getServerAddresses());
+        return jdbcService;
     }
 
-	public PostgresDbService extendedConnection(ServiceInstance serviceInstance, Plan plan, UsernamePasswordCredential usernamePasswordCredential) {
-        return connection(serviceInstance, plan, usernamePasswordCredential, null, false);
+    public PostgresDbService createExtendedConnection(String action, ServiceInstance serviceInstance, Plan plan, String database,
+                                                      UsernamePasswordCredential usernamePasswordCredential) {
+	    log.error("CREATE_EXT: " + serviceInstance.getUsername() + "/"+serviceInstance.getPassword());
+        return establishExtendedConnection(action,prepareConnectionParameter(action,serviceInstance,plan,database,usernamePasswordCredential));
     }
 
-    public PostgresDbService simpleConnection(ServiceInstance serviceInstance, Plan plan, UsernamePasswordCredential usernamePasswordCredential) {
-        return connection(serviceInstance, plan, usernamePasswordCredential, null, true);
+    public PostgresDbService createSimpleConnection (String action, ServiceInstance serviceInstance, Plan plan, String database,
+                                                     UsernamePasswordCredential usernamePasswordCredential) {
+        log.error("CREATE_SIM: " + serviceInstance.getUsername() + "/"+serviceInstance.getPassword());
+        return establishSimpleConnection(action,prepareConnectionParameter(action,serviceInstance,plan,database,usernamePasswordCredential));
     }
 }

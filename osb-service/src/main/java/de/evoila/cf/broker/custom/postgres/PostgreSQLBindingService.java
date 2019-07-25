@@ -88,9 +88,6 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
             hosts = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);
         }
 
-        UsernamePasswordCredential serviceInstanceUsernamePasswordCredential = credentialStore
-                .getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
-
         String database = PostgreSQLUtils.dbName(serviceInstance.getId());
         if (serviceInstanceBindingRequest.getParameters() != null) {
             String customBindingDatabase = (String) serviceInstanceBindingRequest.getParameters().get("database");
@@ -103,32 +100,49 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
         credentialStore.createUser(serviceInstance, bindingId);
         UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, bindingId);
-        String generalrole = database;
+        String generalRole = database;
 
 		try {
 		    if (postgresCustomImplementation.isPgpoolEnabled()) {
                 if (plan.getPlatform() == Platform.BOSH) {
-                    postgresBoshPlatformService.createPgPoolUser(serviceInstance, ingressInstanceGroup,
-                            usernamePasswordCredential);
+                    postgresBoshPlatformService.createPgPoolUser(serviceInstance, ingressInstanceGroup, usernamePasswordCredential);
+                    log.error("CREATE_BIND " + serviceInstance.getUsername() + "/" + serviceInstance.getPassword() + " - " + serviceInstance.getId());
 
-                    jdbcService = postgresCustomImplementation.extendedConnection(serviceInstance, plan,
-                            serviceInstanceUsernamePasswordCredential, database);
+                    jdbcService = postgresCustomImplementation.createExtendedConnection("CREATE_BIND_GENERAL",
+                            serviceInstance,
+                            plan,
+                            database,
+                            credentialStore.getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS));
                 } else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
-                    existingServiceFactory.createPgPoolUser(postgresBoshPlatformService,
-                            ingressInstanceGroup, hosts, usernamePasswordCredential);
-                    jdbcService = postgresCustomImplementation.extendedConnection(serviceInstance, plan, null);
+                    existingServiceFactory.createPgPoolUser(postgresBoshPlatformService, ingressInstanceGroup, hosts, usernamePasswordCredential);
+                    jdbcService = postgresCustomImplementation.createExtendedConnection("CREATE_BIND_GENERAL",
+                            serviceInstance,
+                            plan,
+                            database,
+                            null);
+                } else {
+                    throw new ServiceBrokerException("Unknown platform utilized in plan");
                 }
             }
-            postgresCustomImplementation.createGeneralRole(jdbcService, generalrole, database);
+            /* TODO:
+                 this connection should be done with the "CREATE ROLE" user, not with the superuser
+                 currently impossible due to missing pgpool config for this user
+            */
+            postgresCustomImplementation.createGeneralRole(jdbcService, generalRole, database);
             postgresCustomImplementation.bindRoleToDatabase(jdbcService, usernamePasswordCredential.getUsername(),
-                    usernamePasswordCredential.getPassword(), database, generalrole, false);
+                    usernamePasswordCredential.getPassword(), database, generalRole, false);
             jdbcService.closeIfConnected();
 
+            log.error("HIER - EXT - CREATE_DEF_PRIVS");
  		    // close connection to postgresql db / open connection to bind db
             // necessary to set user specific privileges inside the db
-			jdbcService.createExtendedConnection(usernamePasswordCredential.getUsername(),
-                    usernamePasswordCredential.getPassword(), database, hosts);
-			postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, usernamePasswordCredential.getUsername(), generalrole);
+			jdbcService.createExtendedConnection(
+			        usernamePasswordCredential.getUsername(),
+                    usernamePasswordCredential.getPassword(),
+                    database,
+                    hosts);
+
+			postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, usernamePasswordCredential.getUsername(), generalRole);
 		} catch (SQLException e) {
 		    log.error(String.format("Creating Binding(%s) failed while creating the ne postgres user. Could not update database", bindingId), e);
             throw new ServiceBrokerException("Could not update database");
@@ -162,15 +176,26 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
     @Override
     protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
-        UsernamePasswordCredential serviceInstanceUsernamePasswordCredential = credentialStore
-                .getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
-
-        PostgresDbService jdbcService = postgresCustomImplementation.extendedConnection(serviceInstance, plan, serviceInstanceUsernamePasswordCredential);
+        PostgresDbService jdbcService = null;
+        if (plan.getPlatform() == Platform.BOSH) {
+            jdbcService = postgresCustomImplementation.createExtendedConnection("DELETE_BIND",
+                    serviceInstance,
+                    plan,
+                    PostgreSQLUtils.dbName(serviceInstance.getId()),
+                    credentialStore.getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS));
+        } else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
+            jdbcService = postgresCustomImplementation.createExtendedConnection("DELETE_BIND",
+                    serviceInstance,
+                    plan,
+                    PostgreSQLUtils.dbName(serviceInstance.getId()),
+                    null);
+        } else {
+            throw new ServiceBrokerException("Unknown platform utilized in plan");
+        }
 
         try {
             UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, binding.getId());
-
-            postgresCustomImplementation.unbindRoleFromDatabase(serviceInstance,plan, jdbcService, usernamePasswordCredential);
+            postgresCustomImplementation.unbindRoleFromDatabase(credentialStore,serviceInstance,plan, jdbcService, usernamePasswordCredential);
             credentialStore.deleteCredentials(serviceInstance, binding.getId());
         } catch (SQLException e) {
             throw new ServiceBrokerException("Could not remove from database");

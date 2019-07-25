@@ -24,13 +24,12 @@ public class PostgresDbService {
 
 	private Connection connection;
 
-	public boolean createConnection(String database, List<ServerAddress> serverAddresses, Properties properties) {
+	private boolean createConnection(String database, List<ServerAddress> serverAddresses, Properties properties) {
 		String connectionUrl = ServiceInstanceUtils.connectionUrl(serverAddresses);
 
 		try {
 			Class.forName("org.postgresql.Driver");
 			String url = "jdbc:postgresql://" + connectionUrl + "/" + database;
-
 			connection = DriverManager.getConnection(url, properties);
 
 		} catch (ClassNotFoundException | SQLException e) {
@@ -42,17 +41,18 @@ public class PostgresDbService {
 	}
 
 	public boolean createExtendedConnection(String username, String password, String database, List<ServerAddress> serverAddresses) {
-		String connectionUrl = ServiceInstanceUtils.connectionUrl(serverAddresses);
 		Properties properties = new Properties();
+		log.error("CON_CREATE: " + username+"/"+password + " DB: " + database);
+
 		properties.setProperty("user",username);
 		properties.setProperty("password",password);
+		properties.setProperty("preferQueryMode","extended");
 
 		return createConnection(database, serverAddresses, properties);
 	}
 
 	public boolean createSimpleConnection(String username, String password, String database, List<ServerAddress> serverAddresses) {
-		String connectionUrl = ServiceInstanceUtils.connectionUrl(serverAddresses);
-
+		log.error("CON_CREATE: " + username+"/"+password + " DB: " + database);
 		Properties properties = new Properties();
 		properties.setProperty("user",username);
 		properties.setProperty("password",password);
