@@ -39,15 +39,15 @@ public class PostgreConnectionHandler {
         }
     }
 
-    private PostgresConnectionParameter prepareRootUserConnectionParameter(String action,ServiceInstance serviceInstance, Plan plan, String database){
-        return prepareConnectionParameter(action,serviceInstance,plan,database,ConnectionUserType.ROOT_USER,null);
+    private PostgresConnectionParameter prepareRootUserConnectionParameter(ServiceInstance serviceInstance, Plan plan, String database){
+        return prepareConnectionParameter(serviceInstance,plan,database,ConnectionUserType.ROOT_USER,null);
     }
 
-    private PostgresConnectionParameter prepareBindUserConnectionParameter(String action,ServiceInstance serviceInstance, Plan plan, String database, String bindingId){
-        return prepareConnectionParameter(action,serviceInstance,plan,database,ConnectionUserType.BIND_USER,bindingId);
+    private PostgresConnectionParameter prepareBindUserConnectionParameter(ServiceInstance serviceInstance, Plan plan, String database, String bindingId){
+        return prepareConnectionParameter(serviceInstance,plan,database,ConnectionUserType.BIND_USER,bindingId);
     }
 
-    private PostgresConnectionParameter prepareConnectionParameter(String action,ServiceInstance serviceInstance, Plan plan, String database,
+    private PostgresConnectionParameter prepareConnectionParameter(ServiceInstance serviceInstance, Plan plan, String database,
                                                                    ConnectionUserType connectionType, String bindingId) {
 
         PostgresConnectionParameter connectionParameter = new PostgresConnectionParameter();
@@ -61,9 +61,7 @@ public class PostgreConnectionHandler {
                 connectionParameter.setUsernamePasswordCredential(getBindUserCredentials(serviceInstance,credentialStore,bindingId));
         }
 
-        log.error("REAL_CREDS: " + connectionParameter.getUsernamePasswordCredential().getUsername() + "/" + connectionParameter.getUsernamePasswordCredential().getPassword());
         if (database == null) {
-            log.error("HIER - PREP_START - "+action+": USER="+connectionParameter.getUsernamePasswordCredential().getUsername()+" DB=null");
             switch (plan.getPlatform()) {
                 case BOSH:
                     database = PostgreSQLUtils.dbName(serviceInstance.getId());
@@ -72,19 +70,14 @@ public class PostgreConnectionHandler {
                     database = existingEndpointBean.getDatabase();
                     break;
             }
-        } else {
-            log.error("HIER - PREP_START - "+action+": USER="+connectionParameter.getUsernamePasswordCredential().getUsername()+" DB="+database);
         }
-
-        log.error("HIER - PREP_END - "+action+": USER="+connectionParameter.getUsernamePasswordCredential().getUsername()+" DB="+database);
 
         connectionParameter.setDatabase(database);
         return connectionParameter;
     }
 
-    private PostgresDbService establishSimpleConnection(String action, PostgresConnectionParameter connectionParameter) {
+    private PostgresDbService establishSimpleConnection(PostgresConnectionParameter connectionParameter) {
         PostgresDbService jdbcService = new PostgresDbService();
-        log.error("HIER - SIM - "+action+": "+connectionParameter.getUsernamePasswordCredential().getUsername() + " / " + connectionParameter.getDatabase()+ "-"+connectionParameter.getUsernamePasswordCredential().getPassword());
 
         jdbcService.createSimpleConnection(
                 connectionParameter.getUsernamePasswordCredential().getUsername(),
@@ -94,9 +87,8 @@ public class PostgreConnectionHandler {
         return jdbcService;
     }
 
-    private PostgresDbService establishExtendedConnection(String action, PostgresConnectionParameter connectionParameter) {
+    private PostgresDbService establishExtendedConnection(PostgresConnectionParameter connectionParameter) {
         PostgresDbService jdbcService = new PostgresDbService();
-        log.error("HIER - EXT - "+action+": "+connectionParameter.getUsernamePasswordCredential().getUsername() + " / " + connectionParameter.getDatabase() + "-"+connectionParameter.getUsernamePasswordCredential().getPassword());
 
         jdbcService.createExtendedConnection(
                 connectionParameter.getUsernamePasswordCredential().getUsername(),
@@ -107,19 +99,19 @@ public class PostgreConnectionHandler {
     }
 
 
-    public PostgresDbService createExtendedRootUserConnection(String action, ServiceInstance serviceInstance, Plan plan, String database) {
-        return establishExtendedConnection(action,prepareRootUserConnectionParameter(action,serviceInstance,plan,database));
+    public PostgresDbService createExtendedRootUserConnection(ServiceInstance serviceInstance, Plan plan, String database) {
+        return establishExtendedConnection(prepareRootUserConnectionParameter(serviceInstance,plan,database));
     }
 
-    public PostgresDbService createExtendedBindUserConnection(String action, ServiceInstance serviceInstance, Plan plan, String database, String bindingId) {
-        return establishExtendedConnection(action,prepareBindUserConnectionParameter(action,serviceInstance,plan,database,bindingId));
+    public PostgresDbService createExtendedBindUserConnection(ServiceInstance serviceInstance, Plan plan, String database, String bindingId) {
+        return establishExtendedConnection(prepareBindUserConnectionParameter(serviceInstance,plan,database,bindingId));
     }
 
-    public PostgresDbService createSimpleRootUserConnection (String action, ServiceInstance serviceInstance, Plan plan, String database) {
-        return establishSimpleConnection(action,prepareRootUserConnectionParameter(action,serviceInstance,plan,database));
+    public PostgresDbService createSimpleRootUserConnection (ServiceInstance serviceInstance, Plan plan, String database) {
+        return establishSimpleConnection(prepareRootUserConnectionParameter(serviceInstance,plan,database));
     }
 
-    public PostgresDbService createSimpleBindUserConnection (String action, ServiceInstance serviceInstance, Plan plan, String database, String bindingId) {
-        return establishSimpleConnection(action,prepareBindUserConnectionParameter(action,serviceInstance,plan,database,bindingId));
+    public PostgresDbService createSimpleBindUserConnection (ServiceInstance serviceInstance, Plan plan, String database, String bindingId) {
+        return establishSimpleConnection(prepareBindUserConnectionParameter(serviceInstance,plan,database,bindingId));
     }
 }

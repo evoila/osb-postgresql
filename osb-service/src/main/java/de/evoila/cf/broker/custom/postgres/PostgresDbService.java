@@ -32,7 +32,6 @@ public class PostgresDbService {
 			String url = "jdbc:postgresql://" + connectionUrl + "/" + database;
 			connection = DriverManager.getConnection(url, properties);
 
-			log.error("CONN_FINAL " + url);
 		} catch (ClassNotFoundException | SQLException e) {
 			log.info("Could not establish connection", e);
 			return false;
@@ -43,7 +42,6 @@ public class PostgresDbService {
 
 	public boolean createExtendedConnection(String username, String password, String database, List<ServerAddress> serverAddresses) {
 		Properties properties = new Properties();
-		log.error("CON_CREATE: " + username+"/"+password + " DB: " + database);
 
 		properties.setProperty("user",username);
 		properties.setProperty("password",password);
@@ -53,7 +51,6 @@ public class PostgresDbService {
 	}
 
 	public boolean createSimpleConnection(String username, String password, String database, List<ServerAddress> serverAddresses) {
-		log.error("CON_CREATE: " + username+"/"+password + " DB: " + database);
 		Properties properties = new Properties();
 		properties.setProperty("user",username);
 		properties.setProperty("password",password);

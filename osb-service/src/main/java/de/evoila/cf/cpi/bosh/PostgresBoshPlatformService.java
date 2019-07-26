@@ -70,13 +70,15 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
         credentialStore.deleteCredentials(serviceInstance, DefaultCredentialConstants.BACKUP_AGENT_CREDENTIALS);
     }
 
-    private void executeCommands(Channel channel, List<String> commands){
+    private void executeCommands(Channel channel, List<String> commands, boolean silent){
         try {
 
             log.info("Sending commands...");
             sendCommands(channel, commands);
 
-            readChannelOutput(channel);
+            if (silent) {
+                readChannelOutput(channel);
+            }
             log.info("Finished sending commands!");
 
         } catch(Exception e) {
@@ -151,8 +153,14 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
                 .findAny();
 
         if (group.isPresent()) {
-            for (int i = 0; i < group.get().getInstances(); i++) {
-                createPgPoolUser(serviceInstance, ingressInstanceGroup, i, usernamePasswordCredential.getUsername(),
+            for (int instanceIdx = 0; instanceIdx < group.get().getInstances(); instanceIdx++) {
+                Session session = getSshSession(serviceInstance, ingressInstanceGroup, instanceIdx)
+                        .toBlocking()
+                        .first();
+
+                sendPgPoolCreateCommand(
+                        session,
+                        usernamePasswordCredential.getUsername(),
                         usernamePasswordCredential.getPassword());
             }
         } else {
@@ -160,12 +168,18 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
         }
     }
 
-    private void createPgPoolUser(ServiceInstance instance, String instanceGroupName, int i, String username,
-                                  String password) throws JSchException {
-        Session session = getSshSession(instance, instanceGroupName, i)
-                .toBlocking()
-                .first();
+    public void createPgPoolUser(String deploymentName, String instanceName, List<ServerAddress> serverAddresses, String username, String password)
+            throws JSchException {
 
+        for (int i = 0; i < serverAddresses.size(); i++) {
+            Session session = getSshSession(deploymentName, instanceName, i)
+                    .toBlocking()
+                    .first();
+            sendPgPoolCreateCommand(session,username,password);
+        }
+    }
+
+    private void sendPgPoolCreateCommand(Session session, String username, String password) throws JSchException {
         session.connect();
         Channel channel = session.openChannel("shell");
         channel.connect();
@@ -176,33 +190,8 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
                         username, password)
         );
 
-        executeCommands(channel, commands);
+        executeCommands(channel, commands, true);
 
         close(channel, session);
-    }
-
-    public void createPgPoolUser(String deploymentName, String instanceName, List<ServerAddress> serverAddresses, String username, String password)
-            throws JSchException {
-
-        for (int i = 0; i < serverAddresses.size(); i++) {
-
-            Session session = getSshSession(deploymentName, instanceName, i)
-                    .toBlocking()
-                    .first();
-
-            session.connect();
-            Channel channel = session.openChannel("shell");
-            channel.connect();
-
-            List<String> commands = Arrays.asList(
-                    String.format("sudo /var/vcap/packages/pgpool/bin/pg_md5 --md5auth " +
-                                    "--config-file /var/vcap/jobs/pgpool/config/pgpool.conf --username=%s %s",
-                            username, password)
-            );
-
-            executeCommands(channel, commands);
-
-            close(channel, session);
-        }
     }
 }

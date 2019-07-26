@@ -115,8 +115,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
                     throw new ServiceBrokerException("Unknown platform utilized in plan");
                 }
             }
-            jdbcService = postgreConnectionHandler.createExtendedRootUserConnection("CREATE_BIND",
-                    serviceInstance,
+            jdbcService = postgreConnectionHandler.createExtendedRootUserConnection(serviceInstance,
                     plan,
                     database);
 
@@ -132,8 +131,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
  		    // close connection to postgresql db / open connection to bind db
             // necessary to set user specific privileges inside the db
-			jdbcService = postgreConnectionHandler.createExtendedBindUserConnection("CREATE_DEF_PRIVS",
-                    serviceInstance,
+			jdbcService = postgreConnectionHandler.createExtendedBindUserConnection(serviceInstance,
                     plan,
                     database,
                     bindingId
@@ -180,13 +178,11 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
     protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
         PostgresDbService jdbcService = null;
         if (plan.getPlatform() == Platform.BOSH) {
-            jdbcService = postgreConnectionHandler.createExtendedRootUserConnection("DELETE_BIND",
-                    serviceInstance,
+            jdbcService = postgreConnectionHandler.createExtendedRootUserConnection(serviceInstance,
                     plan,
                     PostgreSQLUtils.dbName(serviceInstance.getId()));
         } else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
-            jdbcService = postgreConnectionHandler.createExtendedRootUserConnection("DELETE_BIND",
-                    serviceInstance,
+            jdbcService = postgreConnectionHandler.createExtendedRootUserConnection(serviceInstance,
                     plan,
                     PostgreSQLUtils.dbName(serviceInstance.getId()));
         } else {

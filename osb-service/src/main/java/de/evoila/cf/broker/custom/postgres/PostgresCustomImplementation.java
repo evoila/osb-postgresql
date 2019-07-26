@@ -167,7 +167,7 @@ public class PostgresCustomImplementation {
             // jdbcService_tmp connection:
             //   service user -> each database in the instance
             //   necessary because privileges have to be unbound from within the database
-            PostgresDbService jdbcService_tmp = postgreConnectionHandler.createSimpleRootUserConnection("BREAKDOWN_PRIVILEGES",serviceInstance,plan,database.getValue());
+            PostgresDbService jdbcService_tmp = postgreConnectionHandler.createSimpleRootUserConnection(serviceInstance,plan,database.getValue());
 
             String generalRole = database.getValue();
 
