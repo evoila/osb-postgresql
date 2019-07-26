@@ -68,7 +68,7 @@ public class BackupCustomServiceImpl implements BackupCustomService {
         Map<String, String> result = new HashMap<>();
         if (plan.getPlatform().equals(Platform.BOSH)) {
             UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
-            PostgresDbService postgresDbService = postgreConnectionHandler.createExtendedRootUserConnection("GET_DB_LIST",serviceInstance, plan,PostgreSQLUtils.dbName(serviceInstance.getId()));
+            PostgresDbService postgresDbService = postgreConnectionHandler.createExtendedRootUserConnection( serviceInstance, plan,PostgreSQLUtils.dbName(serviceInstance.getId()));
 
             try {
                 Map<String, String> databases = postgresDbService.executeSelect("SELECT datname FROM pg_database", "datname");
