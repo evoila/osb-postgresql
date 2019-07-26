@@ -32,6 +32,7 @@ public class PostgresDbService {
 			String url = "jdbc:postgresql://" + connectionUrl + "/" + database;
 			connection = DriverManager.getConnection(url, properties);
 
+			log.error("CONN_FINAL " + url);
 		} catch (ClassNotFoundException | SQLException e) {
 			log.info("Could not establish connection", e);
 			return false;

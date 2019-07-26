@@ -1,6 +1,7 @@
 package de.evoila.cf.broker.backup;
 
 import de.evoila.cf.broker.bean.BackupConfiguration;
+import de.evoila.cf.broker.custom.postgres.PostgreConnectionHandler;
 import de.evoila.cf.broker.custom.postgres.PostgreSQLUtils;
 import de.evoila.cf.broker.custom.postgres.PostgresCustomImplementation;
 import de.evoila.cf.broker.custom.postgres.PostgresDbService;
@@ -41,16 +42,20 @@ public class BackupCustomServiceImpl implements BackupCustomService {
 
     private CredentialStore credentialStore;
 
+    private PostgreConnectionHandler postgreConnectionHandler;
+
     public BackupCustomServiceImpl(BackupConfiguration backupTypeConfiguration,
                                    ServiceInstanceRepository serviceInstanceRepository,
                                    PostgresCustomImplementation postgresCustomImplementation,
                                    ServiceDefinitionRepository serviceDefinitionRepository,
-                                   CredentialStore credentialStore) {
+                                   CredentialStore credentialStore,
+                                   PostgreConnectionHandler postgreConnectionHandler) {
         this.backupTypeConfiguration = backupTypeConfiguration;
         this.serviceInstanceRepository = serviceInstanceRepository;
         this.postgresCustomImplementation = postgresCustomImplementation;
         this.serviceDefinitionRepository = serviceDefinitionRepository;
         this.credentialStore = credentialStore;
+        this.postgreConnectionHandler = postgreConnectionHandler;
     }
 
     @Override
@@ -63,8 +68,7 @@ public class BackupCustomServiceImpl implements BackupCustomService {
         Map<String, String> result = new HashMap<>();
         if (plan.getPlatform().equals(Platform.BOSH)) {
             UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
-            PostgresDbService postgresDbService = postgresCustomImplementation.createExtendedConnection("GET_DB_LIST",serviceInstance, plan,
-                    PostgreSQLUtils.dbName(serviceInstance.getId()),usernamePasswordCredential);
+            PostgresDbService postgresDbService = postgreConnectionHandler.createExtendedRootUserConnection("GET_DB_LIST",serviceInstance, plan,PostgreSQLUtils.dbName(serviceInstance.getId()));
 
             try {
                 Map<String, String> databases = postgresDbService.executeSelect("SELECT datname FROM pg_database", "datname");

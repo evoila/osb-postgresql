@@ -2,6 +2,7 @@ package de.evoila.cf.cpi.existing;
 
 import com.jcraft.jsch.JSchException;
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
+import de.evoila.cf.broker.custom.postgres.PostgreConnectionHandler;
 import de.evoila.cf.broker.custom.postgres.PostgreSQLUtils;
 import de.evoila.cf.broker.custom.postgres.PostgresCustomImplementation;
 import de.evoila.cf.broker.custom.postgres.PostgresDbService;
@@ -40,22 +41,26 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 
     private CredentialStore credentialStore;
 
+    private PostgreConnectionHandler postgreConnectionHandler;
+
 	public PostgreSQLExistingServiceFactory(PostgresCustomImplementation postgresCustomImplementation,
                                             ExistingEndpointBean existingEndpointBean,
 											PlatformRepository platformRepository,
                                             ServicePortAvailabilityVerifier portAvailabilityVerifier,
-                                            CredentialStore credentialStore) {
+                                            CredentialStore credentialStore,
+											PostgreConnectionHandler postgreConnectionHandler) {
 		super(platformRepository, portAvailabilityVerifier, existingEndpointBean);
 		this.postgresCustomImplementation = postgresCustomImplementation;
 	    this.existingEndpointBean = existingEndpointBean;
         this.credentialStore = credentialStore;
+        this.postgreConnectionHandler = postgreConnectionHandler;
     }
 
 	@Override
     public void deleteInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
 		String database = PostgreSQLUtils.dbName(serviceInstance.getId());
-		PostgresDbService postgresDbService = postgresCustomImplementation
-                .createExtendedConnection("DELETE_EXT", serviceInstance, plan, database, null);
+		PostgresDbService postgresDbService = postgreConnectionHandler
+                .createExtendedRootUserConnection("DELETE_EXT", serviceInstance, plan, database);
 		try {
 		    postgresCustomImplementation.dropAllExtensions(postgresDbService);
 		} catch (SQLException e) {
@@ -63,7 +68,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 		}
 
 		postgresDbService.closeIfConnected();
-		postgresDbService = postgresCustomImplementation.createSimpleConnection("DELETE_DB",serviceInstance, plan, null,null);
+		postgresDbService = postgreConnectionHandler.createSimpleRootUserConnection("DELETE_DB",serviceInstance, plan, null);
         postgresCustomImplementation.deleteDatabase(postgresDbService, serviceInstance.getUsername(), database, serviceInstance.getUsername());
 
 		deleteCredential(serviceInstance,CredentialConstants.ROOT_CREDENTIALS);
@@ -102,8 +107,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 		serviceInstance.setHosts(existingEndpointBean.getHosts());
 
         try {
-            PostgresDbService postgresDbService = postgresCustomImplementation.createExtendedConnection("CREATE_DB/CREATE_GENERAL_ROLE",serviceInstance, plan, null,
-                    new UsernamePasswordCredential(existingEndpointBean.getUsername(), existingEndpointBean.getPassword()));
+            PostgresDbService postgresDbService = postgreConnectionHandler.createExtendedRootUserConnection("CREATE_DB/CREATE_SERVICE_ROLE",serviceInstance, plan, null);
 
             postgresCustomImplementation.createDatabase(postgresDbService, database);
 
@@ -111,16 +115,9 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
             // Backend takes some time for streaming replication
             TimeUnit.SECONDS.sleep(10);
 
-
-
-			//TODO: Create pgpool user
 			postgresCustomImplementation.createGeneralRole(postgresDbService, database, database);
-//			if (postgresCustomImplementation.isPgpoolEnabled()) {
-//				if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
-//					this.createPgPoolUser(postgresBoshPlatformService,
-//							ingressInstanceGroup, hosts, usernamePasswordCredential);
-//				}
-//			}
+
+			//TODO: Create pgpool user for bind admin
 			postgresCustomImplementation.bindRoleToDatabase(postgresDbService,
 					serviceInstanceUsernamePasswordCredential.getUsername(),
                     serviceInstanceUsernamePasswordCredential.getPassword(),
@@ -129,8 +126,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 			// close connection to postgresql db / open connection to bind db
 			// necessary for installing db specific extensions (as admin)
 			postgresDbService.closeIfConnected();
-			postgresDbService = postgresCustomImplementation.createExtendedConnection("CREATE_EXT",serviceInstance, plan,database,
-                    new UsernamePasswordCredential(existingEndpointBean.getUsername(), existingEndpointBean.getPassword()));
+			postgresDbService = postgreConnectionHandler.createExtendedRootUserConnection("CREATE_EXT",serviceInstance, plan,database);
 			postgresCustomImplementation.createExtensions(postgresDbService);
 		} catch(SQLException | InterruptedException ex) {
             throw new PlatformException(ex);

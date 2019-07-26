@@ -1,7 +1,5 @@
 package de.evoila.cf.broker.custom.postgres;
 
-import de.evoila.cf.broker.bean.ExistingEndpointBean;
-import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.model.catalog.ServerAddress;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
@@ -36,23 +34,7 @@ public class PostgresConnectionParameter {
         this.serverAddresses=ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);
     }
 
-    public void setUsernamePasswordCredential(ServiceInstance serviceInstance, Plan plan,
-                                                                    UsernamePasswordCredential usernamePasswordCredential,
-                                                                    ExistingEndpointBean existingEndpointBean) {
-        if (plan.getPlatform() == Platform.BOSH) {
-            if (usernamePasswordCredential == null) {
-                usernamePasswordCredential = new UsernamePasswordCredential(
-                        serviceInstance.getUsername(),
-                        serviceInstance.getPassword());
-            }
-        } else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
-            if (usernamePasswordCredential == null) {
-                usernamePasswordCredential = new UsernamePasswordCredential(
-                        existingEndpointBean.getUsername(),
-                        existingEndpointBean.getPassword());
-            }
-        }
+    public void setUsernamePasswordCredential(UsernamePasswordCredential usernamePasswordCredential) {
         this.usernamePasswordCredential=usernamePasswordCredential;
     }
-
 }

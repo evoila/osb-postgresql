@@ -6,7 +6,7 @@ package de.evoila.cf.broker.custom.postgres;
 public class PostgreSQLUtils {
 
     public static String dbName(String uuid) {
-        if (uuid != null && uuid.length() > 15)
+        if (uuid != null)
             return "d" + uuid.replace("-", "").substring(0, 15);
         else
             return null;

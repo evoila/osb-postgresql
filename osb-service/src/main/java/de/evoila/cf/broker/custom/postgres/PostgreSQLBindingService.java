@@ -12,7 +12,6 @@ import de.evoila.cf.broker.service.AsyncBindingService;
 import de.evoila.cf.broker.service.HAProxyService;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import de.evoila.cf.broker.util.ServiceInstanceUtils;
-import de.evoila.cf.cpi.CredentialConstants;
 import de.evoila.cf.cpi.bosh.InstanceGroupNotFoundException;
 import de.evoila.cf.cpi.bosh.PostgresBoshPlatformService;
 import de.evoila.cf.cpi.existing.PostgreSQLExistingServiceFactory;
@@ -56,6 +55,8 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
     private CredentialStore credentialStore;
 
+    private PostgreConnectionHandler postgreConnectionHandler;
+
 	PostgreSQLBindingService(PostgresCustomImplementation customImplementation,
                              PostgreSQLExistingServiceFactory existingServiceFactory,
                              PostgresBoshPlatformService postgresBoshPlatformService,
@@ -63,7 +64,8 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
                              ServiceInstanceRepository serviceInstanceRepository, RouteBindingRepository routeBindingRepository,
                              @Autowired( required = false ) HAProxyService haProxyService, JobRepository jobRepository,
                              AsyncBindingService asyncBindingService, PlatformRepository platformRepository,
-                             CredentialStore credentialStore) {
+                             CredentialStore credentialStore,
+                             PostgreConnectionHandler postgreConnectionHandler) {
         super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository,
                 haProxyService, jobRepository, asyncBindingService, platformRepository);
 	    Assert.notNull(customImplementation, "PostgresCustomImplementation may not be null");
@@ -72,6 +74,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		this.postgresCustomImplementation = customImplementation;
 		this.postgresBoshPlatformService = postgresBoshPlatformService;
 		this.credentialStore = credentialStore;
+		this.postgreConnectionHandler = postgreConnectionHandler;
 	}
 
     @Override
@@ -106,41 +109,40 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		    if (postgresCustomImplementation.isPgpoolEnabled()) {
                 if (plan.getPlatform() == Platform.BOSH) {
                     postgresBoshPlatformService.createPgPoolUser(serviceInstance, ingressInstanceGroup, usernamePasswordCredential);
-                    log.error("CREATE_BIND " + serviceInstance.getUsername() + "/" + serviceInstance.getPassword() + " - " + serviceInstance.getId());
-
-                    jdbcService = postgresCustomImplementation.createExtendedConnection("CREATE_BIND_GENERAL",
-                            serviceInstance,
-                            plan,
-                            database,
-                            credentialStore.getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS));
                 } else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
                     existingServiceFactory.createPgPoolUser(postgresBoshPlatformService, ingressInstanceGroup, hosts, usernamePasswordCredential);
-                    jdbcService = postgresCustomImplementation.createExtendedConnection("CREATE_BIND_GENERAL",
-                            serviceInstance,
-                            plan,
-                            database,
-                            null);
                 } else {
                     throw new ServiceBrokerException("Unknown platform utilized in plan");
                 }
             }
+            jdbcService = postgreConnectionHandler.createExtendedRootUserConnection("CREATE_BIND",
+                    serviceInstance,
+                    plan,
+                    database);
+
             /* TODO:
-                 this connection should be done with the "CREATE ROLE" user, not with the superuser
+                 this connection should be done with the BIND_ADMIN ("CREATE ROLE") user, not with the superuser
                  currently impossible due to missing pgpool config for this user
+                 would have to be created in the existing service factory
             */
             postgresCustomImplementation.createGeneralRole(jdbcService, generalRole, database);
             postgresCustomImplementation.bindRoleToDatabase(jdbcService, usernamePasswordCredential.getUsername(),
                     usernamePasswordCredential.getPassword(), database, generalRole, false);
             jdbcService.closeIfConnected();
 
-            log.error("HIER - EXT - CREATE_DEF_PRIVS");
  		    // close connection to postgresql db / open connection to bind db
             // necessary to set user specific privileges inside the db
-			jdbcService.createExtendedConnection(
-			        usernamePasswordCredential.getUsername(),
-                    usernamePasswordCredential.getPassword(),
+			jdbcService = postgreConnectionHandler.createExtendedBindUserConnection("CREATE_DEF_PRIVS",
+                    serviceInstance,
+                    plan,
                     database,
-                    hosts);
+                    bindingId
+                    );
+//            jdbcService.createExtendedConnection(
+//			        usernamePasswordCredential.getUsername(),
+//                    usernamePasswordCredential.getPassword(),
+//                    database,
+//                    hosts);
 
 			postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, usernamePasswordCredential.getUsername(), generalRole);
 		} catch (SQLException e) {
@@ -178,17 +180,15 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
     protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
         PostgresDbService jdbcService = null;
         if (plan.getPlatform() == Platform.BOSH) {
-            jdbcService = postgresCustomImplementation.createExtendedConnection("DELETE_BIND",
+            jdbcService = postgreConnectionHandler.createExtendedRootUserConnection("DELETE_BIND",
                     serviceInstance,
                     plan,
-                    PostgreSQLUtils.dbName(serviceInstance.getId()),
-                    credentialStore.getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS));
+                    PostgreSQLUtils.dbName(serviceInstance.getId()));
         } else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
-            jdbcService = postgresCustomImplementation.createExtendedConnection("DELETE_BIND",
+            jdbcService = postgreConnectionHandler.createExtendedRootUserConnection("DELETE_BIND",
                     serviceInstance,
                     plan,
-                    PostgreSQLUtils.dbName(serviceInstance.getId()),
-                    null);
+                    PostgreSQLUtils.dbName(serviceInstance.getId()));
         } else {
             throw new ServiceBrokerException("Unknown platform utilized in plan");
         }
