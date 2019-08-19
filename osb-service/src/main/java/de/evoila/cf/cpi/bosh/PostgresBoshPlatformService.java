@@ -76,9 +76,7 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
             log.info("Sending commands...");
             sendCommands(channel, commands);
 
-            if (silent) {
-                readChannelOutput(channel);
-            }
+            readChannelOutput(channel, silent);
             log.info("Finished sending commands!");
 
         } catch(Exception e) {
@@ -103,7 +101,7 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
 
     }
 
-    private void readChannelOutput(Channel channel){
+    private void readChannelOutput(Channel channel, boolean silent){
         byte[] buffer = new byte[1024];
 
         try {
@@ -116,7 +114,9 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
                         break;
                     }
                     line = new String(buffer, 0, i);
-                    log.info(line);
+                    if (!silent) {
+                        log.info(line);
+                    }
                 }
 
                 if(line.contains("logout")) {
