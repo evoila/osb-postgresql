@@ -24,8 +24,6 @@ import java.util.Map;
 @Service
 public class PostgresCustomImplementation {
 
-    private Logger log = LoggerFactory.getLogger(PostgresCustomImplementation.class);
-
 	@Value("${pgpool.enabled}")
 	private boolean pgpoolEnabled;
 
@@ -33,14 +31,11 @@ public class PostgresCustomImplementation {
 
     private PostgresBoshPlatformService postgresBoshPlatformService;
 
-    private CredentialStore credentialStore;
-
     private PostgreConnectionHandler postgreConnectionHandler;
 
-    public PostgresCustomImplementation(ExistingEndpointBean existingEndpointBean, PostgresBoshPlatformService postgresBoshPlatformService,CredentialStore credentialStore, PostgreConnectionHandler postgreConnectionHandler) {
+    public PostgresCustomImplementation(ExistingEndpointBean existingEndpointBean, PostgresBoshPlatformService postgresBoshPlatformService, PostgreConnectionHandler postgreConnectionHandler) {
     	this.existingEndpointBean = existingEndpointBean;
     	this.postgresBoshPlatformService = postgresBoshPlatformService;
-        this.credentialStore = credentialStore;
         this.postgreConnectionHandler = postgreConnectionHandler;
     }
 

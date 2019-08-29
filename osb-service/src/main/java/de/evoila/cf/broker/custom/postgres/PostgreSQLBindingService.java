@@ -9,7 +9,6 @@ import de.evoila.cf.broker.model.catalog.ServerAddress;
 import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
 import de.evoila.cf.broker.repository.*;
 import de.evoila.cf.broker.service.AsyncBindingService;
-import de.evoila.cf.broker.service.HAProxyService;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import de.evoila.cf.broker.util.ServiceInstanceUtils;
 import de.evoila.cf.cpi.bosh.InstanceGroupNotFoundException;
@@ -62,12 +61,11 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
                              PostgresBoshPlatformService postgresBoshPlatformService,
                              BindingRepository bindingRepository, ServiceDefinitionRepository serviceDefinitionRepository,
                              ServiceInstanceRepository serviceInstanceRepository, RouteBindingRepository routeBindingRepository,
-                             @Autowired( required = false ) HAProxyService haProxyService, JobRepository jobRepository,
+                             @Autowired( required = false ) JobRepository jobRepository,
                              AsyncBindingService asyncBindingService, PlatformRepository platformRepository,
                              CredentialStore credentialStore,
                              PostgreConnectionHandler postgreConnectionHandler) {
-        super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository,
-                haProxyService, jobRepository, asyncBindingService, platformRepository);
+        super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, jobRepository, asyncBindingService, platformRepository);
 	    Assert.notNull(customImplementation, "PostgresCustomImplementation may not be null");
 		Assert.notNull(existingServiceFactory, "PostgreSQLExistingServiceFactory may not be null");
 		this.existingServiceFactory = existingServiceFactory;

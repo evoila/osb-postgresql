@@ -7,15 +7,12 @@ import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
 import de.evoila.cf.cpi.ConnectionUserType;
 import de.evoila.cf.cpi.CredentialConstants;
 import de.evoila.cf.security.credentials.CredentialStore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PostgreConnectionHandler {
 
     private ExistingEndpointBean existingEndpointBean;
-    private Logger log = LoggerFactory.getLogger(PostgresCustomImplementation.class);
 
     private CredentialStore credentialStore;
 
