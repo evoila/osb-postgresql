@@ -1,0 +1,648 @@
+backup:
+  enabled: true
+bosh:
+  authentication: OAUTH
+  host: 192.168.50.6
+  stemcellOs: ubuntu-xenial
+  stemcellVersion: latest
+  username: admin
+  vip_network: floating
+catalog:
+  services:
+  - bindable: true
+    bindings_retrievable: true
+    dashboard:
+      auth_endpoint: https://uaa.local/oauth
+      url: https://osb-postgresql.local/custom/v2/authentication
+    dashboard_client:
+      id: osb-postgresql.local
+      redirect_uri: https://osb-postgresql.local/custom/v2/authentication
+      secret: e50bf7b0-8282-4677-b41d-1f386d8e6fa2
+    description: PostgreSQL Instances
+    id: B459D6A2-AF75-4C02-8544-C1B976764FFC
+    instances_retrievable: true
+    name: osb-postgresql
+    plans:
+    - description: A shared cluster for dev/test and really small apps
+      free: true
+      id: 2FC323491-858C-41F4-803A-2309C3230
+      metadata:
+        backup:
+          enabled: true
+          instance_group: postgres
+        connections: 5
+        ingress_instance_group: pgpool
+      name: xs
+      platform: EXISTING_SERVICE
+    - description: A small instance for low requirement apps
+      free: false
+      id: 5903CFC3-95C0-4C62-BE6C-DA87664656F4
+      metadata:
+        backup:
+          enabled: true
+          instance_group: postgres
+        ingress_instance_group: pgpool
+        instance_group_config:
+        - name: postgres
+          nodes: 1
+          persistent_disk_type: 10GB
+        - name: pgpool
+          nodes: 1
+        networks:
+        - name: service
+        vm_type: small
+      name: s
+      platform: BOSH
+      schemas:
+        service_binding:
+          create:
+            parameters:
+              properties:
+                database:
+                  description: Specify the database for the service binding.
+                  type: string
+              schema: http://json-schema.org/draft-04/schema#
+              type: object
+        service_instance:
+          update:
+            parameters:
+              properties:
+                pgpool:
+                  properties:
+                    child_life_time:
+                      default: 300
+                      title: Child Life Time
+                      type: number
+                    child_max_connections:
+                      default: 0
+                      title: Child Max Connectons
+                      type: number
+                    client_idle_limit:
+                      default: 90
+                      title: Client Idle Limit
+                      type: number
+                    connection_life_time:
+                      default: 900
+                      title: Connection Life Time
+                      type: number
+                  required:
+                  - child_life_time
+                  - child_max_connections
+                  - connection_life_time
+                  - client_idle_limit
+                  title: PGPool Configuration
+                  type: object
+                postgres:
+                  properties:
+                    config:
+                      properties:
+                        authentication_timeout:
+                          default: 30
+                          title: Authentication Timeout
+                          type: number
+                        max_locks_per_transaction:
+                          default: 64
+                          title: Maximum Locks per Transaction
+                          type: number
+                        max_pred_locks_per_page:
+                          default: 2
+                          title: Maximum Predicate Locks per Page
+                          type: number
+                        max_pred_locks_per_relation:
+                          default: -2
+                          title: Maximum Predicate Locks per Relation
+                          type: number
+                        max_pred_locks_per_transaction:
+                          default: 64
+                          title: Maximum Predicate Locks per Transaction
+                          type: number
+                      required:
+                      - authentication_timeout
+                      - max_locks_per_transaction
+                      - max_pred_locks_per_transaction
+                      - max_pred_locks_per_relation
+                      - max_pred_locks_per_page
+                      title: General PostgreSQL Settings
+                      type: object
+                    databases:
+                      items:
+                      - properties:
+                          name:
+                            pattern: ^[A-Za-z0-9_-]+$
+                            type: string
+                          users:
+                            items:
+                            - type: string
+                            type: array
+                        required:
+                        - name
+                        - users
+                        type: object
+                      type: array
+                    users:
+                      items:
+                      - properties:
+                          admin:
+                            type: boolean
+                          password:
+                            type: string
+                          username:
+                            pattern: ^[A-Za-z0-9_-]+$
+                            type: string
+                        required:
+                        - username
+                        - password
+                        type: object
+                      type: array
+                  title: ProgreSQL Configuration
+                  type: object
+              schema: http://json-schema.org/draft-06/schema
+              type: object
+    - description: The medium version for PostgreSQL and distributed applications
+      free: false
+      id: A6EB9BAC-9C5D-46A6-AA67-5FA9481E0D28
+      metadata:
+        backup:
+          enabled: true
+          instance_group: postgres
+        ingress_instance_group: pgpool
+        instance_group_config:
+        - name: postgres
+          nodes: 1
+          persistent_disk_type: 100GB
+          vm_type: large
+        - name: pgpool
+          nodes: 1
+          vm_type: small
+        networks:
+        - name: service
+      name: m
+      platform: BOSH
+      schemas:
+        service_binding:
+          create:
+            parameters:
+              properties:
+                database:
+                  description: Specify the database for the service binding.
+                  type: string
+              schema: http://json-schema.org/draft-04/schema#
+              type: object
+        service_instance:
+          update:
+            parameters:
+              properties:
+                pgpool:
+                  properties:
+                    child_life_time:
+                      default: 300
+                      title: Child Life Time
+                      type: number
+                    child_max_connections:
+                      default: 0
+                      title: Child Max Connectons
+                      type: number
+                    client_idle_limit:
+                      default: 90
+                      title: Client Idle Limit
+                      type: number
+                    connection_life_time:
+                      default: 900
+                      title: Connection Life Time
+                      type: number
+                  required:
+                  - child_life_time
+                  - child_max_connections
+                  - connection_life_time
+                  - client_idle_limit
+                  title: PGPool Configuration
+                  type: object
+                postgres:
+                  properties:
+                    config:
+                      properties:
+                        authentication_timeout:
+                          default: 30
+                          title: Authentication Timeout
+                          type: number
+                        max_locks_per_transaction:
+                          default: 64
+                          title: Maximum Locks per Transaction
+                          type: number
+                        max_pred_locks_per_page:
+                          default: 2
+                          title: Maximum Predicate Locks per Page
+                          type: number
+                        max_pred_locks_per_relation:
+                          default: -2
+                          title: Maximum Predicate Locks per Relation
+                          type: number
+                        max_pred_locks_per_transaction:
+                          default: 64
+                          title: Maximum Predicate Locks per Transaction
+                          type: number
+                      required:
+                      - authentication_timeout
+                      - max_locks_per_transaction
+                      - max_pred_locks_per_transaction
+                      - max_pred_locks_per_relation
+                      - max_pred_locks_per_page
+                      title: General PostgreSQL Settings
+                      type: object
+                    databases:
+                      items:
+                      - properties:
+                          name:
+                            pattern: ^[A-Za-z0-9_-]+$
+                            type: string
+                          users:
+                            items:
+                            - type: string
+                            type: array
+                        required:
+                        - name
+                        - users
+                        type: object
+                      type: array
+                    users:
+                      items:
+                      - properties:
+                          admin:
+                            type: boolean
+                          password:
+                            type: string
+                          username:
+                            pattern: ^[A-Za-z0-9_-]+$
+                            type: string
+                        required:
+                        - username
+                        - password
+                        type: object
+                      type: array
+                  title: ProgreSQL Configuration
+                  type: object
+              schema: http://json-schema.org/draft-06/schema
+              type: object
+    - description: A good toolbox providing availability and performance over five
+        nodes
+      free: false
+      id: DA183185-701A-41CB-BB0C-9CFC7DD95CB3
+      metadata:
+        backup:
+          enabled: true
+          instance_group: postgres
+        ingress_instance_group: pgpool
+        instance_group_config:
+        - name: postgres
+          nodes: 2
+          persistent_disk_type: 100GB
+          vm_type: large
+        - name: pgpool
+          nodes: 1
+          vm_type: small
+        networks:
+        - name: service
+      name: l
+      platform: BOSH
+      schemas:
+        service_binding:
+          create:
+            parameters:
+              properties:
+                database:
+                  description: Specify the database for the service binding.
+                  type: string
+              schema: http://json-schema.org/draft-04/schema#
+              type: object
+        service_instance:
+          update:
+            parameters:
+              properties:
+                pgpool:
+                  properties:
+                    child_life_time:
+                      default: 300
+                      title: Child Life Time
+                      type: number
+                    child_max_connections:
+                      default: 0
+                      title: Child Max Connectons
+                      type: number
+                    client_idle_limit:
+                      default: 90
+                      title: Client Idle Limit
+                      type: number
+                    connection_life_time:
+                      default: 900
+                      title: Connection Life Time
+                      type: number
+                  required:
+                  - child_life_time
+                  - child_max_connections
+                  - connection_life_time
+                  - client_idle_limit
+                  title: PGPool Configuration
+                  type: object
+                postgres:
+                  properties:
+                    config:
+                      properties:
+                        authentication_timeout:
+                          default: 30
+                          title: Authentication Timeout
+                          type: number
+                        max_locks_per_transaction:
+                          default: 64
+                          title: Maximum Locks per Transaction
+                          type: number
+                        max_pred_locks_per_page:
+                          default: 2
+                          title: Maximum Predicate Locks per Page
+                          type: number
+                        max_pred_locks_per_relation:
+                          default: -2
+                          title: Maximum Predicate Locks per Relation
+                          type: number
+                        max_pred_locks_per_transaction:
+                          default: 64
+                          title: Maximum Predicate Locks per Transaction
+                          type: number
+                      required:
+                      - authentication_timeout
+                      - max_locks_per_transaction
+                      - max_pred_locks_per_transaction
+                      - max_pred_locks_per_relation
+                      - max_pred_locks_per_page
+                      title: General PostgreSQL Settings
+                      type: object
+                    databases:
+                      items:
+                      - properties:
+                          name:
+                            pattern: ^[A-Za-z0-9_-]+$
+                            type: string
+                          users:
+                            items:
+                            - type: string
+                            type: array
+                        required:
+                        - name
+                        - users
+                        type: object
+                      type: array
+                    users:
+                      items:
+                      - properties:
+                          admin:
+                            type: boolean
+                          password:
+                            type: string
+                          username:
+                            pattern: ^[A-Za-z0-9_-]+$
+                            type: string
+                        required:
+                        - username
+                        - password
+                        type: object
+                      type: array
+                  title: ProgreSQL Configuration
+                  type: object
+              schema: http://json-schema.org/draft-06/schema
+              type: object
+config:
+  sb:
+    name: osb-postgresql
+    uri: https://osb-postgresql.local
+  site:
+    postfix: ""
+    url: local
+endpoints:
+  custom:
+  - identifier: osb-backup-manager
+    url: http://localhost:8081
+  - identifier: osb-log-metric-backend
+    url: http://localhost:8090
+  - identifier: osb-autoscaler-core
+    url: http://localhost:8082
+  default: https://localhost:8080
+existing:
+  endpoint:
+    database: service
+    password: cv3tPniFaUsNiDa6Jg9YISVZLEsRvn
+    username: service
+    deployment: osb-bosh-postgresql
+    hosts:
+    - ip: 10.245.0.6
+      name: pgpool
+      port: 5432
+haproxy:
+  auth:
+    token: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  token: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  uri: http://localhost:8082/agents/5b07c382ab86f100075e1292/schemas?type=listen
+kubernetes:
+  api:
+    version": v1
+  auth:
+    mode": x509
+  certs:
+    ca:
+      data: |
+        -----BEGIN CERTIFICATE-----
+        MIIC5zCCAc+gAwIBAgIBATANBgkqhkiG9w0BAQsFADAVMRMwEQYDVQQDEwptaW5p
+        a3ViZUNBMB4XDTE4MTIwNjE1MzIwMloXDTI4MTIwNDE1MzIwMlowFTETMBEGA1UE
+        AxMKbWluaWt1YmVDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJJ
+        2dxJkPyr0pZ5QHu6ujS/ccwGPQwhYbJFIZrvwqGkIJNKGQ1C+MvYKZwQmDQiTeED
+        mYpoBXsw+MpdYcbP9CTormzBq4f9tAPLaOmpAjssBWRj/ZOQG6yMlTydawPAmHqF
+        CQ2AHgFDKUiZXJqtEQHZKPSAkI6vOVqvfOjYUj67Y+GpvBDM2wPIdcXyiYH8eTQ+
+        m5wPkrdx7qRkJxRHM2DOnfQUWgtUH7Jth7O08XE2zc9BiilAD2ARggX1F6VgUx/Y
+        cveyd28C4EQI5JdPLW2YdhNsaI7Z5M5eZjm/R+xP9ucJNN8yaolLOUeJ2xslfTEX
+        heRFe8dQk4BsKhSEIA0CAwEAAaNCMEAwDgYDVR0PAQH/BAQDAgKkMB0GA1UdJQQW
+        MBQGCCsGAQUFBwMCBggrBgEFBQcDATAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3
+        DQEBCwUAA4IBAQCex9NQqOGWlHOLA/dWOn93pbcMXCuxrFeglFWBPNzKQL+aQpGc
+        1gOpGlwgoSeDKIkDONj0JkWFbcFb6An8FKLLXdR7Sjkxn5k+CjeECHpW7DSvu826
+        GeFSA7gbScR8qRUfUx728a5e91RDBItJF5LOTF31KZa3rSWmKxRHe97RIURhZP9w
+        Ilt1kl7tvja3oocbhWtZ8nS20zezE6FTJ+uxiAqM9twHj7iLrl5Lq0MG2F+qTqwX
+        9OTkc57UvCKf2aL5phW2BIuGPBc65FgsDNUqLuuZT/72W168agH5JlZlrrBeTrBv
+        T9UJn9voKmdzmlVhcC4HvdriUYp+6UtmV6aS
+        -----END CERTIFICATE-----
+    client:
+      data: |
+        -----BEGIN CERTIFICATE-----
+        MIIDADCCAeigAwIBAgIBAjANBgkqhkiG9w0BAQsFADAVMRMwEQYDVQQDEwptaW5p
+        a3ViZUNBMB4XDTE5MDEzMDEyNTE1MloXDTIwMDEzMTEyNTE1MlowMTEXMBUGA1UE
+        ChMOc3lzdGVtOm1hc3RlcnMxFjAUBgNVBAMTDW1pbmlrdWJlLXVzZXIwggEiMA0G
+        CSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDOIiYIV90vgeo00y35fG96HqGg8vHQ
+        puO1NrtiXwRJek5KAVf9Ws1W23RA4A5jYMf1VlnnKh9Nu/3w90Ba4tF/PN2w9Ykk
+        bvTiVOKcsb+TikgSfBflu0GfyX7EbWkG4T2q32zAYU9No2+UMm/D2Dg7qJdQnPwC
+        BDqAuA6JYDKtZ8UfVJT9K4dz1SuTvknMRMTELMrbAi0o9yR2ZvGlxFIBAji8N3GB
+        Nk1odDQxGrwkEktt2Hlk42bxnKuzJFuRCyv3o8LW5rgtPj3weMHSH6x0y6hAaaOe
+        cR/nnVUaVmQ3gnKmMDdeiSHQ6CCxTeYnxoy4b6dlJZmp4btDUoTQFSdLAgMBAAGj
+        PzA9MA4GA1UdDwEB/wQEAwIFoDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUH
+        AwIwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQsFAAOCAQEADsm6f5fgCvFC37tc
+        y6oZpTeNeQg8f8XO8iugSlRTDp0QADv+C17Hxe6s+48n/TBGq9gNbLcQ880yQHgX
+        9UfX9IJEIF+AnkwQfvEtzgxHbqdlFaIzGYd312EJltn8hg6KBWVcWPx9kUX/nBxz
+        Ws2CSAc1SrZSJHO5EvfwfrT4yk2W2hud4ad5xJY88TV3gDARjZo531MpsPocgIAU
+        ww3sjqyidYxeAQMjkCnUvgDqiwQ94LCSOBeoiA7yG7c67xUklrScBQnMANZlbTih
+        XBh/EGGUJon+8zWH6cnjKWsJXIq47XtctSUCUthanA3LZGZwk7WR4MR0Hk9BfsQc
+        FpY3BQ==
+        -----END CERTIFICATE-----
+      key:
+        data: |
+          -----BEGIN RSA PRIVATE KEY-----
+          MIIEowIBAAKCAQEAziImCFfdL4HqNNMt+Xxveh6hoPLx0KbjtTa7Yl8ESXpOSgFX
+          /VrNVtt0QOAOY2DH9VZZ5yofTbv98PdAWuLRfzzdsPWJJG704lTinLG/k4pIEnwX
+          5btBn8l+xG1pBuE9qt9swGFPTaNvlDJvw9g4O6iXUJz8AgQ6gLgOiWAyrWfFH1SU
+          /SuHc9Urk75JzETExCzK2wItKPckdmbxpcRSAQI4vDdxgTZNaHQ0MRq8JBJLbdh5
+          ZONm8ZyrsyRbkQsr96PC1ua4LT498HjB0h+sdMuoQGmjnnEf551VGlZkN4JypjA3
+          Xokh0OggsU3mJ8aMuG+nZSWZqeG7Q1KE0BUnSwIDAQABAoIBAF3hf6DdI4e3i4tz
+          gsTVv4/G06YR/8AfwiWOP9mVnMY6Rd2+ruxcppigaloBsYvhUDCUm22E6azlqcpN
+          UaoTE4b3maA2s7c8MZvDPVJQQghYOmrwyZF/r2uuwWWEzwirHQLtrwIPT6b0gKTm
+          M7DmkPXa2s+EL+JbOqnVKgm3Hl2Ky7m48QPr26sK1sElc7rcjdT2RtA0iANVo7ut
+          oZT9vY5/+Jlv6IesFUOlcpCOqqVpi+oKPHVGLgjGtb1uny/jxf2khuRpvIMrkEc3
+          +MMwy+VegdzhO+7em4xtu/5yFRrq1016xfTTN9Cc4XL5QyaOwdZNe8irXSEEtjZ6
+          zp9o/0ECgYEA9LyDuFbTNpZLnjz6tpb/RO+EYUhxC8dqUBGUiAA4hIT5dIhpDGzB
+          YesH6jYpzzGiMMiwR+wcSAp1csBJII9etzUPIVvtGdEsk6+W7m4iUVq+zuFks8NT
+          rXXR9zkNi033GYSh1PX9qtPWsQqjbKPWHIHoVQaoJrwO7RleVdy2wS8CgYEA157Q
+          OI0fKebhtMIKaWtWTcxAbeiDEAXVOctjfKFdzynbAiYlyug6wt9hiClzeJxcDqzt
+          IRPBQpdh+BKWXueTJ9TPdoUOVQmYDQjA5Br4ffk7YE506JT4KzJiPve86Yrs96Cc
+          sgEiCI4lqOBqeT4Sz4siyK0PjDXIucIQImAOnKUCgYAtZuOQyRq537v7iRiB0xVc
+          Nor6eTPvmXkRjZFegZv6iai1g7DpSyu8/JslShMLiwupvTFmxligzL/pH97xGWfa
+          2Q8Lg0BDL9jzNPntFaVsLkeDnbDO4IefgGIJWR44H6idpUtYdKIwlMgZY/3ZY7OO
+          6lKto2SCexTRy4kCqMWGpQKBgFZcVJeh5k55HAOzCEqK5ElKuq+Kxhu/ylRYoyNC
+          2njkEcT9lHt9ojN1FvJbb9VqAvEZz+xEpk5Opb2fbDzc0bLNaL7WshPbQNxPmjqC
+          lu6VyXNcWTTinbdnebQws6hyrVDNMpWVIJV+oZTPNbYT56La3naz4htNW3UTRjUO
+          divFAoGBAL/JCBE4DuUPRzoCmik+wootfCt1cCDpqywzO/CsDLBjvqfUh4Ra0i6O
+          tmLocb/vM+NinJ9p36ugqC7DkWggoZIcobXYu589DvdrInZ4hB7NqUxWvngaYhv0
+          ukRzshg8F5YxLMJ6AcGykpbUKpgbQraS1PAe7tQEgobCmjit/hQU
+          -----END RSA PRIVATE KEY-----
+        passphrase: changeit
+  connectionTimeout: 10000
+  reconnectInternval: 1000
+  reconnectLimit: -1
+  requestTimeout: 10000
+login:
+  password: cloudfoundry
+  role: USER
+  username: admin
+openstack:
+  cinder:
+    az: zone00
+  endpoint: https://os.eu-de-darz.msh.host:5000/v3
+  imageId: 7e72a4b2-8dd4-4a3c-94f9-0ad895b7a622
+  keypair: service-dev
+  networkId: feb96c822-631f-483f-a4b3-8eb4e87be9e9
+  pool: public00
+  project:
+    domainName: meshstack
+    projectName: cloudfoundry-dev
+  subnetId: 9fe94282-36e8-42a9-8af9-fac6b68a8957
+  user:
+    domainName: meshstack
+    password: 6Wjs22B9A2VXepWw
+    username: cfservice-dev
+pgpool:
+  enabled: true
+site:
+  iaas:
+    platform: bosh-lite
+  properties:
+    osb-lbaas:
+      backend_servers:
+      - 10.0.8.13
+      tcp_backend_servers:
+      - 10.0.8.14
+spring:
+  credhub:
+    bosh-director: bucc
+    certificate:
+      ca: |
+        -----BEGIN CERTIFICATE-----
+        MIIDJDCCAgygAwIBAgIRAOlNqwH5EmWqw6yIOxfJJVQwDQYJKoZIhvcNAQELBQAw
+        OzEMMAoGA1UEBhMDVVNBMRYwFAYDVQQKEw1DbG91ZCBGb3VuZHJ5MRMwEQYDVQQD
+        EwpDcmVkSHViIENBMB4XDTE5MDYxNzA5NDEyNloXDTIwMDYxNjA5NDEyNlowOzEM
+        MAoGA1UEBhMDVVNBMRYwFAYDVQQKEw1DbG91ZCBGb3VuZHJ5MRMwEQYDVQQDEwpD
+        cmVkSHViIENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAs01D2/2E
+        9/+c4DFzndimgTbzAmNe6+yuBDk1QaSK7CwmnGcvNK/fGNxg9gewmxC1GN7bX2OW
+        qKZv2SOWq9v30l3/HhcsBUyXOGPJLxk5LMxZj0ISrtcx+qrnxbGpo200cLinTScZ
+        NUnN3rWxLkr8Lt16/Zvp6QE6KvtE4aLpxTLbhEfjFIy92rI1AOcTvrWCLjw5W/JZ
+        +NhGZupomRHwq2QDwrXDjLfya44RckcUx5x+2idFuIItZUsNkxbtgNtKt4nCaUm6
+        6FAO0f/4htNYoFZr9OQahR8kWd2ZqQlXcFe9FseBZGn8cV/0kBQ46i6tIgEuHqQE
+        rLcSPuv0esAhWQIDAQABoyMwITAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUw
+        AwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAHPMVds4aTLbgbiq6JCoBXDEFAsuLS3Fl
+        Ba6fdpFkAonvcJMCUqFDun0sESw0kcKS/jaBJIoGS/MQxt4hn8A13Eq03crgt87Q
+        iWCPdpKc3YLDiyYRHCja29sGIkWiqDc8qGU8hvFQvjdSvkmiyzi0ep+hjdchqMJX
+        LVimHJQJnhYTfLZZJ6HEOBF8urgA15dg54F5RPOitfEw27AVDpdOaCHkCUScbqzN
+        srV/y4I9v2Y3FyLOlRbX5PQtwfzUqXyXeUzBe8LlEQIaEU+cUQRunwjNT3X/lSZR
+        74WOwdwZv5ZiAuJZEkwpWfOgmx10s0d5mLtS1yyQs1vvTnnjvrX0PA==
+        -----END CERTIFICATE-----
+      certificate: |
+        -----BEGIN CERTIFICATE-----
+        MIIDJDCCAgygAwIBAgIRAOlNqwH5EmWqw6yIOxfJJVQwDQYJKoZIhvcNAQELBQAw
+        OzEMMAoGA1UEBhMDVVNBMRYwFAYDVQQKEw1DbG91ZCBGb3VuZHJ5MRMwEQYDVQQD
+        EwpDcmVkSHViIENBMB4XDTE5MDYxNzA5NDEyNloXDTIwMDYxNjA5NDEyNlowOzEM
+        MAoGA1UEBhMDVVNBMRYwFAYDVQQKEw1DbG91ZCBGb3VuZHJ5MRMwEQYDVQQDEwpD
+        cmVkSHViIENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAs01D2/2E
+        9/+c4DFzndimgTbzAmNe6+yuBDk1QaSK7CwmnGcvNK/fGNxg9gewmxC1GN7bX2OW
+        qKZv2SOWq9v30l3/HhcsBUyXOGPJLxk5LMxZj0ISrtcx+qrnxbGpo200cLinTScZ
+        NUnN3rWxLkr8Lt16/Zvp6QE6KvtE4aLpxTLbhEfjFIy92rI1AOcTvrWCLjw5W/JZ
+        +NhGZupomRHwq2QDwrXDjLfya44RckcUx5x+2idFuIItZUsNkxbtgNtKt4nCaUm6
+        6FAO0f/4htNYoFZr9OQahR8kWd2ZqQlXcFe9FseBZGn8cV/0kBQ46i6tIgEuHqQE
+        rLcSPuv0esAhWQIDAQABoyMwITAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUw
+        AwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAHPMVds4aTLbgbiq6JCoBXDEFAsuLS3Fl
+        Ba6fdpFkAonvcJMCUqFDun0sESw0kcKS/jaBJIoGS/MQxt4hn8A13Eq03crgt87Q
+        iWCPdpKc3YLDiyYRHCja29sGIkWiqDc8qGU8hvFQvjdSvkmiyzi0ep+hjdchqMJX
+        LVimHJQJnhYTfLZZJ6HEOBF8urgA15dg54F5RPOitfEw27AVDpdOaCHkCUScbqzN
+        srV/y4I9v2Y3FyLOlRbX5PQtwfzUqXyXeUzBe8LlEQIaEU+cUQRunwjNT3X/lSZR
+        74WOwdwZv5ZiAuJZEkwpWfOgmx10s0d5mLtS1yyQs1vvTnnjvrX0PA==
+        -----END CERTIFICATE-----
+      private_key: |
+        -----BEGIN RSA PRIVATE KEY-----
+        MIIEpQIBAAKCAQEAs01D2/2E9/+c4DFzndimgTbzAmNe6+yuBDk1QaSK7CwmnGcv
+        NK/fGNxg9gewmxC1GN7bX2OWqKZv2SOWq9v30l3/HhcsBUyXOGPJLxk5LMxZj0IS
+        rtcx+qrnxbGpo200cLinTScZNUnN3rWxLkr8Lt16/Zvp6QE6KvtE4aLpxTLbhEfj
+        FIy92rI1AOcTvrWCLjw5W/JZ+NhGZupomRHwq2QDwrXDjLfya44RckcUx5x+2idF
+        uIItZUsNkxbtgNtKt4nCaUm66FAO0f/4htNYoFZr9OQahR8kWd2ZqQlXcFe9FseB
+        ZGn8cV/0kBQ46i6tIgEuHqQErLcSPuv0esAhWQIDAQABAoIBAQCYo/5RGdJJDeKP
+        OYojpnyZJB5cuhvk3OiHz+v2pg1eYXe9TlpxkAdtMq+Yw5Mlb2O8eHxpCG8JxCcT
+        w6hRRkIDZOH6y98946YY61oqLl7uNElKHAWrsqdprnUBZ+3yotUx4QEMPWzIYLxS
+        DHt53XwyqXo6zLClG9ZZIO/S5s38gZDtmgMKJ4CSW7eWQ90b3lT0WigZvZ9XQLEg
+        JhbrDuSSikmT52xFf1dGoSds5y16ZRwrWtJKf8Sa/dc6Wh8LrtJQiydHi1UBEd29
+        9v+8x12YLcw8fx/ZF7i09Kuk5fy1eSuwGjb3zar9tgVCyNfmIL3xkUBvHVqxEbnI
+        3FqbXiTBAoGBAOrVckeHM86HbWdtkSOJs/S7+s/Sqzv2dYn+kjWVLR8V+09VpRZn
+        v6UBbUjThVkTYSD1askF38+zRIb0x+yCMFCQzM6OMTERzTAoDZ7BYr1YmAL/mUsG
+        wwr9Ti0y0B39J7Bl5xzeg/tzdd14iJ8WCRIjT/nNSJpL/r7LFUzfnVa3AoGBAMN2
+        eXfaYqZg3h9Z8hPjY475yOFVIGK0Mq8Kx69gOVJZERB/V00hih7XeoGi39v/6VTc
+        e04N9CevhKTBLL/GcPzxq5cxa6khJK7fAR4j92xeq6s0hjhwq3P4uiYV9+CQhuUT
+        0Eg/sSHBord267nqf721uIlnnLXbMY8EcF72bLhvAoGBALklLAKE8C2GzJTc569T
+        JBRyGJ69g8+00prHoNKqGHcHx6mW5p+xkIExjM38JohCJTPtChIPlZOVzRNx7iXj
+        xt/eKfs4VERRuqqbCZH++jA6py7GAkAKxr/lUjuEcl0SeLY0wXAbZ4daUrUYEO8M
+        Wn54ZNeYKAOuotweFV8UdmIlAoGBALaBxA9mCWDC6AQsDv4E/uv8TVYhDxk6mmyY
+        yzT0yvEaGvXlgRWS8I21szyiYRXhkPPc3wFVxBjeKSNRAECcwNldqlOFILqOKNtj
+        fH6xJJC6oN4+L+k5Qs4Je36eWpIDQQFai8s6NWGIlS9rSdWRoO75Y7Jg3ZFsdozM
+        n0P8Ii3fAoGAX/EmCij4CgZ9KdN0VLoLbwG2OizBEaNR549tsuP00xw4e23epkJA
+        DxbOynSCrbvO0GNXF7Odu0iYK6TbKhdGoudh5qL5xav//r6nYUdTKhB5Hjw7VWpF
+        27xwui4cMutxW5rtg7uulUehEW1f3LtO/6+Y2XNtITnUWLc42ZyeKZs=
+        -----END RSA PRIVATE KEY-----
+    oauth2:
+      access-token-uri: https://192.168.50.6:8443/oauth/token
+      client-id: credhub-admin
+      client-secret: vv4bjif4qwhnr7hmb1aa
+    url: https://192.168.50.6:8844
+  data:
+    mongodb:
+      database: evoila
+      host: 127.0.0.1
+      password: evoila
+      port: 27017
+      username: evoila
+  profiles: local
+  rabbitmq:
+    host: 127.0.0.1
+    password: evoila
+    port: 5672
+    username: evoila
+  thymeleaf:
+    cache: false
+    mode: LEGACYHTML5
+
