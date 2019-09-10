@@ -28,3 +28,4 @@ ca.pem
 *logging.file_IS_UNDEFINED
 osb-service/src/main/resources/static
 osb-service/src/main/resources/templates
+application-local.yml
