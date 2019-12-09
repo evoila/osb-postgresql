@@ -41,18 +41,15 @@ instance_groups:
     release: osb-bosh-postgresql
   - name: backup-agent
     release: osb-bosh-postgresql
-  - name: node_exporter
-    release: osb-bosh-monitoring
   - name: postgres_exporter
-    release: osb-bosh-monitoring
+    release: prometheus
+    properties:
   properties:
+    postgres_exporter:
+      datasource_name: "postgresql://((exporter_credentials.username)):((exporter_credentials.password))@127.0.0.1:6432/postgres?sslmode=disable"
     backup_agent:
       username: backup
       password: rulez
-    postgres_exporter:
-      user: admin
-      password: admin
-      port: 5432
     postgres:
       resource:
         shared_buffers: 128MB
@@ -108,8 +105,6 @@ instance_groups:
   jobs:
   - name: pgpool
     release: osb-bosh-postgresql
-  - name: node_exporter
-    release: osb-bosh-monitoring
   properties:
     pcp:
       system_password: ((pcp_password))
