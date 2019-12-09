@@ -6,7 +6,7 @@ name: osb-bosh-postgresql
 releases:
 - name: osb-bosh-postgresql
   version: latest
-- name: osb-bosh-monitoring
+- name: prometheus
   version: latest
 
 update:
