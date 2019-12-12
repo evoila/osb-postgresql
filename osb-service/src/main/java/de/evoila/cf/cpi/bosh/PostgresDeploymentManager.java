@@ -60,7 +60,7 @@ public class PostgresDeploymentManager extends DeploymentManager {
 
             UsernamePasswordCredential exporterCredential = credentialStore.createUser(serviceInstance,
                     DefaultCredentialConstants.EXPORTER_CREDENTIALS);
-            postgresExporter.put("datasource_name", "postgresql://exporterCredential.getPassword():exporterCredential.getPassword()@127.0.0.1:6432/postgres?sslmode=disable");
+            postgresExporter.put("datasource_name", "postgresql://" + exporterCredential.getUsername() + ":" + exporterCredential.getPassword() + "@127.0.0.1:6432/postgres?sslmode=disable");
             HashMap<String, Object> exporterProperties = adminUsers.get(1);
             exporterProperties.put("username", exporterCredential.getUsername());
             exporterProperties.put("password", exporterCredential.getPassword());
