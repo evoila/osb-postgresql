@@ -190,7 +190,7 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
                         username, password)
         );
 
-        executeCommands(channel, commands, true);
+        executeCommands(channel, commands, false);
 
         close(channel, session);
     }
