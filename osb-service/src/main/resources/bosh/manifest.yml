@@ -98,6 +98,7 @@ instance_groups:
   instances: 1
   vm_type: minimal
   stemcell: default
+  persistent_disk_type: 1GB
   azs:
   - z1
   networks:
