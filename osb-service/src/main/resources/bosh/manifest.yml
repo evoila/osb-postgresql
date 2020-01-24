@@ -111,7 +111,7 @@ instance_groups:
       system_password: ((pcp_password))
     pgpool:
       pool_passwd: pool_passwd
-      debug: on
+      debug: off
       backend:
         port: 5432
       max_pool: 4
