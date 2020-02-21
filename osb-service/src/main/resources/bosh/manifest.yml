@@ -46,7 +46,7 @@ instance_groups:
     properties:
   properties:
     postgres_exporter:
-      datasource_name: "postgresql://((exporter_credentials.username)):((exporter_credentials.password))@127.0.0.1:6432/postgres?sslmode=disable"
+      datasource_name: "postgresql://((exporter_credentials.username)):((exporter_credentials.password))@127.0.0.1:5432/postgres?sslmode=disable"
     backup_agent:
       username: backup
       password: rulez
