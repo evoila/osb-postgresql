@@ -120,8 +120,6 @@ instance_groups:
       load_balance_mode: off
       master_slave_mode: on
       master_slave_sub_mode: stream
-      client_idle_limit: 10
-      connection_life_time: 10
       hba:
       - host all all 0.0.0.0/0 md5
       - host all all ::/0 md5
