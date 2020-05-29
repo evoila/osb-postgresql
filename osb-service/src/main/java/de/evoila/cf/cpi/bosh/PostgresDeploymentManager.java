@@ -92,9 +92,10 @@ public class PostgresDeploymentManager extends DeploymentManager {
             Map<String, Object> database = new HashMap<>();
             database.put("name", PostgreSQLUtils.dbName(serviceInstance.getId()));
             database.put("users", databaseUsers);
-            database.put("extensions", Arrays.asList("postgis", "postgis_topology",
+/*            database.put("extensions", Arrays.asList("postgis", "postgis_topology",
                     "fuzzystrmatch", "address_standardizer",
                     "postgis_tiger_geocoder", "pg_trgm"));
+*/
             databases.add(database);
 
             postgres.put("databases", databases);

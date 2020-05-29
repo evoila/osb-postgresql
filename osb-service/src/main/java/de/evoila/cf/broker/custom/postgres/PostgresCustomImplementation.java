@@ -87,12 +87,13 @@ public class PostgresCustomImplementation {
     public void createExtensions(PostgresDbService jdbcService) throws SQLException {
 		Map<String, String> availableExtensions = jdbcService.executeSelect("SELECT name FROM pg_available_extensions", "name");
 
-        List<String> extensionsToInstall = Arrays.asList("fuzzystrmatch", "postgis", "postgis_topology", "address_standardizer", "postgis_tiger_geocoder");
+/*       List<String> extensionsToInstall = Arrays.asList("fuzzystrmatch", "postgis", "postgis_topology", "address_standardizer", "postgis_tiger_geocoder");
 		for (String extension : extensionsToInstall) {
 			if (availableExtensions.containsValue(extension)) {
 				jdbcService.executeUpdate("CREATE EXTENSION IF NOT EXISTS \"" + extension + "\"");
 			}
 		}
+*/
 	}
 
 	public void dropAllExtensions(PostgresDbService jdbcService) throws SQLException {
