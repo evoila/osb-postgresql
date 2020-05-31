@@ -15,6 +15,8 @@ import de.evoila.cf.security.credentials.DefaultCredentialConstants;
 import org.springframework.core.env.Environment;
 
 import java.util.*;
+import java.security.SecureRandom;
+import javax.xml.bind.DatatypeConverter;
 
 /**
  * @author Marco Hennig, Johannes Hiemer.
@@ -33,6 +35,10 @@ public class PostgresDeploymentManager extends DeploymentManager {
     @Override
     protected void replaceParameters(ServiceInstance serviceInstance, Manifest manifest, Plan plan, Map<String,
             Object> customParameters, boolean isUpdate) {
+	SecureRandom random = new SecureRandom();
+	byte tdeBytes[] = new byte[16]; // 128 bits are converted to 16 bytes;
+	random.nextBytes(tdeBytes);
+	String tdeKeyString = DatatypeConverter.printHexBinary(tdeBytes).toLowerCase();
         HashMap<String, Object> properties = new HashMap<>();
         if (customParameters != null && !customParameters.isEmpty())
             properties.putAll(customParameters);
@@ -49,6 +55,7 @@ public class PostgresDeploymentManager extends DeploymentManager {
             HashMap<String, Object> backupAgent = (HashMap<String, Object>) postgresManifestProperties.get("backup_agent");
 
             PasswordCredential systemPassword = credentialStore.createPassword(serviceInstance, CredentialConstants.PGPOOL_SYSTEM_PASSWORD);
+            PasswordCredential tdeKey = credentialStore.createUser(serviceInstance, CredentialConstants.TDE_KEY,"tde",tdeKeyString);
             pcp.put("system_password", systemPassword.getPassword());
 
             List<HashMap<String, Object>> adminUsers = (List<HashMap<String, Object>>) postgres.get("admin_users");

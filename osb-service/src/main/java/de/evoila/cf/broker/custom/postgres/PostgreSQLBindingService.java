@@ -160,14 +160,15 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		if (host != null)
 		    endpoint = host.getIp() + ":" + host.getPort();
 
-        String dbURL = String.format("postgres://%s:%s@%s/%s", usernamePasswordCredential.getUsername(),
-                usernamePasswordCredential.getPassword(), endpoint, database);
+        String dbURL = String.format("postgres://%s:%s@%s/%s??sslmode=%s", usernamePasswordCredential.getUsername(),
+                usernamePasswordCredential.getPassword(), endpoint, database,"verify-full");
 
 		Map<String, Object> credentials = new HashMap<>();
 		credentials.put(URI, dbURL);
 		credentials.put(USERNAME, usernamePasswordCredential.getUsername());
 		credentials.put(PASSWORD, usernamePasswordCredential.getPassword());
 		credentials.put(DATABASE, database);
+		credentials.put("sslmode", "verify-full");
 
 		return credentials;
 	}
