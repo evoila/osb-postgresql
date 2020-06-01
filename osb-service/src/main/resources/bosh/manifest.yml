@@ -43,9 +43,9 @@ instance_groups:
   persistent_disk_type: 10GB
   jobs:
   - name: postgres
-    release: osb-bosh-postgresql
+    release: osb-bosh-postgresql-tde
   - name: backup-agent
-    release: osb-bosh-postgresql
+    release: osb-bosh-postgresql-tde
   - name: postgres_exporter
     release: prometheus
     properties:
@@ -116,7 +116,7 @@ instance_groups:
   - name: service
   jobs:
   - name: pgpool
-    release: osb-bosh-postgresql
+    release: osb-bosh-postgresql-tde
   properties:
     pcp:
       system_password: ((pcp_password))
