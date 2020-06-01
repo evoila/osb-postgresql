@@ -29,7 +29,7 @@ public class PostgresDbService {
 
 		try {
 			Class.forName("org.postgresql.Driver");
-			String url = "jdbc:postgresql://" + connectionUrl + "/" + database + "?sslmode=verify-full";
+			String url = "jdbc:postgresql://" + connectionUrl + "/" + database + "?sslmode=verify-full" + "&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory";
 			connection = DriverManager.getConnection(url, properties);
 
 		} catch (ClassNotFoundException | SQLException e) {
