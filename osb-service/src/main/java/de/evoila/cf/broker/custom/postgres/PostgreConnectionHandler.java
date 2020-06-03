@@ -92,6 +92,7 @@ public class PostgreConnectionHandler {
                 connectionParameter.getUsernamePasswordCredential().getUsername(),
                 connectionParameter.getUsernamePasswordCredential().getPassword(),
                 connectionParameter.getDatabase(),
+                connectionParameter.getSsl(),
                 connectionParameter.getServerAddresses());
         return jdbcService;
     }

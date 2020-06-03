@@ -24,7 +24,7 @@ public class PostgresDbService {
 
 	private Connection connection;
 
-	private boolean createConnection(String database, List<ServerAddress> serverAddresses, Properties properties,boolean ssl) {
+	private boolean createConnection(String database, List<ServerAddress> serverAddresses, Properties properties, boolean ssl) {
 		String connectionUrl = ServiceInstanceUtils.connectionUrl(serverAddresses);
 
 		try {
@@ -40,23 +40,23 @@ public class PostgresDbService {
 		return true;
 	}
 
-	public boolean createExtendedConnection(String username, String password, String database, List<ServerAddress> serverAddresses) {
+	public boolean createExtendedConnection(String username, String password, String database, boolean ssl, List<ServerAddress> serverAddresses) {
 		Properties properties = new Properties();
 
 		properties.setProperty("user",username);
 		properties.setProperty("password",password);
 		properties.setProperty("preferQueryMode","extended");
 
-		return createConnection(database, serverAddresses, properties,true);
+		return createConnection(database, serverAddresses, properties, ssl);
 	}
 
-	public boolean createSimpleConnection(String username, String password, String database,boolean ssl, List<ServerAddress> serverAddresses) {
+	public boolean createSimpleConnection(String username, String password, String database, boolean ssl, List<ServerAddress> serverAddresses) {
 		Properties properties = new Properties();
 		properties.setProperty("user",username);
 		properties.setProperty("password",password);
 		properties.setProperty("preferQueryMode","simple");
 
-		return createConnection(database, serverAddresses, properties,ssl);
+		return createConnection(database, serverAddresses, properties, ssl);
 	}
 
 	public boolean isConnected() throws SQLException {

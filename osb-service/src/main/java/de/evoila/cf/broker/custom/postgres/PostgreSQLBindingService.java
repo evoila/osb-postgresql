@@ -83,13 +83,27 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
     @Override
     protected Map<String, Object> createCredentials(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                     ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException {
+	    boolean ssl = true;
+        Object sslProperty = null;
         List<ServerAddress> hosts = new ArrayList<>();
         String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
         if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
             hosts = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);
         }
+        if ((sslProperty=getMapProperty( serviceInstance.getParameters(),"postgres","ssl","enabled"))!=null){
+            ssl = ((Boolean)sslProperty).booleanValue();
+        }
+        if ((sslProperty=getMapProperty( serviceInstanceBindingRequest.getParameters(),"ssl","enabled"))!=null){
+            boolean bindSsl = ((Boolean)sslProperty).booleanValue();
+            if( ssl==false && bindSsl == true){
+                throw new ServiceBrokerException("Cannot use SSL on this Service Instance");
+            }else{
+                ssl = bindSsl;
+            }
+        }
 
-        String database = PostgreSQLUtils.dbName(serviceInstance.getId());
+
+            String database = PostgreSQLUtils.dbName(serviceInstance.getId());
         if (serviceInstanceBindingRequest.getParameters() != null) {
             String customBindingDatabase = (String) serviceInstanceBindingRequest.getParameters().get("database");
 
@@ -160,17 +174,18 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		if (host != null)
 		    endpoint = host.getIp() + ":" + host.getPort();
 
-        String dbURL = String.format("postgres://%s:%s@%s/%s?sslmode=%s%s", usernamePasswordCredential.getUsername(),
-                usernamePasswordCredential.getPassword(), endpoint, database,"verify-full","&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory");
+        String dbURL = String.format("postgres://%s:%s@%s/%s" + (ssl?"?sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory":""), usernamePasswordCredential.getUsername(),
+                usernamePasswordCredential.getPassword(), endpoint, database);
 
 		Map<String, Object> credentials = new HashMap<>();
 		credentials.put(URI, dbURL);
 		credentials.put(USERNAME, usernamePasswordCredential.getUsername());
 		credentials.put(PASSWORD, usernamePasswordCredential.getPassword());
 		credentials.put(DATABASE, database);
-		credentials.put("sslmode", "verify-full");
-		credentials.put("sslfactory","org.postgresql.ssl.DefaultJavaSSLFactory");
-
+		if (ssl){
+            credentials.put("sslmode", "verify-full");
+            credentials.put("sslfactory","org.postgresql.ssl.DefaultJavaSSLFactory");
+        }
 		return credentials;
 	}
 
@@ -200,4 +215,17 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         }
     }
 
+    private Object getMapProperty(Map<String,Object> map,String ... keys){
+        Map<String,Object> nextMap=map;
+        if(map==null){
+            return null;
+        }
+        for(String key:keys){
+            if(!map.containsKey(key)){
+                return null;
+            }
+            map=(Map<String, Object>)map.get(key);
+        }
+        return map;
+    }
 }
