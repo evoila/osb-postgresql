@@ -1,5 +1,6 @@
 package de.evoila.cf.cpi.bosh;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import de.evoila.cf.broker.bean.BoshProperties;
 import de.evoila.cf.broker.custom.postgres.PostgreSQLUtils;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
@@ -36,12 +37,21 @@ public class PostgresDeploymentManager extends DeploymentManager {
     protected void replaceParameters(ServiceInstance serviceInstance, Manifest manifest, Plan plan, Map<String,
             Object> customParameters, boolean isUpdate) {
 	SecureRandom random = new SecureRandom();
+	boolean useSsl = true;
+	ArrayList<String> extensions = null;
 	byte tdeBytes[] = new byte[16]; // 128 bits are converted to 16 bytes;
 	random.nextBytes(tdeBytes);
 	String tdeKeyString = DatatypeConverter.printHexBinary(tdeBytes).toLowerCase();
         HashMap<String, Object> properties = new HashMap<>();
-        if (customParameters != null && !customParameters.isEmpty())
+        if (customParameters != null && !customParameters.isEmpty()){
             properties.putAll(customParameters);
+            Object ssl=getMapProperty(properties,"postgres","ssl");
+            if(ssl!=null) {
+                setMapProperty(properties,ssl,"pgpool","ssl");
+            }
+            useSsl=((Boolean)getMapProperty((Map<String,Object>)ssl,"enabled")).booleanValue();
+            extensions=(ArrayList<String>)getMapProperty(properties,"database","extenison");
+        }
 
         if (!isUpdate) {
             log.debug("Updating Deployment Manifest, replacing parameters");
@@ -67,7 +77,7 @@ public class PostgresDeploymentManager extends DeploymentManager {
 
             UsernamePasswordCredential exporterCredential = credentialStore.createUser(serviceInstance,
                     DefaultCredentialConstants.EXPORTER_CREDENTIALS);
-            postgresExporter.put("datasource_name", "postgresql://" + exporterCredential.getUsername() + ":" + exporterCredential.getPassword() + "@127.0.0.1:5432/postgres?sslmode=require");
+            postgresExporter.put("datasource_name", "postgresql://" + exporterCredential.getUsername() + ":" + exporterCredential.getPassword() + "@127.0.0.1:5432/postgres?sslmode="+(useSsl?"require":"disable"));
             HashMap<String, Object> exporterProperties = adminUsers.get(1);
             exporterProperties.put("username", exporterCredential.getUsername());
             exporterProperties.put("password", exporterCredential.getPassword());
@@ -99,6 +109,9 @@ public class PostgresDeploymentManager extends DeploymentManager {
             Map<String, Object> database = new HashMap<>();
             database.put("name", PostgreSQLUtils.dbName(serviceInstance.getId()));
             database.put("users", databaseUsers);
+            if(extensions!=null){
+                database.put("extensions",extensions);
+            }
 /*            database.put("extensions", Arrays.asList("postgis", "postgis_topology",
                     "fuzzystrmatch", "address_standardizer",
                     "postgis_tiger_geocoder", "pg_trgm"));
@@ -130,4 +143,30 @@ public class PostgresDeploymentManager extends DeploymentManager {
             }).findFirst().get().getProperties();
     }
 
+    private Object getMapProperty(Map<String,Object> map,String ... keys){
+        Map<String,Object> nextMap=map;
+        if(map==null){
+            return null;
+        }
+        for(String key:keys){
+            if(!map.containsKey(key)){
+                return null;
+            }
+            map=(Map<String, Object>)map.get(key);
+        }
+        return map;
+    }
+
+    private void setMapProperty(Map<String,Object> map,Object value,String ... keys){
+        Map<String,Object> nextMap=map;
+        int i;
+        for(i=0;i<keys.length-1;i++){
+            if(!map.containsKey(keys[i])){
+                map.put(keys[i],keys[i+1]);
+            }else {
+                map = (Map<String, Object>) map.get(keys[i]);
+            }
+        }
+        map.put(keys[i],value);
+    }
 }

@@ -24,12 +24,12 @@ public class PostgresDbService {
 
 	private Connection connection;
 
-	private boolean createConnection(String database, List<ServerAddress> serverAddresses, Properties properties) {
+	private boolean createConnection(String database, List<ServerAddress> serverAddresses, Properties properties,boolean ssl) {
 		String connectionUrl = ServiceInstanceUtils.connectionUrl(serverAddresses);
 
 		try {
 			Class.forName("org.postgresql.Driver");
-			String url = "jdbc:postgresql://" + connectionUrl + "/" + database + "?sslmode=verify-full" + "&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory";
+			String url = "jdbc:postgresql://" + connectionUrl + "/" + database + (ssl?"?sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory":"");
 			connection = DriverManager.getConnection(url, properties);
 
 		} catch (ClassNotFoundException | SQLException e) {
@@ -47,16 +47,16 @@ public class PostgresDbService {
 		properties.setProperty("password",password);
 		properties.setProperty("preferQueryMode","extended");
 
-		return createConnection(database, serverAddresses, properties);
+		return createConnection(database, serverAddresses, properties,true);
 	}
 
-	public boolean createSimpleConnection(String username, String password, String database, List<ServerAddress> serverAddresses) {
+	public boolean createSimpleConnection(String username, String password, String database,boolean ssl, List<ServerAddress> serverAddresses) {
 		Properties properties = new Properties();
 		properties.setProperty("user",username);
 		properties.setProperty("password",password);
 		properties.setProperty("preferQueryMode","simple");
 
-		return createConnection(database, serverAddresses, properties);
+		return createConnection(database, serverAddresses, properties,ssl);
 	}
 
 	public boolean isConnected() throws SQLException {
