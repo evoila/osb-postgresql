@@ -217,15 +217,17 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
     private Object getMapProperty(Map<String,Object> map,String ... keys){
         Map<String,Object> nextMap=map;
+        Object objectMap=map;
         if(map==null){
             return null;
         }
         for(String key:keys){
+            map=(Map< String, Object>)objectMap;
             if(!map.containsKey(key)){
                 return null;
             }
-            map=(Map<String, Object>)map.get(key);
+            objectMap=map.get(key);
         }
-        return map;
+        return objectMap;
     }
 }
