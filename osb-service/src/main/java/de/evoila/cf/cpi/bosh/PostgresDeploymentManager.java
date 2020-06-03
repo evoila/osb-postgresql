@@ -1,6 +1,5 @@
 package de.evoila.cf.cpi.bosh;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import de.evoila.cf.broker.bean.BoshProperties;
 import de.evoila.cf.broker.custom.postgres.PostgreSQLUtils;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
