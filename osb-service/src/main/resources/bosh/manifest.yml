@@ -104,9 +104,9 @@ instance_groups:
         - sample
         extensions:
         - citext
-      ssh:
-        pubkey: ((transport_ssh.public_key))
-        privkey: ((transport_ssh.private_key))
+    ssh:
+      pubkey: ((transport_ssh.public_key))
+      privkey: ((transport_ssh.private_key))
 
 - name: pgpool
   instances: 1
@@ -141,6 +141,6 @@ instance_groups:
       hba:
       - host all all 0.0.0.0/0 md5
       - host all all ::/0 md5
-      ssh:
-        pubkey: ((transport_ssh.public_key))
-        privkey: ((transport_ssh.private_key))
+    ssh:
+      pubkey: ((transport_ssh.public_key))
+      privkey: ((transport_ssh.private_key))
