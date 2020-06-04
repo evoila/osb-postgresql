@@ -46,7 +46,7 @@ public class PostgresDeploymentManager extends DeploymentManager {
             properties.putAll(customParameters);
             Object ssl=getMapProperty(properties,"postgres", "ssl", "enabled");
             if(ssl!=null) {
-                useSsl=((Boolean)getMapProperty((Map<String,Object>)ssl, "enabled")).booleanValue();
+                useSsl=((Boolean)ssl).booleanValue();
                 ssl=getMapProperty(properties,"postgres", "ssl");
                 setMapProperty(properties, ssl, "pgpool", "ssl");
             }
