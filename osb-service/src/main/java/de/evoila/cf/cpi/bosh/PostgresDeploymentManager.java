@@ -48,8 +48,11 @@ public class PostgresDeploymentManager extends DeploymentManager {
             if(ssl!=null) {
                 setMapProperty(properties,ssl,"pgpool","ssl");
             }
-            useSsl=((Boolean)getMapProperty((Map<String,Object>)ssl,"enabled")).booleanValue();
-            extensions=(ArrayList<String>)getMapProperty(properties,"database","extenison");
+            useSsl=((Boolean)getMapProperty((Map<String,Object>)ssl, "enabled")).booleanValue();
+            extensions=(ArrayList<String>)getMapProperty(properties, "postgres","database","extenisons");
+            if (extensions != null){
+                deleteMapProperty(properties, "postgres","database","extenisons");
+            }
         }
 
         if (!isUpdate) {
@@ -108,13 +111,9 @@ public class PostgresDeploymentManager extends DeploymentManager {
             Map<String, Object> database = new HashMap<>();
             database.put("name", PostgreSQLUtils.dbName(serviceInstance.getId()));
             database.put("users", databaseUsers);
-            if(extensions!=null){
+            if(extensions!=null && !extensions.isEmpty()){
                 database.put("extensions",extensions);
             }
-/*            database.put("extensions", Arrays.asList("postgis", "postgis_topology",
-                    "fuzzystrmatch", "address_standardizer",
-                    "postgis_tiger_geocoder", "pg_trgm"));
-*/
             databases.add(database);
 
             postgres.put("databases", databases);
@@ -156,6 +155,22 @@ public class PostgresDeploymentManager extends DeploymentManager {
             objectMap=map.get(key);
         }
         return objectMap;
+    }
+
+    private void deleteMapProperty(Map<String,Object> map,String ... keys){
+        Map<String,Object> nextMap=map;
+        Object objectMap = map;
+        if(map==null){
+            return;
+        }
+        for(String key:keys){
+            map=(Map< String, Object>)objectMap;
+            if(!map.containsKey(key)){
+                return ;
+            }
+            objectMap=map.get(key);
+        }
+        map.remove(objectMap);
     }
 
     private void setMapProperty(Map<String,Object> map,Object value,String ... keys){
