@@ -45,7 +45,7 @@ public class PostgresDeploymentManager extends DeploymentManager {
         if (customParameters != null && !customParameters.isEmpty()){
             properties.putAll(customParameters);
             Object ssl=getMapProperty(properties,"postgres", "ssl", "enabled");
-            if(ssl!=null) {
+            if (ssl!=null) {
                 useSsl=((Boolean)ssl).booleanValue();
                 ssl=getMapProperty(properties,"postgres", "ssl");
                 setMapProperty(properties, ssl, "pgpool", "ssl");
@@ -118,7 +118,8 @@ public class PostgresDeploymentManager extends DeploymentManager {
             databases.add(database);
 
             postgres.put("databases", databases);
-        } else if (isUpdate && customParameters != null && !customParameters.isEmpty()) {
+        }
+        if (customParameters != null && !customParameters.isEmpty()) {
             for (Map.Entry parameter : customParameters.entrySet()) {
                 Map<String, Object> manifestProperties = manifestProperties(parameter.getKey().toString(), manifest);
 
