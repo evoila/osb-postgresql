@@ -44,11 +44,12 @@ public class PostgresDeploymentManager extends DeploymentManager {
         HashMap<String, Object> properties = new HashMap<>();
         if (customParameters != null && !customParameters.isEmpty()){
             properties.putAll(customParameters);
-            Object ssl=getMapProperty(properties,"postgres","ssl");
+            Object ssl=getMapProperty(properties,"postgres", "ssl", "enabled");
             if(ssl!=null) {
-                setMapProperty(properties,ssl,"pgpool","ssl");
+                useSsl=((Boolean)getMapProperty((Map<String,Object>)ssl, "enabled")).booleanValue();
+                ssl=getMapProperty(properties,"postgres", "ssl");
+                setMapProperty(properties, ssl, "pgpool", "ssl");
             }
-            useSsl=((Boolean)getMapProperty((Map<String,Object>)ssl, "enabled")).booleanValue();
             extensions=(ArrayList<String>)getMapProperty(properties, "postgres","database","extenisons");
             if (extensions != null){
                 deleteMapProperty(properties, "postgres","database","extenisons");
