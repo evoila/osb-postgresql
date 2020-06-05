@@ -84,13 +84,15 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
     protected Map<String, Object> createCredentials(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                     ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException {
 	    boolean ssl = true;
+        boolean pgpool = plan.getMetadata().getIngressInstanceGroup().equals("postgres");
         Object sslProperty = null;
+        Object pgpoolProperty = null;
         List<ServerAddress> hosts = new ArrayList<>();
         String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
         if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
             hosts = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);
         }
-        if ((sslProperty=getMapProperty( serviceInstance.getParameters(),"postgres","ssl","enabled"))!=null){
+        if ((sslProperty = getMapProperty( serviceInstance.getParameters(),"postgres","ssl","enabled"))!=null){
             ssl = ((Boolean)sslProperty).booleanValue();
         }
         if ((sslProperty=getMapProperty( serviceInstanceBindingRequest.getParameters(),"ssl","enabled"))!=null){
@@ -118,7 +120,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         String generalRole = database;
 
 		try {
-		    if (postgresCustomImplementation.isPgpoolEnabled()) {
+		    if (pgpool) {
                 if (plan.getPlatform() == Platform.BOSH) {
                     postgresBoshPlatformService.createPgPoolUser(serviceInstance, ingressInstanceGroup, usernamePasswordCredential);
                 } else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {

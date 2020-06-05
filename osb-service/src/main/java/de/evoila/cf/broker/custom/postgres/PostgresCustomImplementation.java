@@ -24,9 +24,6 @@ import java.util.Map;
 @Service
 public class PostgresCustomImplementation {
 
-	@Value("${pgpool.enabled}")
-	private boolean pgpoolEnabled;
-
 	private ExistingEndpointBean existingEndpointBean;
 
     private PostgresBoshPlatformService postgresBoshPlatformService;
@@ -38,10 +35,6 @@ public class PostgresCustomImplementation {
     	this.postgresBoshPlatformService = postgresBoshPlatformService;
         this.postgreConnectionHandler = postgreConnectionHandler;
     }
-
-    public boolean isPgpoolEnabled(){
-		return pgpoolEnabled;
-	}
 
 	public boolean checkIfRoleExists(PostgresDbService jdbcService, String roleName) throws SQLException {
 		Map<String, String> existingRoles = jdbcService.executeSelect("SELECT rolname FROM pg_roles WHERE rolname='" + roleName + "'", "rolname");

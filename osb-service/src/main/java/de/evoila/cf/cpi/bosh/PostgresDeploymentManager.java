@@ -50,6 +50,12 @@ public class PostgresDeploymentManager extends DeploymentManager {
                 ssl=getMapProperty(properties,"postgres", "ssl");
                 setMapProperty(properties, ssl, "pgpool", "ssl");
             }
+            Object pgpool=getMapProperty(properties,"pgpool", "enabled");
+            if (pgpool!=null) {
+                if (!((Boolean)pgpool).booleanValue()){
+
+                }
+            }
             extensions=(ArrayList<String>)getMapProperty(properties, "postgres","database","extenisons");
             if (extensions != null){
                 deleteMapProperty(properties, "postgres","database","extenisons");
