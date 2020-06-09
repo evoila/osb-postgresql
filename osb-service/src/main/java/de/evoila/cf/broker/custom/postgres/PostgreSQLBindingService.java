@@ -83,7 +83,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
     @Override
     protected Map<String, Object> createCredentials(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                     ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException {
-	    boolean ssl = true;
+        boolean ssl = true;
         boolean pgpool = !plan.getMetadata().getIngressInstanceGroup().equals("postgres");
         Object sslProperty = null;
         Object pgpoolProperty = null;
@@ -91,6 +91,9 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
         if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
             hosts = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);
+        }
+        if ((sslProperty = getMapProperty( plan.getMetadata().getCustomParameters(),"ssl","enabled"))!=null){
+            ssl = ((Boolean)sslProperty).booleanValue();
         }
         if ((sslProperty = getMapProperty( serviceInstance.getParameters(),"postgres","ssl","enabled"))!=null){
             ssl = ((Boolean)sslProperty).booleanValue();
