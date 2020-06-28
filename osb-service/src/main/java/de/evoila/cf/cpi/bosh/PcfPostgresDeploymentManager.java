@@ -205,7 +205,7 @@ public class PcfPostgresDeploymentManager extends DeploymentManager {
         if (caPath instanceof String) {
             final String caPathAsString = (String) caPath;
             setMapProperty(ssl, "((" + caPathAsString + ".cert_pem))","ca");
-            setMapProperty(ssl, "((" + caPathAsString + ".private_key_pem))","caKey");
+            setMapProperty(ssl, "((" + caPathAsString + ".private_key_pem))","cakey");
         }
     }
 }
