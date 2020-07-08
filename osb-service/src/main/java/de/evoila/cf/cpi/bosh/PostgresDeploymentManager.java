@@ -58,9 +58,9 @@ public class PostgresDeploymentManager extends DeploymentManager {
 
                 }
             }
-            extensions=(ArrayList<String>)getMapProperty(properties, "postgres","database","extenisons");
+            extensions=(ArrayList<String>)getMapProperty(properties, "postgres","database","extensions");
             if (extensions != null){
-                deleteMapProperty(properties, "postgres","database","extenisons");
+                deleteMapProperty(properties, "postgres","database","extensions");
             }
         }
 
