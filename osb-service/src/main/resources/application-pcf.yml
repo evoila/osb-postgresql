@@ -10,6 +10,6 @@ spring:
 
 existing:
   endpoint:
-    pcfHosts: "${PGPOOL_HOSTS}"
+    pcfHosts: "${EXISTING_HOSTS}"
     name: pgpool
     port: 5432
