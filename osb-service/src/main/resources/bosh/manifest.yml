@@ -61,7 +61,7 @@ instance_groups:
       ssl:
         enabled: true
         ca: ((ssl_ca.certificate))((ssl_ca.ca))
-        ca_key: ((ssl_ca.private_key))
+        cakey: ((ssl_ca.private_key))
       resource:
         shared_buffers: 128MB
         temp_buffers: 8MB
@@ -127,7 +127,7 @@ instance_groups:
       ssl:
         enabled: true
         ca: ((ssl_ca.certificate))((ssl_ca.ca))
-        ca_key: ((ssl_ca.private_key))
+        cakey: ((ssl_ca.private_key))
       pool_passwd: pool_passwd
       debug: off
       backend:
