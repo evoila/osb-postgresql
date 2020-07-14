@@ -15,6 +15,7 @@ import de.evoila.cf.security.credentials.DefaultCredentialConstants;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+import de.evoila.cf.cpi.bosh.deployment.manifest.InstanceGroup;
 
 import java.util.*;
 import java.security.SecureRandom;
@@ -45,6 +46,15 @@ public class PcfPostgresDeploymentManager extends DeploymentManager {
 	byte tdeBytes[] = new byte[16]; // 128 bits are converted to 16 bytes;
 	random.nextBytes(tdeBytes);
 	String tdeKeyString = DatatypeConverter.printHexBinary(tdeBytes).toLowerCase();
+	if (!plan.getMetadata().getIngressInstanceGroup().equals("pgpool")){
+            Optional<InstanceGroup> group = manifest.getInstanceGroups()
+                    .stream()
+                    .filter(i -> i.getName().equals("pgpool"))
+                    .findAny();
+            if (group.isPresent()) {
+                group.get().setInstances(0);
+	    }
+    	}
         HashMap<String, Object> properties = new HashMap<>();
         if (customParameters != null && !customParameters.isEmpty()){
             properties.putAll(customParameters);
