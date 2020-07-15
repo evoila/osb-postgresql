@@ -14,6 +14,7 @@ import de.evoila.cf.security.credentials.CredentialStore;
 import de.evoila.cf.security.credentials.DefaultCredentialConstants;
 import org.springframework.core.env.Environment;
 import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.security.SecureRandom;
@@ -23,6 +24,7 @@ import javax.xml.bind.DatatypeConverter;
  * @author Marco Hennig, Johannes Hiemer.
  */
 @Profile("!pcf")
+@Component
 public class PostgresDeploymentManager extends DeploymentManager {
 
     private CredentialStore credentialStore;
