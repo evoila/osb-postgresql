@@ -1,0 +1,66 @@
+package de.evoila.cf.broker.utils;
+
+import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
+
+import java.util.Map;
+
+/**
+ * @author Patrick Weber.
+ */
+
+public class PostgresqlMapUtils {
+    static public Map<String, Object> manifestProperties(String instanceGroup, Manifest manifest) {
+        return manifest
+                .getInstanceGroups()
+                .stream()
+                .filter(i -> {
+                    if (i.getName().equals(instanceGroup))
+                        return true;
+                    return false;
+                }).findFirst().get().getProperties();
+    }
+
+    static public Object getMapProperty(Map<String,Object> map,String ... keys){
+        Map<String,Object> nextMap=map;
+        Object objectMap=map;
+        if(map==null){
+            return null;
+        }
+        for(String key:keys){
+            map=(Map< String, Object>)objectMap;
+            if(!map.containsKey(key)){
+                return null;
+            }
+            objectMap=map.get(key);
+        }
+        return objectMap;
+    }
+
+    static public void deleteMapProperty(Map<String,Object> map,String ... keys){
+        Map<String,Object> nextMap=map;
+        Object objectMap = map;
+        if(map==null){
+            return;
+        }
+        for(String key:keys){
+            map=(Map< String, Object>)objectMap;
+            if(!map.containsKey(key)){
+                return ;
+            }
+            objectMap=map.get(key);
+        }
+        map.remove(objectMap);
+    }
+
+    static public void setMapProperty(Map<String,Object> map,Object value,String ... keys){
+        Map<String,Object> nextMap=map;
+        int i;
+        for(i=0;i<keys.length-1;i++){
+            if(!map.containsKey(keys[i])){
+                map.put(keys[i],keys[i+1]);
+            }else {
+                map = (Map<String, Object>) map.get(keys[i]);
+            }
+        }
+        map.put(keys[i],value);
+    }}

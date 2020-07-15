@@ -22,6 +22,7 @@ import io.bosh.client.vms.Vm;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,11 +47,12 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
                                 BoshProperties boshProperties,
                                 CredentialStore credentialStore,
                                 Optional<DashboardClient> dashboardClient,
-                                Environment environment) {
+                                Environment environment,
+                                DeploymentManager deploymentManager) {
         super(repository,
                 catalogService, availabilityVerifier,
                 boshProperties, dashboardClient,
-                new PostgresDeploymentManager(boshProperties, environment, credentialStore));
+                deploymentManager);
         this.credentialStore = credentialStore;
     }
 
