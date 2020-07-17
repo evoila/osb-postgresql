@@ -14,53 +14,55 @@ public class PostgresqlMapUtils {
                 .getInstanceGroups()
                 .stream()
                 .filter(i -> {
-                    if (i.getName().equals(instanceGroup))
-                        return true;
-                    return false;
+                    return i.getName().equals(instanceGroup);
                 }).findFirst().get().getProperties();
     }
 
-    static public Object getMapProperty(Map<String,Object> map,String ... keys){
-        Map<String,Object> nextMap=map;
-        Object objectMap=map;
-        if(map==null){
+    static public Object getMapProperty(Map<String, Object> map, String... keys) {
+        Map<String, Object> nextMap = map;
+        Object objectMap = map;
+        if (map == null) {
             return null;
         }
-        for(String key:keys){
-            map=(Map< String, Object>)objectMap;
-            if(!map.containsKey(key)){
+        for (String key : keys) {
+            map = (Map<String, Object>) objectMap;
+            if (!map.containsKey(key)) {
                 return null;
             }
-            objectMap=map.get(key);
+            objectMap = map.get(key);
         }
         return objectMap;
     }
 
-    static public void deleteMapProperty(Map<String,Object> map,String ... keys){
-        Map<String,Object> nextMap=map;
+    static public void deleteMapProperty(Map<String, Object> map, String... keys) {
+        Map<String, Object> nextMap = map;
         Object objectMap = map;
-        if(map==null){
+        if (map == null) {
             return;
         }
-        for(String key:keys){
-            map=(Map< String, Object>)objectMap;
-            if(!map.containsKey(key)){
-                return ;
+        for (String key : keys) {
+            map = (Map<String, Object>) objectMap;
+            if (!map.containsKey(key)) {
+                return;
             }
-            objectMap=map.get(key);
+            if (map.size() == 1) {
+                map.remove(key);
+                return;
+            }
         }
         map.remove(objectMap);
     }
 
-    static public void setMapProperty(Map<String,Object> map,Object value,String ... keys){
-        Map<String,Object> nextMap=map;
+    static public void setMapProperty(Map<String, Object> map, Object value, String... keys) {
+        Map<String, Object> nextMap = map;
         int i;
-        for(i=0;i<keys.length-1;i++){
-            if(!map.containsKey(keys[i])){
-                map.put(keys[i],keys[i+1]);
-            }else {
+        for (i = 0; i < keys.length - 1; i++) {
+            if (!map.containsKey(keys[i])) {
+                map.put(keys[i], keys[i + 1]);
+            } else {
                 map = (Map<String, Object>) map.get(keys[i]);
             }
         }
-        map.put(keys[i],value);
-    }}
+        map.put(keys[i], value);
+    }
+}
