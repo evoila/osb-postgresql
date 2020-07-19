@@ -9,9 +9,12 @@ import de.evoila.cf.broker.utils.PostgresqlMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -20,46 +23,42 @@ import java.util.Optional;
  */
 @Profile("pcf")
 @Component
+@Order(25)
 public class PostgresqlCatalogMgmt implements TransformCatalog {
 
     private final Logger log = LoggerFactory.getLogger(PostgresqlCatalogMgmt.class);
 
 
     public void transform(Catalog catalog, Environment environment, EndpointConfiguration endpointConfiguration) {
-        catalog.getServices()
-                .stream().forEach(serviceDefinition -> {
-            serviceDefinition.getPlans()
-                    .stream().forEach(plan -> {
-                if (plan.getMetadata().isActive()) {
-                    changeSslCert(plan);
-                    deletePgpoolInstances(plan);
-                }
-            });
-        });
+        catalog.getServices().forEach(s -> s.getPlans().forEach(this::convert));
     }
-
 
     public void clean(Catalog catalog, Environment environment, EndpointConfiguration endpointConfiguration) {
-        catalog.getServices()
-                .stream().forEach(serviceDefinition -> {
-            serviceDefinition.getPlans()
-                    .stream().forEach(plan -> {
-                if (plan.getMetadata().isActive()) {
-                    cleanChangeSslCert(plan);
-                }
-            });
-        });
+        catalog.getServices().forEach(s -> s.getPlans().forEach(this::cleanChangeSslCert));
     }
 
+    private void convert(Plan plan){
+        changeSslCert(plan);
+        deletePgpoolInstances(plan);
+    }
+    
     private void cleanChangeSslCert(Plan plan) {
-        PostgresqlMapUtils.deleteMapProperty(plan.getMetadata().getProperties(), "postgres", "ssl");
+        PostgresqlMapUtils.deleteMapProperty(plan.getMetadata().getCustomParameters(), "capath");
     }
 
     private void changeSslCert(Plan plan) {
-        Map<String, Object> ssl = (Map<String, Object>) PostgresqlMapUtils.getMapProperty(plan.getMetadata().getProperties(), "postgres", "ssl");
+        Map<String,Object> properties= plan.getMetadata().getProperties();
         Object caPath = plan.getMetadata().getCustomParameters().get("capath");
-
         if (caPath instanceof String) {
+            if (properties == null){
+                properties = new HashMap<String, Object>();
+                plan.getMetadata().setProperties(properties);
+            }
+            Map<String, Object> ssl = (Map<String, Object>) PostgresqlMapUtils.getMapProperty(properties, "postgres", "ssl");
+            if (ssl == null){
+                ssl = new HashMap<String, Object>();
+                PostgresqlMapUtils.setMapProperty(properties, ssl , "postgres", "ssl");
+            }
             final String caPathAsString = (String) caPath;
             PostgresqlMapUtils.setMapProperty(ssl, "((" + caPathAsString + ".cert_pem))", "ca");
             PostgresqlMapUtils.setMapProperty(ssl, "((" + caPathAsString + ".private_key_pem))", "cakey");
