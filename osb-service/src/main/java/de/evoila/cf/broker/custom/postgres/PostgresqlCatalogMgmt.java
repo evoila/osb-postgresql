@@ -62,6 +62,14 @@ public class PostgresqlCatalogMgmt implements TransformCatalog {
             final String caPathAsString = (String) caPath;
             PostgresqlMapUtils.setMapProperty(ssl, "((" + caPathAsString + ".cert_pem))", "ca");
             PostgresqlMapUtils.setMapProperty(ssl, "((" + caPathAsString + ".private_key_pem))", "cakey");
+            ssl = (Map<String, Object>) PostgresqlMapUtils.getMapProperty(properties, "pgpool", "ssl");
+            if (ssl == null){
+                ssl = new HashMap<String, Object>();
+                PostgresqlMapUtils.setMapProperty(properties, ssl , "pgpool", "ssl");
+            }
+            final String caPathAsString = (String) caPath;
+            PostgresqlMapUtils.setMapProperty(ssl, "((" + caPathAsString + ".cert_pem))", "ca");
+            PostgresqlMapUtils.setMapProperty(ssl, "((" + caPathAsString + ".private_key_pem))", "cakey");
         }
     }
 
