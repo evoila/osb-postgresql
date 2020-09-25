@@ -5,10 +5,7 @@ import de.evoila.cf.broker.custom.postgres.PostgreConnectionHandler;
 import de.evoila.cf.broker.custom.postgres.PostgreSQLUtils;
 import de.evoila.cf.broker.custom.postgres.PostgresCustomImplementation;
 import de.evoila.cf.broker.custom.postgres.PostgresDbService;
-import de.evoila.cf.broker.exception.PlatformException;
-import de.evoila.cf.broker.exception.ServiceBrokerException;
-import de.evoila.cf.broker.exception.ServiceDefinitionDoesNotExistException;
-import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
+import de.evoila.cf.broker.exception.*;
 import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.ServiceInstance;
@@ -60,10 +57,10 @@ public class BackupCustomServiceImpl implements BackupCustomService {
 
     @Override
     public Map<String, String> getItems(String serviceInstanceId) throws ServiceInstanceDoesNotExistException,
-            ServiceDefinitionDoesNotExistException {
+            ServiceDefinitionDoesNotExistException, ServiceDefinitionPlanDoesNotExistException {
         ServiceInstance serviceInstance = this.validateServiceInstanceId(serviceInstanceId);
 
-        Plan plan = serviceDefinitionRepository.getPlan(serviceInstance.getPlanId());
+        Plan plan = serviceDefinitionRepository.getPlan(serviceInstance.getId(),serviceInstance.getPlanId());
 
         Map<String, String> result = new HashMap<>();
         if (plan.getPlatform().equals(Platform.BOSH)) {

@@ -31,6 +31,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * @author Johannes Hiemer, Yannic Remmet, Marco Hennig.
  */
@@ -39,6 +42,7 @@ import java.util.Optional;
 public class PostgresBoshPlatformService extends BoshPlatformService {
 
     private static final int defaultPort = 5432;
+    private Logger log = LoggerFactory.getLogger(getClass());
 
     private CredentialStore credentialStore;
 
