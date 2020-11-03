@@ -36,16 +36,16 @@ public class PostgreConnectionHandler {
         }
     }
 
-    private PostgresConnectionParameter prepareRootUserConnectionParameter(ServiceInstance serviceInstance, Plan plan, String database){
-        return prepareConnectionParameter(serviceInstance,plan,database,ConnectionUserType.ROOT_USER,null);
+    private PostgresConnectionParameter prepareRootUserConnectionParameter(ServiceInstance serviceInstance, Plan plan, String database, boolean ssl){
+        return prepareConnectionParameter(serviceInstance,plan,database,ConnectionUserType.ROOT_USER,null,ssl);
     }
 
-    private PostgresConnectionParameter prepareBindUserConnectionParameter(ServiceInstance serviceInstance, Plan plan, String database, String bindingId){
-        return prepareConnectionParameter(serviceInstance,plan,database,ConnectionUserType.BIND_USER,bindingId);
+    private PostgresConnectionParameter prepareBindUserConnectionParameter(ServiceInstance serviceInstance, Plan plan, String database, String bindingId,boolean ssl){
+        return prepareConnectionParameter(serviceInstance,plan,database,ConnectionUserType.BIND_USER,bindingId,ssl);
     }
 
     private PostgresConnectionParameter prepareConnectionParameter(ServiceInstance serviceInstance, Plan plan, String database,
-                                                                   ConnectionUserType connectionType, String bindingId) {
+                                                                   ConnectionUserType connectionType, String bindingId,boolean ssl) {
 
         PostgresConnectionParameter connectionParameter = new PostgresConnectionParameter();
         connectionParameter.setServerAddresses(serviceInstance, plan);
@@ -70,6 +70,7 @@ public class PostgreConnectionHandler {
         }
 
         connectionParameter.setDatabase(database);
+        connectionParameter.setSsl(ssl);
         return connectionParameter;
     }
 
@@ -98,19 +99,19 @@ public class PostgreConnectionHandler {
     }
 
 
-    public PostgresDbService createExtendedRootUserConnection(ServiceInstance serviceInstance, Plan plan, String database) {
-        return establishExtendedConnection(prepareRootUserConnectionParameter(serviceInstance,plan,database));
+    public PostgresDbService createExtendedRootUserConnection(ServiceInstance serviceInstance, Plan plan, String database,boolean ssl) {
+        return establishExtendedConnection(prepareRootUserConnectionParameter(serviceInstance,plan,database, ssl));
     }
 
-    public PostgresDbService createExtendedBindUserConnection(ServiceInstance serviceInstance, Plan plan, String database, String bindingId) {
-        return establishExtendedConnection(prepareBindUserConnectionParameter(serviceInstance,plan,database,bindingId));
+    public PostgresDbService createExtendedBindUserConnection(ServiceInstance serviceInstance, Plan plan, String database, String bindingId, boolean ssl) {
+        return establishExtendedConnection(prepareBindUserConnectionParameter(serviceInstance,plan,database,bindingId,ssl));
     }
 
-    public PostgresDbService createSimpleRootUserConnection (ServiceInstance serviceInstance, Plan plan, String database) {
-        return establishSimpleConnection(prepareRootUserConnectionParameter(serviceInstance,plan,database));
+    public PostgresDbService createSimpleRootUserConnection (ServiceInstance serviceInstance, Plan plan, String database, boolean ssl) {
+        return establishSimpleConnection(prepareRootUserConnectionParameter(serviceInstance,plan,database,ssl));
     }
 
-    public PostgresDbService createSimpleBindUserConnection (ServiceInstance serviceInstance, Plan plan, String database, String bindingId) {
-        return establishSimpleConnection(prepareBindUserConnectionParameter(serviceInstance,plan,database,bindingId));
+    public PostgresDbService createSimpleBindUserConnection (ServiceInstance serviceInstance, Plan plan, String database, String bindingId, boolean ssl) {
+        return establishSimpleConnection(prepareBindUserConnectionParameter(serviceInstance,plan,database,bindingId,ssl));
     }
 }

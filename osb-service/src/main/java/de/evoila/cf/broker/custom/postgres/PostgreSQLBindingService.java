@@ -80,32 +80,41 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    protected Map<String, Object> createCredentials(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
-                                                    ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException {
+    protected boolean ssl(ServiceInstance serviceInstance, Plan plan, boolean bindSsl) throws ServiceBrokerException {
         boolean ssl = true;
-        boolean pgpool = !plan.getMetadata().getIngressInstanceGroup().equals("postgres");
         Object sslProperty = null;
-        Object pgpoolProperty = null;
-        List<ServerAddress> hosts = new ArrayList<>();
-        String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
-        if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
-            hosts = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);
-        }
         if ((sslProperty = getMapProperty( plan.getMetadata().getCustomParameters(),"ssl","enabled"))!=null){
             ssl = ((Boolean)sslProperty).booleanValue();
         }
         if ((sslProperty = getMapProperty( serviceInstance.getParameters(),"postgres","ssl","enabled"))!=null){
             ssl = ((Boolean)sslProperty).booleanValue();
         }
-        if ((sslProperty=getMapProperty( serviceInstanceBindingRequest.getParameters(),"ssl","enabled"))!=null){
-            boolean bindSsl = ((Boolean)sslProperty).booleanValue();
+
             if( ssl==false && bindSsl == true){
                 throw new ServiceBrokerException("Cannot use SSL on this Service Instance");
             }else{
                 ssl = bindSsl;
             }
+        return ssl;
         }
+
+    @Override
+    protected Map<String, Object> createCredentials(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
+                                                    ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException {
+        boolean pgpool = !plan.getMetadata().getIngressInstanceGroup().equals("postgres");
+        Object pgpoolProperty = null;
+        Object sslProperty = null;
+        boolean bindSsl=true;
+        if ((sslProperty=getMapProperty( serviceInstanceBindingRequest.getParameters(),"ssl","enabled"))!=null) {
+            bindSsl = ((Boolean) sslProperty).booleanValue();
+        }
+        boolean ssl=ssl(serviceInstance,plan,bindSsl);
+        List<ServerAddress> hosts = new ArrayList<>();
+        String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
+        if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
+            hosts = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);
+        }
+       
 
 
             String database = PostgreSQLUtils.dbName(serviceInstance.getId());
@@ -134,7 +143,8 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
             }
             jdbcService = postgreConnectionHandler.createExtendedRootUserConnection(serviceInstance,
                     plan,
-                    database);
+                    database,
+                    ssl);
 
             /* TODO:
                  this connection should be done with the BIND_ADMIN ("CREATE ROLE") user, not with the superuser
@@ -151,8 +161,8 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 			jdbcService = postgreConnectionHandler.createExtendedBindUserConnection(serviceInstance,
                     plan,
                     database,
-                    bindingId
-                    );
+                    bindingId,
+                    ssl);
 //            jdbcService.createExtendedConnection(
 //			        usernamePasswordCredential.getUsername(),
 //                    usernamePasswordCredential.getPassword(),
@@ -197,21 +207,30 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
     @Override
     protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
         PostgresDbService jdbcService = null;
+
+        Object sslProperty = null;
+        boolean bindSsl=true;
+        if ((sslProperty=getMapProperty( binding.getParameters(),"ssl","enabled"))!=null) {
+            bindSsl = ((Boolean) sslProperty).booleanValue();
+        }
+        boolean ssl=ssl(serviceInstance,plan,bindSsl);
         if (plan.getPlatform() == Platform.BOSH) {
             jdbcService = postgreConnectionHandler.createExtendedRootUserConnection(serviceInstance,
                     plan,
-                    PostgreSQLUtils.dbName(serviceInstance.getId()));
+                    PostgreSQLUtils.dbName(serviceInstance.getId()),
+                    ssl);
         } else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
             jdbcService = postgreConnectionHandler.createExtendedRootUserConnection(serviceInstance,
                     plan,
-                    PostgreSQLUtils.dbName(serviceInstance.getId()));
+                    PostgreSQLUtils.dbName(serviceInstance.getId()),
+                    ssl);
         } else {
             throw new ServiceBrokerException("Unknown platform utilized in plan");
         }
 
         try {
             UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, binding.getId());
-            postgresCustomImplementation.unbindRoleFromDatabase(credentialStore,serviceInstance,plan, jdbcService, usernamePasswordCredential);
+            postgresCustomImplementation.unbindRoleFromDatabase(credentialStore,serviceInstance,plan, jdbcService, usernamePasswordCredential, ssl);
             credentialStore.deleteCredentials(serviceInstance, binding.getId());
         } catch (SQLException e) {
             throw new ServiceBrokerException("Could not remove from database");

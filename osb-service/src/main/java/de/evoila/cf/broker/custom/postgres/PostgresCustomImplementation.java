@@ -146,7 +146,7 @@ public class PostgresCustomImplementation {
         jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public To \"" + username + "\"");
     }
 
-	public void unbindRoleFromDatabase(CredentialStore credentialStore,ServiceInstance serviceInstance, Plan plan, PostgresDbService jdbcService, UsernamePasswordCredential usernamePasswordCredential) throws SQLException {
+	public void unbindRoleFromDatabase(CredentialStore credentialStore,ServiceInstance serviceInstance, Plan plan, PostgresDbService jdbcService, UsernamePasswordCredential usernamePasswordCredential, boolean ssl) throws SQLException {
         // jdbcService connection: service user -> service db
         String roleName = usernamePasswordCredential.getUsername();
 
@@ -156,7 +156,7 @@ public class PostgresCustomImplementation {
             // jdbcService_tmp connection:
             //   service user -> each database in the instance
             //   necessary because privileges have to be unbound from within the database
-            PostgresDbService jdbcService_tmp = postgreConnectionHandler.createSimpleRootUserConnection(serviceInstance,plan,database.getValue());
+            PostgresDbService jdbcService_tmp = postgreConnectionHandler.createSimpleRootUserConnection(serviceInstance,plan,database.getValue(),ssl);
 
             String generalRole = database.getValue();
 
