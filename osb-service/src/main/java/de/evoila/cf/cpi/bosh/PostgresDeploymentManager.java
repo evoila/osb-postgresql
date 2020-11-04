@@ -50,13 +50,6 @@ public class PostgresDeploymentManager extends DeploymentManager {
             if (ssl!=null) {
                 useSsl=((Boolean)ssl).booleanValue();
                 ssl=getMapProperty(properties,"postgres", "ssl");
-                setMapProperty(properties, ssl, "pgpool", "ssl");
-            }
-            Object pgpool=getMapProperty(properties,"pgpool", "enabled");
-            if (pgpool!=null) {
-                if (!((Boolean)pgpool).booleanValue()){
-
-                }
             }
             extensions=(ArrayList<String>)getMapProperty(properties, "postgres","database","extensions");
             if (extensions != null){
@@ -68,16 +61,10 @@ public class PostgresDeploymentManager extends DeploymentManager {
             log.debug("Updating Deployment Manifest, replacing parameters");
 
             Map<String, Object> postgresManifestProperties = manifestProperties("postgres", manifest);
-            Map<String, Object> pgpoolManifestProperties = manifestProperties("pgpool", manifest);
 
-            HashMap<String, Object> pcp = (HashMap<String, Object>) pgpoolManifestProperties.get("pcp");
             HashMap<String, Object> postgres = (HashMap<String, Object>) postgresManifestProperties.get("postgres");
             HashMap<String, Object> postgresExporter = (HashMap<String, Object>) postgresManifestProperties.get("postgres_exporter");
             HashMap<String, Object> backupAgent = (HashMap<String, Object>) postgresManifestProperties.get("backup_agent");
-
-            PasswordCredential systemPassword = credentialStore.createPassword(serviceInstance, CredentialConstants.PGPOOL_SYSTEM_PASSWORD);
-            PasswordCredential tdeKey = credentialStore.createUser(serviceInstance, CredentialConstants.TDE_KEY,"tde",tdeKeyString);
-            pcp.put("system_password", systemPassword.getPassword());
 
             List<HashMap<String, Object>> adminUsers = (List<HashMap<String, Object>>) postgres.get("admin_users");
             HashMap<String, Object> userProperties = adminUsers.get(0);

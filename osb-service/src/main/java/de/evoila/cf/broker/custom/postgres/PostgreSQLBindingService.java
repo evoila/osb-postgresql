@@ -101,8 +101,6 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
     @Override
     protected Map<String, Object> createCredentials(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                     ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException {
-        boolean pgpool = !plan.getMetadata().getIngressInstanceGroup().equals("postgres");
-        Object pgpoolProperty = null;
         Object sslProperty = null;
         boolean bindSsl=true;
         if ((sslProperty=getMapProperty( serviceInstanceBindingRequest.getParameters(),"ssl","enabled"))!=null) {
@@ -132,15 +130,6 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         String generalRole = database;
 
 		try {
-		    if (pgpool) {
-                if (plan.getPlatform() == Platform.BOSH) {
-                    postgresBoshPlatformService.createPgPoolUser(serviceInstance, ingressInstanceGroup, usernamePasswordCredential);
-                } else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
-                    existingServiceFactory.createPgPoolUser(postgresBoshPlatformService, ingressInstanceGroup, hosts, usernamePasswordCredential);
-                } else {
-                    throw new ServiceBrokerException("Unknown platform utilized in plan");
-                }
-            }
             jdbcService = postgreConnectionHandler.createExtendedRootUserConnection(serviceInstance,
                     plan,
                     database,
@@ -173,12 +162,6 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		} catch (SQLException e) {
 		    log.error(String.format("Creating Binding(%s) failed while creating the ne postgres user. Could not update database", bindingId), e);
             throw new ServiceBrokerException("Could not update database");
-		} catch (IOException | JSchException e) {
-            log.error(String.format("Creating Binding(%s) failed while creating the PgPool user. Connections to PostgreSQL VMs failed", bindingId), e);
-            throw new ServiceBrokerException("Error creating PgPool user");
-        } catch (InstanceGroupNotFoundException e) {
-            log.error(String.format("Creating Binding(%s) failed while creating the PgPool user. %s", bindingId), e);
-            throw new ServiceBrokerException(String.format("Creating Binding(%s) failed while creating the PgPool user. %s", bindingId));
         } finally {
             jdbcService.closeIfConnected();
         }
@@ -189,7 +172,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		if (host != null)
 		    endpoint = host.getIp() + ":" + host.getPort();
 
-        String dbURL = String.format("postgres://%s:%s@%s/%s" + (ssl?"?sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory":""), usernamePasswordCredential.getUsername(),
+        String dbURL = String.format("postgres://%s:%s@%s/%s?targetServerType=primary" + (ssl?"&sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory":""), usernamePasswordCredential.getUsername(),
                 usernamePasswordCredential.getPassword(), endpoint, database);
 
 		Map<String, Object> credentials = new HashMap<>();
@@ -197,6 +180,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 		credentials.put(USERNAME, usernamePasswordCredential.getUsername());
 		credentials.put(PASSWORD, usernamePasswordCredential.getPassword());
 		credentials.put(DATABASE, database);
+		credentials.put("targetServerType","primary");
 		if (ssl){
             credentials.put("sslmode", "verify-full");
             credentials.put("sslfactory","org.postgresql.ssl.DefaultJavaSSLFactory");

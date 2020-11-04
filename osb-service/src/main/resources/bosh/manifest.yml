@@ -108,39 +108,3 @@ instance_groups:
       pubkey: ((transport_ssh.public_key))
       privkey: ((transport_ssh.private_key))
 
-- name: pgpool
-  instances: 1
-  vm_type: minimal
-  stemcell: default
-  persistent_disk_type: 1GB
-  azs:
-  - z1
-  networks:
-  - name: service
-  jobs:
-  - name: pgpool
-    release: osb-bosh-postgresql-tde
-  properties:
-    pcp:
-      system_password: ((pcp_password))
-    pgpool:
-      ssl:
-        enabled: true
-        ca: ((ssl_ca.certificate))((ssl_ca.ca))
-        cakey: ((ssl_ca.private_key))
-      pool_passwd: pool_passwd
-      debug: off
-      backend:
-        port: 5432
-      max_pool: 4
-      num_init_children: 32
-      enable_pool_hba: on
-      load_balance_mode: off
-      master_slave_mode: on
-      master_slave_sub_mode: stream
-      hba:
-      - host all all 0.0.0.0/0 md5
-      - host all all ::/0 md5
-    ssh:
-      pubkey: ((transport_ssh.public_key))
-      privkey: ((transport_ssh.private_key))

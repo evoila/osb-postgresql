@@ -1,11 +1,9 @@
 package de.evoila.cf.broker.utils;
 
-import de.evoila.cf.broker.custom.postgres.PostgresqlCatalogMgmt;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 

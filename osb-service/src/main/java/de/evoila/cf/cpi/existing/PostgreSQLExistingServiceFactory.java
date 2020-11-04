@@ -139,13 +139,4 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
     public ServiceInstance getInstance(ServiceInstance serviceInstance, Plan plan) {
         return serviceInstance;
     }
-
-    public void createPgPoolUser(PostgresBoshPlatformService postgresBoshPlatformService,
-                                 String instanceIngressGroup, List<ServerAddress> hosts,
-                                 UsernamePasswordCredential usernamePasswordCredential) throws JSchException {
-
-		postgresBoshPlatformService.createPgPoolUser(
-			this.existingEndpointBean.getDeployment(), instanceIngressGroup, hosts,
-			usernamePasswordCredential.getUsername(), usernamePasswordCredential.getPassword());
-	}
 }
