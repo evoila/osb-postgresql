@@ -2,12 +2,16 @@ package de.evoila.cf.broker.custom.postgres;
 
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.model.ServiceInstance;
+import de.evoila.cf.broker.model.catalog.ServerAddress;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
+import de.evoila.cf.broker.util.ServiceInstanceUtils;
 import de.evoila.cf.cpi.ConnectionUserType;
 import de.evoila.cf.cpi.CredentialConstants;
 import de.evoila.cf.security.credentials.CredentialStore;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class PostgreConnectionHandler {
@@ -39,16 +43,21 @@ public class PostgreConnectionHandler {
     private PostgresConnectionParameter prepareRootUserConnectionParameter(ServiceInstance serviceInstance, Plan plan, String database, boolean ssl){
         return prepareConnectionParameter(serviceInstance,plan,database,ConnectionUserType.ROOT_USER,null,ssl);
     }
+    
+    private PostgresConnectionParameter prepareRootUserConnectionParameter(ServiceInstance serviceInstance, Plan plan, List<ServerAddress> serverAddresses, String database, boolean ssl){
+        return prepareConnectionParameter(serviceInstance,plan,serverAddresses,database,ConnectionUserType.ROOT_USER,null,ssl);
+    }
 
     private PostgresConnectionParameter prepareBindUserConnectionParameter(ServiceInstance serviceInstance, Plan plan, String database, String bindingId,boolean ssl){
         return prepareConnectionParameter(serviceInstance,plan,database,ConnectionUserType.BIND_USER,bindingId,ssl);
     }
 
-    private PostgresConnectionParameter prepareConnectionParameter(ServiceInstance serviceInstance, Plan plan, String database,
-                                                                   ConnectionUserType connectionType, String bindingId,boolean ssl) {
 
+
+    private PostgresConnectionParameter prepareConnectionParameter(ServiceInstance serviceInstance, Plan plan, List<ServerAddress> serverAddress, String database,
+                                                                   ConnectionUserType connectionType, String bindingId, boolean ssl) {
         PostgresConnectionParameter connectionParameter = new PostgresConnectionParameter();
-        connectionParameter.setServerAddresses(serviceInstance, plan);
+        connectionParameter.setServerAddresses(serverAddress);
 
         switch (connectionType) {
             case ROOT_USER:
@@ -72,6 +81,15 @@ public class PostgreConnectionHandler {
         connectionParameter.setDatabase(database);
         connectionParameter.setSsl(ssl);
         return connectionParameter;
+    }
+
+
+    private PostgresConnectionParameter prepareConnectionParameter(ServiceInstance serviceInstance, Plan plan, String database,
+                                                                   ConnectionUserType connectionType, String bindingId,boolean ssl) {
+
+        String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
+        List<ServerAddress> serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);
+        return prepareConnectionParameter(serviceInstance,plan,serverAddresses,database,connectionType,bindingId,ssl);
     }
 
     private PostgresDbService establishSimpleConnection(PostgresConnectionParameter connectionParameter) {
@@ -103,6 +121,10 @@ public class PostgreConnectionHandler {
         return establishExtendedConnection(prepareRootUserConnectionParameter(serviceInstance,plan,database, ssl));
     }
 
+    public PostgresDbService createExtendedRootUserConnection(ServiceInstance serviceInstance, Plan plan, List<ServerAddress> serverAddresses, String database,boolean ssl) {
+        return establishExtendedConnection(prepareRootUserConnectionParameter(serviceInstance,plan,serverAddresses,database, ssl));
+    }
+    
     public PostgresDbService createExtendedBindUserConnection(ServiceInstance serviceInstance, Plan plan, String database, String bindingId, boolean ssl) {
         return establishExtendedConnection(prepareBindUserConnectionParameter(serviceInstance,plan,database,bindingId,ssl));
     }

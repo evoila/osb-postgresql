@@ -38,9 +38,8 @@ public class PostgresConnectionParameter {
         this.ssl = ssl;
     }
 
-        public void setServerAddresses(ServiceInstance serviceInstance, Plan plan) {
-        String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
-        this.serverAddresses=ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);
+        public void setServerAddresses(List<ServerAddress> serverAddresses) {
+        this.serverAddresses = serverAddresses;
     }
 
     public void setUsernamePasswordCredential(UsernamePasswordCredential usernamePasswordCredential) {

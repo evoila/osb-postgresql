@@ -24,12 +24,12 @@ public class PostgresDbService {
 
 	private Connection connection;
 
-	private boolean createConnection(String database, List<ServerAddress> serverAddresses, Properties properties, boolean ssl) {
+	private boolean createConnection(String database, List<ServerAddress> serverAddresses, Properties properties) {
 		String connectionUrl = ServiceInstanceUtils.connectionUrl(serverAddresses);
 
 		try {
 			Class.forName("org.postgresql.Driver");
-			String url = "jdbc:postgresql://" + connectionUrl + "/" + database + "?targetServerType=primary" + (ssl?"&sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory":"");
+			String url = "jdbc:postgresql://" + connectionUrl + "/" + database;
 			connection = DriverManager.getConnection(url, properties);
 
 		} catch (ClassNotFoundException | SQLException e) {
@@ -46,8 +46,14 @@ public class PostgresDbService {
 		properties.setProperty("user",username);
 		properties.setProperty("password",password);
 		properties.setProperty("preferQueryMode","extended");
-
-		return createConnection(database, serverAddresses, properties, ssl);
+		if (ssl == true) {
+			properties.setProperty("sslmode","verify-full");
+			properties.setProperty("sslfactory","org.postgresql.ssl.DefaultJavaSSLFactory");
+		}
+		if (serverAddresses.size() > 1) {
+			properties.setProperty("targetServerType", "primary");
+		}
+		return createConnection(database, serverAddresses, properties);
 	}
 
 	public boolean createSimpleConnection(String username, String password, String database, boolean ssl, List<ServerAddress> serverAddresses) {
@@ -55,8 +61,14 @@ public class PostgresDbService {
 		properties.setProperty("user",username);
 		properties.setProperty("password",password);
 		properties.setProperty("preferQueryMode","simple");
-
-		return createConnection(database, serverAddresses, properties, ssl);
+		if (ssl == true) {
+			properties.setProperty("sslmode","verify-full");
+			properties.setProperty("sslfactory","org.postgresql.ssl.DefaultJavaSSLFactory");
+		}
+		if (serverAddresses.size() > 1) {
+			properties.setProperty("targetServerType", "primary");
+		}
+		return createConnection(database, serverAddresses, properties);
 	}
 
 	public boolean isConnected() throws SQLException {
@@ -72,6 +84,13 @@ public class PostgresDbService {
             log.info("Could not close connection", e);
         }
     }
+
+    public boolean is_recovery() throws SQLException {
+		Statement statement = connection.createStatement();
+		ResultSet result = statement.executeQuery("SELECT pg_is_in_recovery()");
+		result.next();
+		return result.getBoolean("pg_is_in_recovery");
+	}
 
 	public void executeUpdate(String query) throws SQLException {
 		Statement statement = connection.createStatement();
