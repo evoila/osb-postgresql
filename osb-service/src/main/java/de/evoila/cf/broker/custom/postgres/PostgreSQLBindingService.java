@@ -23,20 +23,17 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.sql.Array;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Johannes Hiemer.
- *
  */
 @Service
 public class PostgreSQLBindingService extends BindingServiceImpl {
 
-	private Logger log = LoggerFactory.getLogger(getClass());
+    private Logger log = LoggerFactory.getLogger(getClass());
 
     private static String URI = "uri";
 
@@ -46,9 +43,9 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
     private static String DATABASE = "database";
 
-	private PostgresCustomImplementation postgresCustomImplementation;
+    private PostgresCustomImplementation postgresCustomImplementation;
 
-	private PostgreSQLExistingServiceFactory existingServiceFactory;
+    private PostgreSQLExistingServiceFactory existingServiceFactory;
 
     private PostgresBoshPlatformService postgresBoshPlatformService;
 
@@ -56,38 +53,65 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
     private PostgreConnectionHandler postgreConnectionHandler;
 
-	PostgreSQLBindingService(PostgresCustomImplementation customImplementation,
+    PostgreSQLBindingService(PostgresCustomImplementation customImplementation,
                              PostgreSQLExistingServiceFactory existingServiceFactory,
                              PostgresBoshPlatformService postgresBoshPlatformService,
                              BindingRepository bindingRepository, ServiceDefinitionRepository serviceDefinitionRepository,
                              ServiceInstanceRepository serviceInstanceRepository, RouteBindingRepository routeBindingRepository,
-                             @Autowired( required = false ) JobRepository jobRepository,
+                             @Autowired(required = false) JobRepository jobRepository,
                              AsyncBindingService asyncBindingService, PlatformRepository platformRepository,
                              CredentialStore credentialStore,
                              PostgreConnectionHandler postgreConnectionHandler) {
         super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, jobRepository, asyncBindingService, platformRepository);
-	    Assert.notNull(customImplementation, "PostgresCustomImplementation may not be null");
-		Assert.notNull(existingServiceFactory, "PostgreSQLExistingServiceFactory may not be null");
-		this.existingServiceFactory = existingServiceFactory;
-		this.postgresCustomImplementation = customImplementation;
-		this.postgresBoshPlatformService = postgresBoshPlatformService;
-		this.credentialStore = credentialStore;
-		this.postgreConnectionHandler = postgreConnectionHandler;
-	}
+        Assert.notNull(customImplementation, "PostgresCustomImplementation may not be null");
+        Assert.notNull(existingServiceFactory, "PostgreSQLExistingServiceFactory may not be null");
+        this.existingServiceFactory = existingServiceFactory;
+        this.postgresCustomImplementation = customImplementation;
+        this.postgresBoshPlatformService = postgresBoshPlatformService;
+        this.credentialStore = credentialStore;
+        this.postgreConnectionHandler = postgreConnectionHandler;
+    }
 
     @Override
     protected RouteBinding bindRoute(ServiceInstance serviceInstance, String route) {
         throw new UnsupportedOperationException();
     }
 
+    protected boolean ssl(ServiceInstance serviceInstance, Plan plan, boolean bindSsl) throws ServiceBrokerException {
+        boolean ssl = true;
+        Object sslProperty = null;
+        if ((sslProperty = getMapProperty(plan.getMetadata().getCustomParameters(), "ssl", "enabled")) != null) {
+            ssl = ((Boolean) sslProperty).booleanValue();
+        }
+        if ((sslProperty = getMapProperty(serviceInstance.getParameters(), "postgres", "ssl", "enabled")) != null) {
+            ssl = ((Boolean) sslProperty).booleanValue();
+        }
+
+        if (ssl == false && bindSsl == true) {
+            throw new ServiceBrokerException("Cannot use SSL on this Service Instance");
+        } else {
+            ssl = bindSsl;
+        }
+        return ssl;
+    }
+
     @Override
     protected Map<String, Object> createCredentials(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                     ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException {
+        Object sslProperty = null;
+        String primaryHost = null;
+        String secendaryHost = null;
+        boolean bindSsl = true;
+        if ((sslProperty = getMapProperty(serviceInstanceBindingRequest.getParameters(), "ssl", "enabled")) != null) {
+            bindSsl = ((Boolean) sslProperty).booleanValue();
+        }
+        boolean ssl = ssl(serviceInstance, plan, bindSsl);
         List<ServerAddress> hosts = new ArrayList<>();
         String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
         if (ingressInstanceGroup != null && ingressInstanceGroup.length() > 0) {
             hosts = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);
         }
+
 
         String database = PostgreSQLUtils.dbName(serviceInstance.getId());
         if (serviceInstanceBindingRequest.getParameters() != null) {
@@ -97,25 +121,17 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
                 database = customBindingDatabase;
         }
 
-		PostgresDbService jdbcService = null;
+        PostgresDbService jdbcService = null;
 
         credentialStore.createUser(serviceInstance, bindingId);
         UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, bindingId);
         String generalRole = database;
 
-		try {
-		    if (postgresCustomImplementation.isPgpoolEnabled()) {
-                if (plan.getPlatform() == Platform.BOSH) {
-                    postgresBoshPlatformService.createPgPoolUser(serviceInstance, ingressInstanceGroup, usernamePasswordCredential);
-                } else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
-                    existingServiceFactory.createPgPoolUser(postgresBoshPlatformService, ingressInstanceGroup, hosts, usernamePasswordCredential);
-                } else {
-                    throw new ServiceBrokerException("Unknown platform utilized in plan");
-                }
-            }
+        try {
             jdbcService = postgreConnectionHandler.createExtendedRootUserConnection(serviceInstance,
                     plan,
-                    database);
+                    database,
+                    ssl);
 
             /* TODO:
                  this connection should be done with the BIND_ADMIN ("CREATE ROLE") user, not with the superuser
@@ -127,29 +143,23 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
                     usernamePasswordCredential.getPassword(), database, generalRole, false);
             jdbcService.closeIfConnected();
 
- 		    // close connection to postgresql db / open connection to bind db
+            // close connection to postgresql db / open connection to bind db
             // necessary to set user specific privileges inside the db
-			jdbcService = postgreConnectionHandler.createExtendedBindUserConnection(serviceInstance,
+            jdbcService = postgreConnectionHandler.createExtendedBindUserConnection(serviceInstance,
                     plan,
                     database,
-                    bindingId
-                    );
+                    bindingId,
+                    ssl);
 //            jdbcService.createExtendedConnection(
 //			        usernamePasswordCredential.getUsername(),
 //                    usernamePasswordCredential.getPassword(),
 //                    database,
 //                    hosts);
 
-			postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, usernamePasswordCredential.getUsername(), generalRole);
-		} catch (SQLException e) {
-		    log.error(String.format("Creating Binding(%s) failed while creating the ne postgres user. Could not update database", bindingId), e);
+            postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, usernamePasswordCredential.getUsername(), generalRole);
+        } catch (SQLException e) {
+            log.error(String.format("Creating Binding(%s) failed while creating the ne postgres user. Could not update database", bindingId), e);
             throw new ServiceBrokerException("Could not update database");
-		} catch (IOException | JSchException e) {
-            log.error(String.format("Creating Binding(%s) failed while creating the PgPool user. Connections to PostgreSQL VMs failed", bindingId), e);
-            throw new ServiceBrokerException("Error creating PgPool user");
-        } catch (InstanceGroupNotFoundException e) {
-            log.error(String.format("Creating Binding(%s) failed while creating the PgPool user. %s", bindingId), e);
-            throw new ServiceBrokerException(String.format("Creating Binding(%s) failed while creating the PgPool user. %s", bindingId));
         } finally {
             jdbcService.closeIfConnected();
         }
@@ -157,39 +167,94 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         String endpoint = ServiceInstanceUtils.connectionUrl(hosts);
 
         // When host is not empty, it is a service key
-		if (host != null)
-		    endpoint = host.getIp() + ":" + host.getPort();
+        if (host != null)
+            endpoint = host.getIp() + ":" + host.getPort();
 
-        String dbURL = String.format("postgres://%s:%s@%s/%s", usernamePasswordCredential.getUsername(),
-                usernamePasswordCredential.getPassword(), endpoint, database);
+//        String dbURL = String.format("postgresql://%s:%s@%s/%s?targetServerType=primary" + (ssl?"&sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory":""), usernamePasswordCredential.getUsername(),
+//                usernamePasswordCredential.getPassword(), endpoint, database);
 
-		Map<String, Object> credentials = new HashMap<>();
-		credentials.put(URI, dbURL);
-		credentials.put(USERNAME, usernamePasswordCredential.getUsername());
-		credentials.put(PASSWORD, usernamePasswordCredential.getPassword());
-		credentials.put(DATABASE, database);
+        Map<String, Object> credentials = new HashMap<>();
 
-		return credentials;
-	}
+        //Create url with secondary and all Hosts
+        String sslParam = ssl ? "&sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory" : "";
+        if (hosts.size() > 1) {
+            String dbURL = String.format("postgres://%s:%s@%s/%s?targetServerType=primary&%s", usernamePasswordCredential.getUsername(),
+                    usernamePasswordCredential.getPassword(), endpoint, database, sslParam);
+            credentials.put("allHostUri", dbURL);
+            boolean primary = false;
+            boolean secondary = false;
+            for (ServerAddress singelHost : hosts) {
+                endpoint = ServiceInstanceUtils.connectionUrl(Arrays.asList(singelHost));
+                dbURL = String.format("postgres://%s:%s@%s/%s?%s", usernamePasswordCredential.getUsername(),
+                        usernamePasswordCredential.getPassword(), endpoint, database, sslParam);
+                try {
+                    jdbcService = postgreConnectionHandler.createExtendedRootUserConnection(serviceInstance, plan, Arrays.asList(singelHost), database, ssl);
+                    if (jdbcService.is_recovery() == false) {
+                        if (primary == true){
+                            throw new ServiceBrokerException("More as one primary server");
+                        }
+                        primary = true;
+                        credentials.put(URI, dbURL);
+                    } else {
+                        secondary = true;
+                        credentials.put("secondaryUri", dbURL);
+                    }
+                } catch (SQLException e) {
+                    log.error(String.format("Can not connect to Service Instance %s", singelHost.getIp()), e);
+                    if (secondary == false) {
+                        credentials.put("secondaryUri", dbURL);
+                    }
+                } finally {
+                    jdbcService.closeIfConnected();
+                }
+            }
+            if (primary == false) {
+                throw new ServiceBrokerException("No primary host exist");
+            }
+        } else {
+            String dbURL = String.format("postgres://%s:%s@%s/%s?targetServerType=primary&%s", usernamePasswordCredential.getUsername(),
+                    usernamePasswordCredential.getPassword(), endpoint, database, sslParam);
+            credentials.put(URI, dbURL);
+        }
+
+        credentials.put(USERNAME, usernamePasswordCredential.getUsername());
+        credentials.put(PASSWORD, usernamePasswordCredential.getPassword());
+        credentials.put(DATABASE, database);
+        credentials.put("targetServerType", "primary");
+        if (ssl) {
+            credentials.put("sslmode", "verify-full");
+            credentials.put("sslfactory", "org.postgresql.ssl.DefaultJavaSSLFactory");
+        }
+        return credentials;
+    }
 
     @Override
     protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
         PostgresDbService jdbcService = null;
+
+        Object sslProperty = null;
+        boolean bindSsl = true;
+        if ((sslProperty = getMapProperty(binding.getParameters(), "ssl", "enabled")) != null) {
+            bindSsl = ((Boolean) sslProperty).booleanValue();
+        }
+        boolean ssl = ssl(serviceInstance, plan, bindSsl);
         if (plan.getPlatform() == Platform.BOSH) {
             jdbcService = postgreConnectionHandler.createExtendedRootUserConnection(serviceInstance,
                     plan,
-                    PostgreSQLUtils.dbName(serviceInstance.getId()));
+                    PostgreSQLUtils.dbName(serviceInstance.getId()),
+                    ssl);
         } else if (plan.getPlatform() == Platform.EXISTING_SERVICE) {
             jdbcService = postgreConnectionHandler.createExtendedRootUserConnection(serviceInstance,
                     plan,
-                    PostgreSQLUtils.dbName(serviceInstance.getId()));
+                    PostgreSQLUtils.dbName(serviceInstance.getId()),
+                    ssl);
         } else {
             throw new ServiceBrokerException("Unknown platform utilized in plan");
         }
 
         try {
             UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, binding.getId());
-            postgresCustomImplementation.unbindRoleFromDatabase(credentialStore,serviceInstance,plan, jdbcService, usernamePasswordCredential);
+            postgresCustomImplementation.unbindRoleFromDatabase(credentialStore, serviceInstance, plan, jdbcService, usernamePasswordCredential, ssl);
             credentialStore.deleteCredentials(serviceInstance, binding.getId());
         } catch (SQLException e) {
             throw new ServiceBrokerException("Could not remove from database");
@@ -198,4 +263,19 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         }
     }
 
+    private Object getMapProperty(Map<String, Object> map, String... keys) {
+        Map<String, Object> nextMap = map;
+        Object objectMap = map;
+        if (map == null) {
+            return null;
+        }
+        for (String key : keys) {
+            map = (Map<String, Object>) objectMap;
+            if (!map.containsKey(key)) {
+                return null;
+            }
+            objectMap = map.get(key);
+        }
+        return objectMap;
+    }
 }

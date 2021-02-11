@@ -13,12 +13,16 @@ import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
 import de.evoila.cf.security.credentials.CredentialStore;
 import de.evoila.cf.security.credentials.DefaultCredentialConstants;
 import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.security.SecureRandom;
+import javax.xml.bind.DatatypeConverter;
 
 /**
  * @author Marco Hennig, Johannes Hiemer.
  */
+@Component
 public class PostgresDeploymentManager extends DeploymentManager {
 
     private CredentialStore credentialStore;
@@ -33,23 +37,34 @@ public class PostgresDeploymentManager extends DeploymentManager {
     @Override
     protected void replaceParameters(ServiceInstance serviceInstance, Manifest manifest, Plan plan, Map<String,
             Object> customParameters, boolean isUpdate) {
+	SecureRandom random = new SecureRandom();
+	boolean useSsl = true;
+	ArrayList<String> extensions = null;
+	byte tdeBytes[] = new byte[16]; // 128 bits are converted to 16 bytes;
+	random.nextBytes(tdeBytes);
+	String tdeKeyString = DatatypeConverter.printHexBinary(tdeBytes).toLowerCase();
         HashMap<String, Object> properties = new HashMap<>();
-        if (customParameters != null && !customParameters.isEmpty())
+        if (customParameters != null && !customParameters.isEmpty()){
             properties.putAll(customParameters);
+            Object ssl=getMapProperty(properties,"postgres", "ssl", "enabled");
+            if (ssl!=null) {
+                useSsl=((Boolean)ssl).booleanValue();
+                ssl=getMapProperty(properties,"postgres", "ssl");
+            }
+            extensions=(ArrayList<String>)getMapProperty(properties, "postgres","database","extensions");
+            if (extensions != null){
+                deleteMapProperty(properties, "postgres","database","extensions");
+            }
+        }
 
         if (!isUpdate) {
             log.debug("Updating Deployment Manifest, replacing parameters");
 
             Map<String, Object> postgresManifestProperties = manifestProperties("postgres", manifest);
-            Map<String, Object> pgpoolManifestProperties = manifestProperties("pgpool", manifest);
 
-            HashMap<String, Object> pcp = (HashMap<String, Object>) pgpoolManifestProperties.get("pcp");
             HashMap<String, Object> postgres = (HashMap<String, Object>) postgresManifestProperties.get("postgres");
             HashMap<String, Object> postgresExporter = (HashMap<String, Object>) postgresManifestProperties.get("postgres_exporter");
             HashMap<String, Object> backupAgent = (HashMap<String, Object>) postgresManifestProperties.get("backup_agent");
-
-            PasswordCredential systemPassword = credentialStore.createPassword(serviceInstance, CredentialConstants.PGPOOL_SYSTEM_PASSWORD);
-            pcp.put("system_password", systemPassword.getPassword());
 
             List<HashMap<String, Object>> adminUsers = (List<HashMap<String, Object>>) postgres.get("admin_users");
             HashMap<String, Object> userProperties = adminUsers.get(0);
@@ -60,7 +75,7 @@ public class PostgresDeploymentManager extends DeploymentManager {
 
             UsernamePasswordCredential exporterCredential = credentialStore.createUser(serviceInstance,
                     DefaultCredentialConstants.EXPORTER_CREDENTIALS);
-            postgresExporter.put("datasource_name", "postgresql://" + exporterCredential.getUsername() + ":" + exporterCredential.getPassword() + "@127.0.0.1:5432/postgres?sslmode=disable");
+            postgresExporter.put("datasource_name", "postgresql://" + exporterCredential.getUsername() + ":" + exporterCredential.getPassword() + "@127.0.0.1:5432/postgres?sslmode="+(useSsl?"require":"disable"));
             HashMap<String, Object> exporterProperties = adminUsers.get(1);
             exporterProperties.put("username", exporterCredential.getUsername());
             exporterProperties.put("password", exporterCredential.getPassword());
@@ -92,13 +107,14 @@ public class PostgresDeploymentManager extends DeploymentManager {
             Map<String, Object> database = new HashMap<>();
             database.put("name", PostgreSQLUtils.dbName(serviceInstance.getId()));
             database.put("users", databaseUsers);
-            database.put("extensions", Arrays.asList("postgis", "postgis_topology",
-                    "fuzzystrmatch", "address_standardizer",
-                    "postgis_tiger_geocoder", "pg_trgm"));
+            if(extensions!=null && !extensions.isEmpty()){
+                database.put("extensions",extensions);
+            }
             databases.add(database);
 
             postgres.put("databases", databases);
-        } else if (isUpdate && customParameters != null && !customParameters.isEmpty()) {
+        }
+        if (customParameters != null && !customParameters.isEmpty()) {
             for (Map.Entry parameter : customParameters.entrySet()) {
                 Map<String, Object> manifestProperties = manifestProperties(parameter.getKey().toString(), manifest);
 
@@ -122,4 +138,48 @@ public class PostgresDeploymentManager extends DeploymentManager {
             }).findFirst().get().getProperties();
     }
 
+    private Object getMapProperty(Map<String,Object> map,String ... keys){
+        Map<String,Object> nextMap=map;
+         Object objectMap=map;
+        if(map==null){
+            return null;
+        }
+        for(String key:keys){
+            map=(Map< String, Object>)objectMap;
+            if(!map.containsKey(key)){
+                return null;
+            }
+            objectMap=map.get(key);
+        }
+        return objectMap;
+    }
+
+    private void deleteMapProperty(Map<String,Object> map,String ... keys){
+        Map<String,Object> nextMap=map;
+        Object objectMap = map;
+        if(map==null){
+            return;
+        }
+        for(String key:keys){
+            map=(Map< String, Object>)objectMap;
+            if(!map.containsKey(key)){
+                return ;
+            }
+            objectMap=map.get(key);
+        }
+        map.remove(objectMap);
+    }
+
+    private void setMapProperty(Map<String,Object> map,Object value,String ... keys){
+        Map<String,Object> nextMap=map;
+        int i;
+        for(i=0;i<keys.length-1;i++){
+            if(!map.containsKey(keys[i])){
+                map.put(keys[i],keys[i+1]);
+            }else {
+                map = (Map<String, Object>) map.get(keys[i]);
+            }
+        }
+        map.put(keys[i],value);
+    }
 }

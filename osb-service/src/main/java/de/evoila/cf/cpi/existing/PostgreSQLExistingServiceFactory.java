@@ -60,7 +60,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
     public void deleteInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
 		String database = PostgreSQLUtils.dbName(serviceInstance.getId());
 		PostgresDbService postgresDbService = postgreConnectionHandler
-                .createExtendedRootUserConnection(serviceInstance, plan, database);
+                .createExtendedRootUserConnection(serviceInstance, plan, database,true);
 		try {
 		    postgresCustomImplementation.dropAllExtensions(postgresDbService);
 		} catch (SQLException e) {
@@ -68,7 +68,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 		}
 
 		postgresDbService.closeIfConnected();
-		postgresDbService = postgreConnectionHandler.createSimpleRootUserConnection(serviceInstance, plan, null);
+		postgresDbService = postgreConnectionHandler.createSimpleRootUserConnection(serviceInstance, plan, null,true);
         postgresCustomImplementation.deleteDatabase(postgresDbService, serviceInstance.getUsername(), database, serviceInstance.getUsername());
 
 		deleteCredential(serviceInstance,CredentialConstants.ROOT_CREDENTIALS);
@@ -107,7 +107,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 		serviceInstance.setHosts(existingEndpointBean.getHosts());
 
         try {
-            PostgresDbService postgresDbService = postgreConnectionHandler.createExtendedRootUserConnection(serviceInstance, plan, null);
+            PostgresDbService postgresDbService = postgreConnectionHandler.createExtendedRootUserConnection(serviceInstance, plan, null, true);
 
             postgresCustomImplementation.createDatabase(postgresDbService, database);
 
@@ -126,7 +126,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 			// close connection to postgresql db / open connection to bind db
 			// necessary for installing db specific extensions (as admin)
 			postgresDbService.closeIfConnected();
-			postgresDbService = postgreConnectionHandler.createExtendedRootUserConnection(serviceInstance, plan,database);
+			postgresDbService = postgreConnectionHandler.createExtendedRootUserConnection(serviceInstance, plan,database, true);
 			postgresCustomImplementation.createExtensions(postgresDbService);
 		} catch(SQLException | InterruptedException ex) {
             throw new PlatformException(ex);
@@ -139,13 +139,4 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
     public ServiceInstance getInstance(ServiceInstance serviceInstance, Plan plan) {
         return serviceInstance;
     }
-
-    public void createPgPoolUser(PostgresBoshPlatformService postgresBoshPlatformService,
-                                 String instanceIngressGroup, List<ServerAddress> hosts,
-                                 UsernamePasswordCredential usernamePasswordCredential) throws JSchException {
-
-		postgresBoshPlatformService.createPgPoolUser(
-			this.existingEndpointBean.getDeployment(), instanceIngressGroup, hosts,
-			usernamePasswordCredential.getUsername(), usernamePasswordCredential.getPassword());
-	}
 }

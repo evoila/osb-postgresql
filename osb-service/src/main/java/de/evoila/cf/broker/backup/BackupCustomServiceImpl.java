@@ -5,10 +5,7 @@ import de.evoila.cf.broker.custom.postgres.PostgreConnectionHandler;
 import de.evoila.cf.broker.custom.postgres.PostgreSQLUtils;
 import de.evoila.cf.broker.custom.postgres.PostgresCustomImplementation;
 import de.evoila.cf.broker.custom.postgres.PostgresDbService;
-import de.evoila.cf.broker.exception.PlatformException;
-import de.evoila.cf.broker.exception.ServiceBrokerException;
-import de.evoila.cf.broker.exception.ServiceDefinitionDoesNotExistException;
-import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
+import de.evoila.cf.broker.exception.*;
 import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.ServiceInstance;
@@ -16,6 +13,7 @@ import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
 import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
 import de.evoila.cf.broker.repository.ServiceInstanceRepository;
 import de.evoila.cf.broker.service.BackupCustomService;
+import de.evoila.cf.broker.utils.PostgresqlMapUtils;
 import de.evoila.cf.cpi.CredentialConstants;
 import de.evoila.cf.security.credentials.CredentialStore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -60,15 +58,23 @@ public class BackupCustomServiceImpl implements BackupCustomService {
 
     @Override
     public Map<String, String> getItems(String serviceInstanceId) throws ServiceInstanceDoesNotExistException,
-            ServiceDefinitionDoesNotExistException {
+            ServiceDefinitionDoesNotExistException, ServiceDefinitionPlanDoesNotExistException {
         ServiceInstance serviceInstance = this.validateServiceInstanceId(serviceInstanceId);
 
-        Plan plan = serviceDefinitionRepository.getPlan(serviceInstance.getPlanId());
+        Plan plan = serviceDefinitionRepository.getPlan(serviceInstance.getServiceDefinitionId(),serviceInstance.getPlanId());
 
         Map<String, String> result = new HashMap<>();
         if (plan.getPlatform().equals(Platform.BOSH)) {
+            Object sslProperty = null;
+            boolean ssl = true;
+            if ((sslProperty = PostgresqlMapUtils.getMapProperty( plan.getMetadata().getCustomParameters(),"ssl","enabled"))!=null){
+                ssl = ((Boolean)sslProperty).booleanValue();
+            }
+            if ((sslProperty = PostgresqlMapUtils.getMapProperty( serviceInstance.getParameters(),"postgres","ssl","enabled"))!=null){
+                ssl = ((Boolean)sslProperty).booleanValue();
+            }
             UsernamePasswordCredential usernamePasswordCredential = credentialStore.getUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
-            PostgresDbService postgresDbService = postgreConnectionHandler.createExtendedRootUserConnection( serviceInstance, plan,PostgreSQLUtils.dbName(serviceInstance.getId()));
+            PostgresDbService postgresDbService = postgreConnectionHandler.createExtendedRootUserConnection( serviceInstance, plan,PostgreSQLUtils.dbName(serviceInstance.getId()),ssl);
 
             try {
                 Map<String, String> databases = postgresDbService.executeSelect("SELECT datname FROM pg_database", "datname");

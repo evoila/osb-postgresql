@@ -22,6 +22,7 @@ import io.bosh.client.vms.Vm;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +30,9 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Johannes Hiemer, Yannic Remmet, Marco Hennig.
@@ -38,6 +42,7 @@ import java.util.Optional;
 public class PostgresBoshPlatformService extends BoshPlatformService {
 
     private static final int defaultPort = 5432;
+    private Logger log = LoggerFactory.getLogger(getClass());
 
     private CredentialStore credentialStore;
 
@@ -46,11 +51,12 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
                                 BoshProperties boshProperties,
                                 CredentialStore credentialStore,
                                 Optional<DashboardClient> dashboardClient,
-                                Environment environment) {
+                                Environment environment,
+                                DeploymentManager deploymentManager) {
         super(repository,
                 catalogService, availabilityVerifier,
                 boshProperties, dashboardClient,
-                new PostgresDeploymentManager(boshProperties, environment, credentialStore));
+                deploymentManager);
         this.credentialStore = credentialStore;
     }
 
@@ -65,7 +71,6 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
     @Override
     public void postDeleteInstance(ServiceInstance serviceInstance) {
         credentialStore.deleteCredentials(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
-        credentialStore.deleteCredentials(serviceInstance, CredentialConstants.PGPOOL_SYSTEM_PASSWORD);
         credentialStore.deleteCredentials(serviceInstance, DefaultCredentialConstants.BACKUP_CREDENTIALS);
         credentialStore.deleteCredentials(serviceInstance, DefaultCredentialConstants.BACKUP_AGENT_CREDENTIALS);
     }
@@ -142,56 +147,4 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
         log.info("Disconnected channel and session");
     }
 
-    public void createPgPoolUser(ServiceInstance serviceInstance, String ingressInstanceGroup, UsernamePasswordCredential usernamePasswordCredential)
-            throws IOException, JSchException, InstanceGroupNotFoundException {
-
-        Manifest manifest = super.getDeployedManifest(serviceInstance);
-
-        Optional<InstanceGroup> group = manifest.getInstanceGroups()
-                .stream()
-                .filter(i -> i.getName().equals(ingressInstanceGroup))
-                .findAny();
-
-        if (group.isPresent()) {
-            for (int instanceIdx = 0; instanceIdx < group.get().getInstances(); instanceIdx++) {
-                Session session = getSshSession(serviceInstance, ingressInstanceGroup, instanceIdx)
-                        .toBlocking()
-                        .first();
-
-                sendPgPoolCreateCommand(
-                        session,
-                        usernamePasswordCredential.getUsername(),
-                        usernamePasswordCredential.getPassword());
-            }
-        } else {
-            throw new InstanceGroupNotFoundException(serviceInstance, manifest, ingressInstanceGroup);
-        }
-    }
-
-    public void createPgPoolUser(String deploymentName, String instanceName, List<ServerAddress> serverAddresses, String username, String password)
-            throws JSchException {
-
-        for (int i = 0; i < serverAddresses.size(); i++) {
-            Session session = getSshSession(deploymentName, instanceName, i)
-                    .toBlocking()
-                    .first();
-            sendPgPoolCreateCommand(session,username,password);
-        }
-    }
-
-    private void sendPgPoolCreateCommand(Session session, String username, String password) throws JSchException {
-        session.connect();
-        Channel channel = session.openChannel("shell");
-        channel.connect();
-
-        List<String> commands = Arrays.asList(
-                String.format("sudo /var/vcap/packages/pgpool/bin/pg_md5 --md5auth " +
-                                "--config-file /var/vcap/jobs/pgpool/config/pgpool.conf --username=%s %s",
-                        username, password)
-        );
-
-        executeCommands(channel, commands, false);
-
-        close(channel, session);
-    }
 }

@@ -12,6 +12,7 @@ public class PostgresConnectionParameter {
     List<ServerAddress> serverAddresses;
     UsernamePasswordCredential usernamePasswordCredential;
     String database;
+    boolean ssl;
 
     public List<ServerAddress> getServerAddresses() {
         return serverAddresses;
@@ -29,9 +30,16 @@ public class PostgresConnectionParameter {
         this.database = database;
     }
 
-    public void setServerAddresses(ServiceInstance serviceInstance, Plan plan) {
-        String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
-        this.serverAddresses=ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);
+    public boolean getSsl() {
+        return ssl;
+    }
+
+    public void setSsl(boolean ssl) {
+        this.ssl = ssl;
+    }
+
+        public void setServerAddresses(List<ServerAddress> serverAddresses) {
+        this.serverAddresses = serverAddresses;
     }
 
     public void setUsernamePasswordCredential(UsernamePasswordCredential usernamePasswordCredential) {

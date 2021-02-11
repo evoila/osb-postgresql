@@ -40,22 +40,34 @@ public class PostgresDbService {
 		return true;
 	}
 
-	public boolean createExtendedConnection(String username, String password, String database, List<ServerAddress> serverAddresses) {
+	public boolean createExtendedConnection(String username, String password, String database, boolean ssl, List<ServerAddress> serverAddresses) {
 		Properties properties = new Properties();
 
 		properties.setProperty("user",username);
 		properties.setProperty("password",password);
 		properties.setProperty("preferQueryMode","extended");
-
+		if (ssl == true) {
+			properties.setProperty("sslmode","verify-full");
+			properties.setProperty("sslfactory","org.postgresql.ssl.DefaultJavaSSLFactory");
+		}
+		if (serverAddresses.size() > 1) {
+			properties.setProperty("targetServerType", "primary");
+		}
 		return createConnection(database, serverAddresses, properties);
 	}
 
-	public boolean createSimpleConnection(String username, String password, String database, List<ServerAddress> serverAddresses) {
+	public boolean createSimpleConnection(String username, String password, String database, boolean ssl, List<ServerAddress> serverAddresses) {
 		Properties properties = new Properties();
 		properties.setProperty("user",username);
 		properties.setProperty("password",password);
 		properties.setProperty("preferQueryMode","simple");
-
+		if (ssl == true) {
+			properties.setProperty("sslmode","verify-full");
+			properties.setProperty("sslfactory","org.postgresql.ssl.DefaultJavaSSLFactory");
+		}
+		if (serverAddresses.size() > 1) {
+			properties.setProperty("targetServerType", "primary");
+		}
 		return createConnection(database, serverAddresses, properties);
 	}
 
@@ -72,6 +84,13 @@ public class PostgresDbService {
             log.info("Could not close connection", e);
         }
     }
+
+    public boolean is_recovery() throws SQLException {
+		Statement statement = connection.createStatement();
+		ResultSet result = statement.executeQuery("SELECT pg_is_in_recovery()");
+		result.next();
+		return result.getBoolean("pg_is_in_recovery");
+	}
 
 	public void executeUpdate(String query) throws SQLException {
 		Statement statement = connection.createStatement();

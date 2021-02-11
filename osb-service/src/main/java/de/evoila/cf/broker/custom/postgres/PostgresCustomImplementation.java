@@ -24,9 +24,6 @@ import java.util.Map;
 @Service
 public class PostgresCustomImplementation {
 
-	@Value("${pgpool.enabled}")
-	private boolean pgpoolEnabled;
-
 	private ExistingEndpointBean existingEndpointBean;
 
     private PostgresBoshPlatformService postgresBoshPlatformService;
@@ -38,10 +35,6 @@ public class PostgresCustomImplementation {
     	this.postgresBoshPlatformService = postgresBoshPlatformService;
         this.postgreConnectionHandler = postgreConnectionHandler;
     }
-
-    public boolean isPgpoolEnabled(){
-		return pgpoolEnabled;
-	}
 
 	public boolean checkIfRoleExists(PostgresDbService jdbcService, String roleName) throws SQLException {
 		Map<String, String> existingRoles = jdbcService.executeSelect("SELECT rolname FROM pg_roles WHERE rolname='" + roleName + "'", "rolname");
@@ -87,12 +80,13 @@ public class PostgresCustomImplementation {
     public void createExtensions(PostgresDbService jdbcService) throws SQLException {
 		Map<String, String> availableExtensions = jdbcService.executeSelect("SELECT name FROM pg_available_extensions", "name");
 
-        List<String> extensionsToInstall = Arrays.asList("fuzzystrmatch", "postgis", "postgis_topology", "address_standardizer", "postgis_tiger_geocoder");
+/*       List<String> extensionsToInstall = Arrays.asList("fuzzystrmatch", "postgis", "postgis_topology", "address_standardizer", "postgis_tiger_geocoder");
 		for (String extension : extensionsToInstall) {
 			if (availableExtensions.containsValue(extension)) {
 				jdbcService.executeUpdate("CREATE EXTENSION IF NOT EXISTS \"" + extension + "\"");
 			}
 		}
+*/
 	}
 
 	public void dropAllExtensions(PostgresDbService jdbcService) throws SQLException {
@@ -152,7 +146,7 @@ public class PostgresCustomImplementation {
         jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public To \"" + username + "\"");
     }
 
-	public void unbindRoleFromDatabase(CredentialStore credentialStore,ServiceInstance serviceInstance, Plan plan, PostgresDbService jdbcService, UsernamePasswordCredential usernamePasswordCredential) throws SQLException {
+	public void unbindRoleFromDatabase(CredentialStore credentialStore,ServiceInstance serviceInstance, Plan plan, PostgresDbService jdbcService, UsernamePasswordCredential usernamePasswordCredential, boolean ssl) throws SQLException {
         // jdbcService connection: service user -> service db
         String roleName = usernamePasswordCredential.getUsername();
 
@@ -162,7 +156,7 @@ public class PostgresCustomImplementation {
             // jdbcService_tmp connection:
             //   service user -> each database in the instance
             //   necessary because privileges have to be unbound from within the database
-            PostgresDbService jdbcService_tmp = postgreConnectionHandler.createSimpleRootUserConnection(serviceInstance,plan,database.getValue());
+            PostgresDbService jdbcService_tmp = postgreConnectionHandler.createSimpleRootUserConnection(serviceInstance,plan,database.getValue(),ssl);
 
             String generalRole = database.getValue();
 
