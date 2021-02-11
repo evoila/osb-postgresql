@@ -61,7 +61,7 @@ public class BackupCustomServiceImpl implements BackupCustomService {
             ServiceDefinitionDoesNotExistException, ServiceDefinitionPlanDoesNotExistException {
         ServiceInstance serviceInstance = this.validateServiceInstanceId(serviceInstanceId);
 
-        Plan plan = serviceDefinitionRepository.getPlan(serviceInstance.getId(),serviceInstance.getPlanId());
+        Plan plan = serviceDefinitionRepository.getPlan(serviceInstance.getServiceDefinitionId(),serviceInstance.getPlanId());
 
         Map<String, String> result = new HashMap<>();
         if (plan.getPlatform().equals(Platform.BOSH)) {
