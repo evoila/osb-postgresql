@@ -43,9 +43,9 @@ instance_groups:
   persistent_disk_type: 10GB
   jobs:
   - name: postgres
-    release: osb-bosh-postgresql-tde
+    release: osb-bosh-postgresql
   - name: backup-agent
-    release: osb-bosh-postgresql-tde
+    release: osb-bosh-postgresql
   - name: postgres_exporter
     release: prometheus
     properties:
