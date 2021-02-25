@@ -17,13 +17,27 @@ update:
 
 stemcells:
 - alias: default
-  os: ubuntu-trusty
+  os: ubuntu-xenial
   version: latest
 
 variables:
 - name: transport_ssh
   type: ssh
 - name: pcp_password
+  type: password
+- name: service_credentials
+  type: user
+  options:
+    username: service
+- name: backup_credentials
+  type: user
+  options:
+    username: backup
+- name: exporter_credentials
+  type: user
+  options:
+    username: exporter
+- name: replicationPassword
   type: password
 - name: ssl_ca
   type: certificate
@@ -53,11 +67,9 @@ instance_groups:
     postgres_exporter:
       datasource_name: "postgresql://((exporter_credentials.username)):((exporter_credentials.password))@localhost:5432/postgres?sslmode=verify-full"
     backup_agent:
-      username: backup
-      password: rulez
+      username: ((backup_credentials.username))
+      password: ((backup_credentials.password))
     postgres:
-      tde:
-        key: ((tde_key))
       ssl:
         enabled: true
         ca: ((ssl_ca.certificate))((ssl_ca.ca))
@@ -65,11 +77,11 @@ instance_groups:
       resource:
         shared_buffers: 128MB
         temp_buffers: 8MB
-        encoding:
-          lc_messages: 'en_US.UTF-8'
-          lc_monetary: 'en_US.UTF-8'
-          lc_numeric:  'en_US.UTF-8'
-          lc_time:     'en_US.UTF-8'
+      encoding:
+        lc_messages: 'en_US.UTF-8'
+        lc_monetary: 'en_US.UTF-8'
+        lc_numeric:  'en_US.UTF-8'
+        lc_time:     'en_US.UTF-8'
       config:
         port: 5432
         max_connections: 400
@@ -83,28 +95,60 @@ instance_groups:
       replication:
         archive_mode: 'on'
         enabled: true
-        password: replication_rulez
+        password: ((replicationPassword))
       admin_users:
-      - username: admin
-        password: rulez
+      - username: ((service_credentials.username))
+        password: ((service_credentials.password))
         admin: true
-      - username: exporter
-        password: rulez
+      - username: ((exporter_credentials.username))
+        password: ((exporter_credentials.password))
         admin: false
       backup_users:
-      - username: backup
-        password: rulez
+      - username: ((backup_credentials.username))
+        password: ((backup_credentials.password))
       users:
-      - username: sample
-        password: rulez
+      - username: pgpool_health
+        password: ((service_credentials.password))
         admin: true
       databases:
-      - name: sample
+      - name: admin
         users:
-        - sample
-        extensions:
-        - citext
+        - pgpool_health
+        - ((service_credentials.username))
+        extensions: 
+        - citext 
+#      - name: pgpool_health
+#        users:
+#        - pgpool_health
+#        extensions: 
+#        - citext 
+#      - name: admin
+#        users:
+#        - ((service_credentials.username))
+#        extensions: 
+#        - citext 
     ssh:
       pubkey: ((transport_ssh.public_key))
       privkey: ((transport_ssh.private_key))
 
+- name: pg-bench-and-backup-smoke-tests
+  instances: 1
+  stemcell: default
+  vm_type: minimal
+  lifecycle: errand
+  azs:
+  - z1
+  networks:
+  - name: default
+  persistent_disk: 0
+  jobs:
+  - name: smoke-tests
+    release: osb-bosh-postgresql
+    properties:
+      smoke_tests:
+        backend:
+          port: 6432
+        target:
+          username: ((service_credentials.username))
+          password: ((service_credentials.password))
+          port: 5432
