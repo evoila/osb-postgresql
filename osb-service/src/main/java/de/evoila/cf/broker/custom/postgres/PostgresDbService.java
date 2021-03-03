@@ -77,7 +77,7 @@ public class PostgresDbService {
 	
     public void closeIfConnected() {
         try {
-            if(isConnected()) {
+            if (isConnected()) {
                 connection.close();
             }
         } catch (SQLException e) {
@@ -86,6 +86,9 @@ public class PostgresDbService {
     }
 
     public boolean is_recovery() throws SQLException {
+		if (!isConnected()) {
+			return true;
+		}
 		Statement statement = connection.createStatement();
 		ResultSet result = statement.executeQuery("SELECT pg_is_in_recovery()");
 		result.next();

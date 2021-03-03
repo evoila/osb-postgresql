@@ -150,11 +150,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
                     database,
                     bindingId,
                     ssl);
-//            jdbcService.createExtendedConnection(
-//			        usernamePasswordCredential.getUsername(),
-//                    usernamePasswordCredential.getPassword(),
-//                    database,
-//                    hosts);
+
 
             postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, usernamePasswordCredential.getUsername(), generalRole);
         } catch (SQLException e) {
@@ -170,8 +166,6 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         if (host != null)
             endpoint = host.getIp() + ":" + host.getPort();
 
-//        String dbURL = String.format("postgresql://%s:%s@%s/%s?targetServerType=primary" + (ssl?"&sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory":""), usernamePasswordCredential.getUsername(),
-//                usernamePasswordCredential.getPassword(), endpoint, database);
 
         Map<String, Object> credentials = new HashMap<>();
 
