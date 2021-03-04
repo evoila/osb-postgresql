@@ -57,7 +57,17 @@ public class PostgresDeploymentManager extends DeploymentManager {
             }
         }
 
-        if (!isUpdate) {
+        if (customParameters != null && !customParameters.isEmpty()) {
+            for (Map.Entry parameter : customParameters.entrySet()) {
+                Map<String, Object> manifestProperties = manifestProperties(parameter.getKey().toString(), manifest);
+
+                if (manifestProperties != null)
+                    MapUtils.deepMerge(manifestProperties, customParameters);
+            }
+
+        }
+        
+//        if (!isUpdate) {
             log.debug("Updating Deployment Manifest, replacing parameters");
 
             Map<String, Object> postgresManifestProperties = manifestProperties("postgres", manifest);
@@ -103,7 +113,10 @@ public class PostgresDeploymentManager extends DeploymentManager {
             List<String> databaseUsers = new ArrayList<>();
             databaseUsers.add(defaultUsernamePasswordCredential.getUsername());
 
-            List<Map<String, Object>> databases = new ArrayList<>();
+            List<Map<String, Object>> databases = (ArrayList<Map<String,Object>>)getMapProperty(postgres, "postgres","databases");
+            if (databases == null) {
+                databases = new ArrayList<>();
+            }
             Map<String, Object> database = new HashMap<>();
             database.put("name", PostgreSQLUtils.dbName(serviceInstance.getId()));
             database.put("users", databaseUsers);
@@ -113,16 +126,8 @@ public class PostgresDeploymentManager extends DeploymentManager {
             databases.add(database);
 
             postgres.put("databases", databases);
-        }
-        if (customParameters != null && !customParameters.isEmpty()) {
-            for (Map.Entry parameter : customParameters.entrySet()) {
-                Map<String, Object> manifestProperties = manifestProperties(parameter.getKey().toString(), manifest);
+  //      }
 
-                if (manifestProperties != null)
-                    MapUtils.deepMerge(manifestProperties, customParameters);
-            }
-
-        }
 
         this.updateInstanceGroupConfiguration(manifest, plan);
     }
