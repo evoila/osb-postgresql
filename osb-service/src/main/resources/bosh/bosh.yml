@@ -1,11 +1,23 @@
 ---
 # https://bosh.io/docs/cli-v2.html#deployment-mgmt
 
-name: osb-bosh-postgresql
+name: osb-postgresql
+
+addons:
+- name: bpm
+  jobs:
+  - name: bpm
+    release: bpm
 
 releases:
 - name: osb-bosh-postgresql
-  version: latest
+  version: 0+dev.130
+- name: bpm
+  version: 1.1.8
+  url: https://bosh.io/d/github.com/cloudfoundry/bpm-release?v=1.1.8
+  sha1: c956394fce7e74f741e4ae8c256b480904ad5942
+- name: osb-bosh-haproxy
+  version: 0+dev.6
 - name: prometheus
   version: latest
 
@@ -55,6 +67,11 @@ instance_groups:
   networks:
   - name: service
   persistent_disk_type: 10GB
+  consumes:
+    zookeeper:
+      deployment: osb-zookeeper
+  consumes:
+    haproxy: {}
   jobs:
   - name: postgres
     release: osb-bosh-postgresql
@@ -64,6 +81,9 @@ instance_groups:
     release: prometheus
     properties:
   properties:
+    patroni:
+      zookeeper:
+        enabled: true
     postgres_exporter:
       datasource_name: "postgresql://((exporter_credentials.username)):((exporter_credentials.password))@localhost:5432/postgres?sslmode=verify-full"
     backup_agent:
@@ -127,10 +147,37 @@ instance_groups:
 #        - ((service_credentials.username))
 #        extensions: 
 #        - citext 
-    ssh:
-      pubkey: ((transport_ssh.public_key))
-      privkey: ((transport_ssh.private_key))
 
+- name: haproxy
+  azs: [z1]
+  instances: 1
+  vm_type: default
+  stemcell: default
+  networks: [{name: default}]
+  jobs:
+  - name: haproxy
+    release: osb-bosh-haproxy
+    custom_provider_definitions:
+    - name: haproxy
+      type: haproxy
+    provides:
+      haproxy: {}
+    consumes:
+      tcp_backend: {}
+    properties:
+      ha_proxy:
+        max_connections: 100
+        client_timeout:  1800
+        connect_timeout: 4
+        server_timeout: 1800
+        backend_port: 5432
+        check_timeout: 5
+        tcp_link_port: 5432
+        tcp_link_check_port: 8008
+        tcp_backend_config: |
+          option httpchk
+          http-check expect status 200
+          default-server inter 3s fall 3 rise 2 on-marked-down shutdown-sessions
 - name: pg-bench-and-backup-smoke-tests
   instances: 1
   stemcell: default
@@ -147,7 +194,7 @@ instance_groups:
     properties:
       smoke_tests:
         backend:
-          port: 6432
+          port: 5432
         target:
           username: ((service_credentials.username))
           password: ((service_credentials.password))
