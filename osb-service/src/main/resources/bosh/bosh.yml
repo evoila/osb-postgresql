@@ -67,14 +67,13 @@ instance_groups:
   networks:
   - name: service
   persistent_disk_type: 10GB
-  consumes:
-    zookeeper:
-      deployment: osb-zookeeper
-  consumes:
-    haproxy: {}
   jobs:
   - name: postgres
     release: osb-bosh-postgresql
+    consumes:
+      haproxy: {}
+      zookeeper:
+        deployment: osb-zookeeper
   - name: backup-agent
     release: osb-bosh-postgresql
   - name: postgres_exporter
