@@ -91,6 +91,7 @@ instance_groups:
       postgres-address:
         as: postgres-address
         aliases: []
+      tcp_backend: {}
   - name: backup-agent
     release: osb-bosh-postgresql
   - name: postgres_exporter
