@@ -1,15 +1,19 @@
 package de.evoila.cf.cpi.bosh;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.evoila.cf.broker.bean.BoshProperties;
+import de.evoila.cf.broker.custom.postgres.CustomParameters;
 import de.evoila.cf.broker.custom.postgres.PostgreSQLUtils;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.ServiceInstance;
-import de.evoila.cf.broker.model.credential.PasswordCredential;
 import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
 import de.evoila.cf.broker.util.MapUtils;
 import de.evoila.cf.cpi.CredentialConstants;
 import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
+import de.evoila.cf.cpi.bosh.deployment.manifest.Variable;
+import de.evoila.cf.cpi.bosh.deployment.manifest.features.Features;
+import de.evoila.cf.cpi.bosh.deployment.manifest.instanceGroup.JobV2;
 import de.evoila.cf.security.credentials.CredentialStore;
 import de.evoila.cf.security.credentials.DefaultCredentialConstants;
 import org.springframework.core.env.Environment;
@@ -26,12 +30,16 @@ import javax.xml.bind.DatatypeConverter;
 public class PostgresDeploymentManager extends DeploymentManager {
 
     private CredentialStore credentialStore;
+    private ObjectMapper objectMapper;
+    
 
     public PostgresDeploymentManager(BoshProperties properties,
                                      Environment environment,
-                                     CredentialStore credentialStore) {
+                                     CredentialStore credentialStore,
+                                     ObjectMapper objectMapper) {
         super(properties, environment);
         this.credentialStore = credentialStore;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -44,17 +52,61 @@ public class PostgresDeploymentManager extends DeploymentManager {
 	random.nextBytes(tdeBytes);
 	String tdeKeyString = DatatypeConverter.printHexBinary(tdeBytes).toLowerCase();
         HashMap<String, Object> properties = new HashMap<>();
-        if (customParameters != null && !customParameters.isEmpty()){
+        if (customParameters != null && !customParameters.isEmpty()) {
             properties.putAll(customParameters);
-            Object ssl=getMapProperty(properties,"postgres", "ssl", "enabled");
-            if (ssl!=null) {
-                useSsl=((Boolean)ssl).booleanValue();
-                ssl=getMapProperty(properties,"postgres", "ssl");
+            Object ssl = getMapProperty(properties, "postgres", "ssl", "enabled");
+            if (ssl != null) {
+                useSsl = ((Boolean) ssl).booleanValue();
+                ssl = getMapProperty(properties, "postgres", "ssl");
             }
-            extensions=(ArrayList<String>)getMapProperty(properties, "postgres","database","extensions");
-            if (extensions != null){
-                deleteMapProperty(properties, "postgres","database","extensions");
+            extensions = (ArrayList<String>) getMapProperty(properties, "postgres", "database", "extensions");
+            if (extensions != null) {
+                deleteMapProperty(properties, "postgres", "database", "extensions");
             }
+
+
+        }
+
+        CustomParameters planParameters = objectMapper.convertValue(plan.getMetadata().getCustomParameters(), CustomParameters.class);
+
+        if (planParameters.getDns() != null) {
+            JobV2 postgres = manifest.getInstanceGroup("postgres").get().getJobs().stream().findFirst().filter(job -> {
+                return job.getName().equals("postgres");
+            }).get();
+            JobV2 haproxy = manifest.getInstanceGroup("haproxy").get().getJobs().stream().findFirst().filter(job -> {
+                return job.getName().equals("haproxy");
+            }).get();
+
+            List<JobV2.Aliases> postgresAliaes = postgres.getProvides().get("postgres-address").getAliases();
+            List<JobV2.Aliases>  haproxyAliaes = haproxy.getProvides().get("haproxy-address").getAliases();
+            Map<String, String> dns = planParameters.getDns();
+            String urlPrefix = serviceInstance.getId().replace("-", "");
+            ArrayList<String> altNames = new ArrayList<String>();
+
+            dns.forEach((key, dnsEntry) -> {
+                altNames.add(urlPrefix + "." + dnsEntry);
+                altNames.add("*." + urlPrefix + "." + dnsEntry);
+                postgresAliaes.add(new JobV2.Aliases("_." + urlPrefix + "." + dnsEntry, JobV2.PlaceholderType.UUID));
+                if (plan.getMetadata().getIngressInstanceGroup().equals("haproxy")){
+                    haproxyAliaes.add(new JobV2.Aliases( urlPrefix + "." + dnsEntry));
+                }else{
+                    postgresAliaes.add(new JobV2.Aliases( urlPrefix + "." + dnsEntry));
+                }
+            });
+
+            Variable serverCert = manifest.getVariables().stream().filter(variable -> {
+                return variable.getName().equals("server_cert");
+            }).findFirst().get();
+            serverCert.getOptions().setAlternativeNames(altNames);
+            if (planParameters.getCert() != null) {
+                serverCert.getOptions().setCa(planParameters.getCert());
+            }
+
+            Features features = new Features();
+            features.setUseDnsAddesses(true);
+            features.setUseShortDnsAddresses(true);
+            manifest.setFeatures(features);
+
         }
 
         if (customParameters != null && !customParameters.isEmpty()) {
@@ -66,7 +118,7 @@ public class PostgresDeploymentManager extends DeploymentManager {
             }
 
         }
-        
+
 //        if (!isUpdate) {
             log.debug("Updating Deployment Manifest, replacing parameters");
 
@@ -104,7 +156,13 @@ public class PostgresDeploymentManager extends DeploymentManager {
             backupUserProperties.put("password", backupUsernamePasswordCredential.getPassword());
 
             List<HashMap<String, Object>> users = (List<HashMap<String, Object>>) postgres.get("users");
-            HashMap<String, Object> defaultUserProperties = users.get(0);
+            HashMap<String, Object> defaultUserProperties;
+            if(users.size()>0){
+                defaultUserProperties = users.get(0);
+            }else{
+                defaultUserProperties = new HashMap<String, Object>();
+                users.add(defaultUserProperties);
+            }
             UsernamePasswordCredential defaultUsernamePasswordCredential = credentialStore.createUser(serviceInstance,
                     CredentialConstants.USER_CREDENTIALS);
             defaultUserProperties.put("username", defaultUsernamePasswordCredential.getUsername());

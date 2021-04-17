@@ -49,13 +49,23 @@ variables:
   type: user
   options:
     username: exporter
-- name: replicationPassword
-  type: password
-- name: ssl_ca
-  type: certificate
+- name: server_ca
   options:
+    common_name: Identity Credentials Intermediate CA
     is_ca: true
-    common_name: postgres-ssl
+  type: certificate
+- name: server_cert
+  options:
+    ca: server_ca 
+    common_name: Identity Credentials Intermediate CA
+    is_ca: false
+    extended_key_usage:
+    - server_auth
+  consumes:
+    alternative_name: 
+      from: postgres-address
+      properties: { wildcard: true }
+  type: certificate
 
 instance_groups:
 - name: postgres
@@ -74,6 +84,13 @@ instance_groups:
       haproxy: {}
       zookeeper:
         deployment: osb-zookeeper
+    custom_provider_definitions:
+     - name: postgres-address
+       type: address
+    provides:
+      postgres-address:
+        as: postgres-address
+        aliases: []
   - name: backup-agent
     release: osb-bosh-postgresql
   - name: postgres_exporter
@@ -91,8 +108,9 @@ instance_groups:
     postgres:
       ssl:
         enabled: true
-        ca: ((ssl_ca.certificate))((ssl_ca.ca))
-        cakey: ((ssl_ca.private_key))
+        ca: ((server_cert.ca))
+        cert: ((server_cert.certificate))((server_cert.ca))
+        key: ((server_cert.private_key))
       resource:
         shared_buffers: 128MB
         temp_buffers: 8MB
@@ -114,7 +132,6 @@ instance_groups:
       replication:
         archive_mode: 'on'
         enabled: true
-        password: ((replicationPassword))
       admin_users:
       - username: ((service_credentials.username))
         password: ((service_credentials.password))
@@ -125,27 +142,13 @@ instance_groups:
       backup_users:
       - username: ((backup_credentials.username))
         password: ((backup_credentials.password))
-      users:
-      - username: pgpool_health
-        password: ((service_credentials.password))
-        admin: true
+      users: []
       databases:
       - name: admin
         users:
-        - pgpool_health
         - ((service_credentials.username))
         extensions: 
         - citext 
-#      - name: pgpool_health
-#        users:
-#        - pgpool_health
-#        extensions: 
-#        - citext 
-#      - name: admin
-#        users:
-#        - ((service_credentials.username))
-#        extensions: 
-#        - citext 
 
 - name: haproxy
   azs: [z1]
@@ -159,8 +162,13 @@ instance_groups:
     custom_provider_definitions:
     - name: haproxy
       type: haproxy
+    - name: haproxy-address
+      type: address
     provides:
       haproxy: {}
+      haproxy-address:
+        as: haproxy-address
+        aliases: []
     consumes:
       tcp_backend: {}
     properties:

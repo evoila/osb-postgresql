@@ -1,5 +1,6 @@
 package de.evoila.cf.broker.custom.postgres;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.evoila.cf.broker.bean.ExistingEndpointBean;
 import de.evoila.cf.broker.model.ServiceInstance;
 import de.evoila.cf.broker.model.catalog.ServerAddress;
@@ -11,6 +12,7 @@ import de.evoila.cf.cpi.CredentialConstants;
 import de.evoila.cf.security.credentials.CredentialStore;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -20,9 +22,12 @@ public class PostgreConnectionHandler {
 
     private CredentialStore credentialStore;
 
-    public PostgreConnectionHandler(ExistingEndpointBean existingEndpointBean,CredentialStore credentialStore) {
+    private ObjectMapper objectMapper;
+
+    public PostgreConnectionHandler(ExistingEndpointBean existingEndpointBean,CredentialStore credentialStore, ObjectMapper objectMapper) {
         this.existingEndpointBean = existingEndpointBean;
         this.credentialStore = credentialStore;
+        this.objectMapper = objectMapper;
     }
 
     private UsernamePasswordCredential getBindUserCredentials (ServiceInstance serviceInstance, CredentialStore credentialStore, String bindingId) {
@@ -56,8 +61,19 @@ public class PostgreConnectionHandler {
 
     private PostgresConnectionParameter prepareConnectionParameter(ServiceInstance serviceInstance, Plan plan, List<ServerAddress> serverAddress, String database,
                                                                    ConnectionUserType connectionType, String bindingId, boolean ssl) {
+
+        CustomParameters planParameters = objectMapper.convertValue(plan.getMetadata().getCustomParameters(), CustomParameters.class);
         PostgresConnectionParameter connectionParameter = new PostgresConnectionParameter();
-        connectionParameter.setServerAddresses(serverAddress);
+        if (planParameters.getDns() == null) {
+            connectionParameter.setServerAddresses(serverAddress);
+        } else {
+            List<ServerAddress> addresses = Arrays.asList((new ServerAddress(
+                    serverAddress.get(0).getName(),
+                    (serviceInstance.getId().replace("-","") + "." + planParameters.getDns().get("0")),
+                    serverAddress.get(0).getPort()
+                    )));
+            connectionParameter.setServerAddresses(addresses);
+        }
 
         switch (connectionType) {
             case ROOT_USER:
@@ -88,6 +104,7 @@ public class PostgreConnectionHandler {
                                                                    ConnectionUserType connectionType, String bindingId,boolean ssl) {
 
         String ingressInstanceGroup = plan.getMetadata().getIngressInstanceGroup();
+        ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);
         List<ServerAddress> serverAddresses = ServiceInstanceUtils.filteredServerAddress(serviceInstance.getHosts(), ingressInstanceGroup);
         return prepareConnectionParameter(serviceInstance,plan,serverAddresses,database,connectionType,bindingId,ssl);
     }

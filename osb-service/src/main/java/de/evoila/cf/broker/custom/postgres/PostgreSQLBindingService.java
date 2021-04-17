@@ -1,5 +1,6 @@
 package de.evoila.cf.broker.custom.postgres;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jcraft.jsch.JSchException;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.model.*;
@@ -53,6 +54,8 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
     private PostgreConnectionHandler postgreConnectionHandler;
 
+    private ObjectMapper objectMapper;
+
     PostgreSQLBindingService(PostgresCustomImplementation customImplementation,
                              PostgreSQLExistingServiceFactory existingServiceFactory,
                              PostgresBoshPlatformService postgresBoshPlatformService,
@@ -61,7 +64,8 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
                              @Autowired(required = false) JobRepository jobRepository,
                              AsyncBindingService asyncBindingService, PlatformRepository platformRepository,
                              CredentialStore credentialStore,
-                             PostgreConnectionHandler postgreConnectionHandler) {
+                             PostgreConnectionHandler postgreConnectionHandler,
+                             ObjectMapper objectMapper) {
         super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, jobRepository, asyncBindingService, platformRepository);
         Assert.notNull(customImplementation, "PostgresCustomImplementation may not be null");
         Assert.notNull(existingServiceFactory, "PostgreSQLExistingServiceFactory may not be null");
@@ -70,6 +74,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         this.postgresBoshPlatformService = postgresBoshPlatformService;
         this.credentialStore = credentialStore;
         this.postgreConnectionHandler = postgreConnectionHandler;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -98,9 +103,9 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
     @Override
     protected Map<String, Object> createCredentials(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                     ServiceInstance serviceInstance, Plan plan, ServerAddress host) throws ServiceBrokerException {
+
+        CustomParameters planParameters = objectMapper.convertValue(plan.getMetadata().getCustomParameters(), CustomParameters.class);
         Object sslProperty = null;
-        String primaryHost = null;
-        String secendaryHost = null;
         boolean bindSsl = true;
         if ((sslProperty = getMapProperty(serviceInstanceBindingRequest.getParameters(), "ssl", "enabled")) != null) {
             bindSsl = ((Boolean) sslProperty).booleanValue();
@@ -159,8 +164,13 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         } finally {
             jdbcService.closeIfConnected();
         }
+        
 
         String endpoint = ServiceInstanceUtils.connectionUrl(hosts);
+        
+        if (planParameters.getDns() != null) {
+            endpoint = serviceInstance.getId().replace("-","") + "." + planParameters.getDns().get("0");
+        }
 
         // When host is not empty, it is a service key
         if (host != null)
@@ -171,45 +181,9 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
         //Create url with secondary and all Hosts
         String sslParam = ssl ? "&sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory" : "";
-        if (hosts.size() > 1) {
-            String dbURL = String.format("postgres://%s:%s@%s/%s?targetServerType=primary&%s", usernamePasswordCredential.getUsername(),
-                    usernamePasswordCredential.getPassword(), endpoint, database, sslParam);
-            credentials.put("allHostUri", dbURL);
-            boolean primary = false;
-            boolean secondary = false;
-            for (ServerAddress singelHost : hosts) {
-                endpoint = ServiceInstanceUtils.connectionUrl(Arrays.asList(singelHost));
-                dbURL = String.format("postgres://%s:%s@%s/%s?%s", usernamePasswordCredential.getUsername(),
-                        usernamePasswordCredential.getPassword(), endpoint, database, sslParam);
-                try {
-                    jdbcService = postgreConnectionHandler.createExtendedRootUserConnection(serviceInstance, plan, Arrays.asList(singelHost), database, ssl);
-                    if (jdbcService.is_recovery() == false) {
-                        if (primary == true){
-                            throw new ServiceBrokerException("More as one primary server");
-                        }
-                        primary = true;
-                        credentials.put(URI, dbURL);
-                    } else {
-                        secondary = true;
-                        credentials.put("secondaryUri", dbURL);
-                    }
-                } catch (SQLException e) {
-                    log.error(String.format("Can not connect to Service Instance %s", singelHost.getIp()), e);
-                    if (secondary == false) {
-                        credentials.put("secondaryUri", dbURL);
-                    }
-                } finally {
-                    jdbcService.closeIfConnected();
-                }
-            }
-            if (primary == false) {
-                throw new ServiceBrokerException("No primary host exist");
-            }
-        } else {
             String dbURL = String.format("postgres://%s:%s@%s/%s?targetServerType=primary&%s", usernamePasswordCredential.getUsername(),
                     usernamePasswordCredential.getPassword(), endpoint, database, sslParam);
             credentials.put(URI, dbURL);
-        }
 
         credentials.put(USERNAME, usernamePasswordCredential.getUsername());
         credentials.put(PASSWORD, usernamePasswordCredential.getPassword());
