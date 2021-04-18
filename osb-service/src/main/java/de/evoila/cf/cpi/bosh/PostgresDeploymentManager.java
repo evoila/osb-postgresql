@@ -79,20 +79,19 @@ public class PostgresDeploymentManager extends DeploymentManager {
 
             List<JobV2.Aliases> postgresAliaes = postgres.getProvides().get("postgres-address").getAliases();
             List<JobV2.Aliases>  haproxyAliaes = haproxy.getProvides().get("haproxy-address").getAliases();
-            Map<String, String> dns = planParameters.getDns();
+            String dns = planParameters.getDns();
             String urlPrefix = serviceInstance.getId().replace("-", "");
             ArrayList<String> altNames = new ArrayList<String>();
 
-            dns.forEach((key, dnsEntry) -> {
-                altNames.add(urlPrefix + "." + dnsEntry);
-                altNames.add("*." + urlPrefix + "." + dnsEntry);
-                postgresAliaes.add(new JobV2.Aliases("_." + urlPrefix + "." + dnsEntry, JobV2.PlaceholderType.UUID));
-                if (plan.getMetadata().getIngressInstanceGroup().equals("haproxy")){
-                    haproxyAliaes.add(new JobV2.Aliases( urlPrefix + "." + dnsEntry));
-                }else{
-                    postgresAliaes.add(new JobV2.Aliases( urlPrefix + "." + dnsEntry));
-                }
-            });
+            String dnsEntry = planParameters.getDns();
+            altNames.add(urlPrefix + "." + dnsEntry);
+            altNames.add("*." + urlPrefix + "." + dnsEntry);
+            postgresAliaes.add(new JobV2.Aliases("_." + urlPrefix + "." + dnsEntry, JobV2.PlaceholderType.UUID));
+            if (plan.getMetadata().getIngressInstanceGroup().equals("haproxy")){
+                haproxyAliaes.add(new JobV2.Aliases( urlPrefix + "." + dnsEntry));
+            }else{
+                postgresAliaes.add(new JobV2.Aliases( urlPrefix + "." + dnsEntry));
+            }
 
             Variable serverCert = manifest.getVariables().stream().filter(variable -> {
                 return variable.getName().equals("server_cert");

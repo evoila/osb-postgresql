@@ -169,7 +169,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         String endpoint = ServiceInstanceUtils.connectionUrl(hosts);
         
         if (planParameters.getDns() != null) {
-            endpoint = serviceInstance.getId().replace("-","") + "." + planParameters.getDns().get("0");
+            endpoint = serviceInstance.getId().replace("-","") + "." + planParameters.getDns();
         }
 
         // When host is not empty, it is a service key

@@ -3,14 +3,14 @@ package de.evoila.cf.broker.custom.postgres;
 import java.util.Map;
 
 public class CustomParameters {
-    private Map<String, String> dns;
+    private String dns;
     private String cert;
 
-    public Map<String, String> getDns() {
+    public String getDns() {
         return dns;
     }
 
-    public void setDns(Map<String, String> dns) {
+    public void setDns(String dns) {
         this.dns = dns;
     }
 

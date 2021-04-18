@@ -69,7 +69,7 @@ public class PostgreConnectionHandler {
         } else {
             List<ServerAddress> addresses = Arrays.asList((new ServerAddress(
                     serverAddress.get(0).getName(),
-                    (serviceInstance.getId().replace("-","") + "." + planParameters.getDns().get("0")),
+                    (serviceInstance.getId().replace("-","") + "." + planParameters.getDns()),
                     serverAddress.get(0).getPort()
                     )));
             connectionParameter.setServerAddresses(addresses);

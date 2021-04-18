@@ -91,7 +91,8 @@ instance_groups:
       postgres-address:
         as: postgres-address
         aliases: []
-      tcp_backend: {}
+      tcp_backend:
+        as: pg-address
   - name: backup-agent
     release: osb-bosh-postgresql
   - name: postgres_exporter
@@ -171,7 +172,8 @@ instance_groups:
         as: haproxy-address
         aliases: []
     consumes:
-      tcp_backend: {}
+      tcp_backend:
+        from: pg-address
     properties:
       ha_proxy:
         max_connections: 100
