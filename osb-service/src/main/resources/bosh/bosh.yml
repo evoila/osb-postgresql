@@ -91,7 +91,7 @@ instance_groups:
       postgres-address:
         as: postgres-address
         aliases: []
-      tcp_backend:
+      tcp_backend: 
         as: pg-address
   - name: backup-agent
     release: osb-bosh-postgresql
@@ -108,6 +108,7 @@ instance_groups:
       username: ((backup_credentials.username))
       password: ((backup_credentials.password))
     postgres:
+      version: "13"
       ssl:
         enabled: true
         ca: ((server_cert.ca))
@@ -126,6 +127,11 @@ instance_groups:
         max_connections: 400
         max_files_per_process: 1000
         shared_preload_libraries: 'pg_stat_statements'
+        authentication_timeout: 30
+        max_locks_per_transaction: 64
+        max_pred_locks_per_page: 2
+        max_pred_locks_per_relation: -2
+        max_pred_locks_per_transaction: 64
       archive_cleanup:
         threshold: 10
       hba:

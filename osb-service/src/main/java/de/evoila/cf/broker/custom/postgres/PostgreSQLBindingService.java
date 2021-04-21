@@ -164,14 +164,13 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         } finally {
             jdbcService.closeIfConnected();
         }
-        
+
 
         String endpoint = ServiceInstanceUtils.connectionUrl(hosts);
-        
-        if (planParameters.getDns() != null) {
+        if(planParameters.getDns() != null || planParameters.isShortDns() == true) {
             endpoint = serviceInstance.getId().replace("-","") + "." + planParameters.getDns();
         }
-
+        
         // When host is not empty, it is a service key
         if (host != null)
             endpoint = host.getIp() + ":" + host.getPort();

@@ -1,9 +1,11 @@
 package de.evoila.cf.cpi.bosh;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import de.evoila.cf.broker.bean.BoshProperties;
+import de.evoila.cf.broker.custom.postgres.CustomParameters;
 import de.evoila.cf.broker.model.DashboardClient;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.catalog.ServerAddress;
@@ -46,26 +48,47 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
 
     private CredentialStore credentialStore;
 
+    private ObjectMapper objectMapper;
+
     PostgresBoshPlatformService(PlatformRepository repository, CatalogService catalogService,
                                 ServicePortAvailabilityVerifier availabilityVerifier,
                                 BoshProperties boshProperties,
                                 CredentialStore credentialStore,
                                 Optional<DashboardClient> dashboardClient,
                                 Environment environment,
-                                DeploymentManager deploymentManager) {
+                                DeploymentManager deploymentManager,
+                                ObjectMapper objectMapper) {
         super(repository,
                 catalogService, availabilityVerifier,
                 boshProperties, dashboardClient,
                 deploymentManager);
         this.credentialStore = credentialStore;
+        this.objectMapper = objectMapper;
     }
 
     @Override
     protected void updateHosts(ServiceInstance serviceInstance, Plan plan, Deployment deployment) {
+
         List<Vm> vms = super.getVms(serviceInstance);
         serviceInstance.getHosts().clear();
+        CustomParameters planParameters = objectMapper.convertValue(plan.getMetadata().getCustomParameters(), CustomParameters.class);
 
-        vms.forEach(vm -> serviceInstance.getHosts().add(super.toServerAddress(vm, defaultPort, plan)));
+        if(planParameters.getDns() == null) {
+            vms.forEach(vm -> serviceInstance.getHosts().add(super.toServerAddress(vm, defaultPort, plan)));
+        }else{
+            String dns = serviceInstance.getId().replace("-","") + "." + planParameters.getDns();
+            final String backup = ( plan.getMetadata().getBackup() != null )?plan.getMetadata().getBackup().getInstanceGroup():"none ";
+
+            vms.forEach(vm -> {
+                serviceInstance.getHosts().add(new ServerAddress(
+                        vm.getJobName() + vm.getIndex(),
+                        vm.getId() + "." + vm.getJobName() + "." + dns,
+                        defaultPort,
+                        vm.getJobName().contains(backup)
+                        )
+                    );
+            });
+        }
     }
 
     @Override

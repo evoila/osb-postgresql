@@ -64,16 +64,7 @@ public class PostgreConnectionHandler {
 
         CustomParameters planParameters = objectMapper.convertValue(plan.getMetadata().getCustomParameters(), CustomParameters.class);
         PostgresConnectionParameter connectionParameter = new PostgresConnectionParameter();
-        if (planParameters.getDns() == null) {
-            connectionParameter.setServerAddresses(serverAddress);
-        } else {
-            List<ServerAddress> addresses = Arrays.asList((new ServerAddress(
-                    serverAddress.get(0).getName(),
-                    (serviceInstance.getId().replace("-","") + "." + planParameters.getDns()),
-                    serverAddress.get(0).getPort()
-                    )));
-            connectionParameter.setServerAddresses(addresses);
-        }
+        connectionParameter.setServerAddresses(serverAddress);
 
         switch (connectionType) {
             case ROOT_USER:

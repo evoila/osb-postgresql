@@ -48,9 +48,6 @@ public class PostgresDeploymentManager extends DeploymentManager {
 	SecureRandom random = new SecureRandom();
 	boolean useSsl = true;
 	ArrayList<String> extensions = null;
-	byte tdeBytes[] = new byte[16]; // 128 bits are converted to 16 bytes;
-	random.nextBytes(tdeBytes);
-	String tdeKeyString = DatatypeConverter.printHexBinary(tdeBytes).toLowerCase();
         HashMap<String, Object> properties = new HashMap<>();
         if (customParameters != null && !customParameters.isEmpty()) {
             properties.putAll(customParameters);
@@ -85,8 +82,10 @@ public class PostgresDeploymentManager extends DeploymentManager {
 
             String dnsEntry = planParameters.getDns();
             altNames.add(urlPrefix + "." + dnsEntry);
-            altNames.add("*." + urlPrefix + "." + dnsEntry);
-            postgresAliaes.add(new JobV2.Aliases("_." + urlPrefix + "." + dnsEntry, JobV2.PlaceholderType.UUID));
+            altNames.add("*.postgres." + urlPrefix + "." + dnsEntry);
+            altNames.add("*.haproxy." + urlPrefix + "." + dnsEntry);
+            postgresAliaes.add(new JobV2.Aliases("_.postgres." + urlPrefix + "." + dnsEntry, JobV2.PlaceholderType.UUID));
+            haproxyAliaes.add(new JobV2.Aliases("_.haproxy." + urlPrefix + "." + dnsEntry, JobV2.PlaceholderType.UUID));
             if (plan.getMetadata().getIngressInstanceGroup().equals("haproxy")){
                 haproxyAliaes.add(new JobV2.Aliases( urlPrefix + "." + dnsEntry));
             }else{
@@ -101,8 +100,9 @@ public class PostgresDeploymentManager extends DeploymentManager {
                 serverCert.getOptions().setCa(planParameters.getCert());
             }
 
+
             Features features = new Features();
-            features.setUseDnsAddesses(true);
+            features.setUseDnsAddresses(true);
             features.setUseShortDnsAddresses(true);
             manifest.setFeatures(features);
 

@@ -4,6 +4,7 @@ import java.util.Map;
 
 public class CustomParameters {
     private String dns;
+    private boolean shortDns;
     private String cert;
 
     public String getDns() {
@@ -20,5 +21,13 @@ public class CustomParameters {
 
     public void setCert(String cert) {
         this.cert = cert;
+    }
+
+    public boolean isShortDns() {
+        return shortDns;
+    }
+
+    public void setShortDns(boolean shortDns) {
+        this.shortDns = shortDns;
     }
 }
