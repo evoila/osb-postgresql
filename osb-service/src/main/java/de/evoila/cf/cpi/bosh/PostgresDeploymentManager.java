@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.security.SecureRandom;
+import java.util.stream.Collectors;
 import javax.xml.bind.DatatypeConverter;
 
 /**
@@ -84,7 +85,13 @@ public class PostgresDeploymentManager extends DeploymentManager {
             altNames.add(urlPrefix + "." + dnsEntry);
             altNames.add("*.postgres." + urlPrefix + "." + dnsEntry);
             altNames.add("*.haproxy." + urlPrefix + "." + dnsEntry);
+            postgresAliaes.removeAll(postgresAliaes.stream().filter(alias ->  {
+                return alias.getDomain().equals(urlPrefix + "." + dnsEntry) || alias.getDomain().equals("_.postgres." + urlPrefix + "." + dnsEntry);
+            }).collect(Collectors.toList()));
             postgresAliaes.add(new JobV2.Aliases("_.postgres." + urlPrefix + "." + dnsEntry, JobV2.PlaceholderType.UUID));
+            haproxyAliaes.removeAll(haproxyAliaes.stream().filter(alias -> {
+                return alias.getDomain().equals(urlPrefix + "." + dnsEntry) || alias.getDomain().equals("_.haproxy." + urlPrefix + "." + dnsEntry);
+            }).collect(Collectors.toList()));
             haproxyAliaes.add(new JobV2.Aliases("_.haproxy." + urlPrefix + "." + dnsEntry, JobV2.PlaceholderType.UUID));
             if (plan.getMetadata().getIngressInstanceGroup().equals("haproxy")){
                 haproxyAliaes.add(new JobV2.Aliases( urlPrefix + "." + dnsEntry));
@@ -170,7 +177,7 @@ public class PostgresDeploymentManager extends DeploymentManager {
             List<String> databaseUsers = new ArrayList<>();
             databaseUsers.add(defaultUsernamePasswordCredential.getUsername());
 
-            List<Map<String, Object>> databases = (ArrayList<Map<String,Object>>)getMapProperty(postgres, "postgres","databases");
+            List<Map<String, Object>> databases = (ArrayList<Map<String,Object>>)getMapProperty(postgres, "databases");
             if (databases == null) {
                 databases = new ArrayList<>();
             }
