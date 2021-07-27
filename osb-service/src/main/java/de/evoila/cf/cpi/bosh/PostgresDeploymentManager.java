@@ -48,6 +48,7 @@ public class PostgresDeploymentManager extends DeploymentManager {
             Object> customParameters, boolean isUpdate) {
 	SecureRandom random = new SecureRandom();
 	boolean useSsl = true;
+	CustomParameters planParameters = objectMapper.convertValue(plan.getMetadata().getCustomParameters(), CustomParameters.class);
 	ArrayList<String> extensions = null;
         HashMap<String, Object> properties = new HashMap<>();
         if (customParameters != null && !customParameters.isEmpty()) {
@@ -56,6 +57,9 @@ public class PostgresDeploymentManager extends DeploymentManager {
             if (ssl != null) {
                 useSsl = ((Boolean) ssl).booleanValue();
                 ssl = getMapProperty(properties, "postgres", "ssl");
+                if (planParameters.getCert() != null) {
+                    ((Map<String,Object>)ssl).put("ca","((" + planParameters.getCert() + ".ca))" );
+                }
             }
             extensions = (ArrayList<String>) getMapProperty(properties, "postgres", "database", "extensions");
             if (extensions != null) {
@@ -65,7 +69,6 @@ public class PostgresDeploymentManager extends DeploymentManager {
 
         }
 
-        CustomParameters planParameters = objectMapper.convertValue(plan.getMetadata().getCustomParameters(), CustomParameters.class);
 
         if (planParameters.getDns() != null) {
             JobV2 postgres = manifest.getInstanceGroup("postgres").get().getJobs().stream().findFirst().filter(job -> {
@@ -126,6 +129,7 @@ public class PostgresDeploymentManager extends DeploymentManager {
         }
 
 //        if (!isUpdate) {
+//        }
             log.debug("Updating Deployment Manifest, replacing parameters");
 
             Map<String, Object> postgresManifestProperties = manifestProperties("postgres", manifest);
@@ -134,48 +138,7 @@ public class PostgresDeploymentManager extends DeploymentManager {
             HashMap<String, Object> postgresExporter = (HashMap<String, Object>) postgresManifestProperties.get("postgres_exporter");
             HashMap<String, Object> backupAgent = (HashMap<String, Object>) postgresManifestProperties.get("backup_agent");
 
-            List<HashMap<String, Object>> adminUsers = (List<HashMap<String, Object>>) postgres.get("admin_users");
-            HashMap<String, Object> userProperties = adminUsers.get(0);
-            UsernamePasswordCredential usernamePasswordCredential = credentialStore.createUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
-            userProperties.put("username", usernamePasswordCredential.getUsername());
-            userProperties.put("password", usernamePasswordCredential.getPassword());
-            serviceInstance.setUsername(usernamePasswordCredential.getUsername());
-
-            UsernamePasswordCredential exporterCredential = credentialStore.createUser(serviceInstance,
-                    DefaultCredentialConstants.EXPORTER_CREDENTIALS);
-            postgresExporter.put("datasource_name", "postgresql://" + exporterCredential.getUsername() + ":" + exporterCredential.getPassword() + "@127.0.0.1:5432/postgres?sslmode="+(useSsl?"require":"disable"));
-            HashMap<String, Object> exporterProperties = adminUsers.get(1);
-            exporterProperties.put("username", exporterCredential.getUsername());
-            exporterProperties.put("password", exporterCredential.getPassword());
-
-
-            UsernamePasswordCredential backupAgentUsernamePasswordCredential = credentialStore.createUser(serviceInstance,
-                    DefaultCredentialConstants.BACKUP_AGENT_CREDENTIALS);
-            backupAgent.put("username", backupAgentUsernamePasswordCredential.getUsername());
-            backupAgent.put("password", backupAgentUsernamePasswordCredential.getPassword());
-
-            List<HashMap<String, Object>> backupUsers = (List<HashMap<String, Object>>) postgres.get("backup_users");
-            HashMap<String, Object> backupUserProperties = backupUsers.get(0);
-            UsernamePasswordCredential backupUsernamePasswordCredential = credentialStore.createUser(serviceInstance,
-                    DefaultCredentialConstants.BACKUP_CREDENTIALS);
-            backupUserProperties.put("username", backupUsernamePasswordCredential.getUsername());
-            backupUserProperties.put("password", backupUsernamePasswordCredential.getPassword());
-
-            List<HashMap<String, Object>> users = (List<HashMap<String, Object>>) postgres.get("users");
-            HashMap<String, Object> defaultUserProperties;
-            if(users.size()>0){
-                defaultUserProperties = users.get(0);
-            }else{
-                defaultUserProperties = new HashMap<String, Object>();
-                users.add(defaultUserProperties);
-            }
-            UsernamePasswordCredential defaultUsernamePasswordCredential = credentialStore.createUser(serviceInstance,
-                    CredentialConstants.USER_CREDENTIALS);
-            defaultUserProperties.put("username", defaultUsernamePasswordCredential.getUsername());
-            defaultUserProperties.put("password", defaultUsernamePasswordCredential.getPassword());
-
             List<String> databaseUsers = new ArrayList<>();
-            databaseUsers.add(defaultUsernamePasswordCredential.getUsername());
 
             List<Map<String, Object>> databases = (ArrayList<Map<String,Object>>)getMapProperty(postgres, "databases");
             if (databases == null) {
@@ -190,7 +153,6 @@ public class PostgresDeploymentManager extends DeploymentManager {
             databases.add(database);
 
             postgres.put("databases", databases);
-  //      }
 
 
         this.updateInstanceGroupConfiguration(manifest, plan);

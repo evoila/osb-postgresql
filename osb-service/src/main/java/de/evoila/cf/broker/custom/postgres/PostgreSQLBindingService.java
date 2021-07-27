@@ -180,14 +180,13 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
         //Create url with secondary and all Hosts
         String sslParam = ssl ? "&sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory" : "";
-            String dbURL = String.format("postgres://%s:%s@%s/%s?targetServerType=primary&%s", usernamePasswordCredential.getUsername(),
+            String dbURL = String.format("postgres://%s:%s@%s/%s?%s", usernamePasswordCredential.getUsername(),
                     usernamePasswordCredential.getPassword(), endpoint, database, sslParam);
             credentials.put(URI, dbURL);
 
         credentials.put(USERNAME, usernamePasswordCredential.getUsername());
         credentials.put(PASSWORD, usernamePasswordCredential.getPassword());
         credentials.put(DATABASE, database);
-        credentials.put("targetServerType", "primary");
         if (ssl) {
             credentials.put("sslmode", "verify-full");
             credentials.put("sslfactory", "org.postgresql.ssl.DefaultJavaSSLFactory");

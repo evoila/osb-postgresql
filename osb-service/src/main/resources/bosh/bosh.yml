@@ -11,13 +11,15 @@ addons:
 
 releases:
 - name: osb-bosh-postgresql
-  version: "0+dev.64"  
-- name: bpm
-  version: 1.1.8
-  url: https://bosh.io/d/github.com/cloudfoundry/bpm-release?v=1.1.8
-  sha1: c956394fce7e74f741e4ae8c256b480904ad5942
-- name: osb-bosh-haproxy
-  version: 0+dev.6
+  version: "0+dev.184"  
+- name: "bpm"
+  version: "1.1.12"
+  url: "https://bosh.io/d/github.com/cloudfoundry/bpm-release?v=1.1.12"
+  sha1: "502e9446fa34accaf122ad2b28b6ffa543d5bbca"
+- name: haproxy
+  version: 11.1.0
+  url: https://github.com/cloudfoundry-incubator/haproxy-boshrelease/releases/download/v11.1.0/haproxy-11.1.0.tgz
+  sha1: ccc8343e4c467f92c288af39d0d94aa1876aac45
 - name: prometheus
   version: latest
 
@@ -41,10 +43,26 @@ variables:
   type: user
   options:
     username: service
+- name: root_credentials
+  type: user
+  options:
+    username: admin
+- name: replication_credentials
+  type: user
+  options:
+    username: replicator
+- name: rewind_credentials
+  type: user
+  options:
+    username: rewind
 - name: backup_credentials
   type: user
   options:
     username: backup
+- name: backup_agent_credentials
+  type: user
+  options:
+    username: backup_agent
 - name: exporter_credentials
   type: user
   options:
@@ -103,10 +121,10 @@ instance_groups:
       zookeeper:
         enabled: true
     postgres_exporter:
-      datasource_name: "postgresql://((exporter_credentials.username)):((exporter_credentials.password))@localhost:5432/postgres?sslmode=verify-full"
+      datasource_name: "postgresql://((exporter_credentials.username)):((exporter_credentials.password))@:5432/postgres?host=/var/vcap/store/postgres/db/.s.PGSQL.5432"
     backup_agent:
-      username: ((backup_credentials.username))
-      password: ((backup_credentials.password))
+      username: ((backup_agent_credentials.username))
+      password: ((backup_agent_credentials.password))
     postgres:
       version: "13"
       ssl:
@@ -135,11 +153,22 @@ instance_groups:
       archive_cleanup:
         threshold: 10
       hba:
-        - host all all 0.0.0.0/0 md5
-        - host all all ::/0 md5
+        - hostssl all all 0.0.0.0/0 md5 clientcert=0
+        - hostnossl all all 0.0.0.0/0 md5
+        - hostssl all all ::/0 md5 clientcert=0
+        - hostnossl all all ::/0 md5
       replication:
-        archive_mode: 'on'
+        archive_mode: "off"
         enabled: true
+      super_user: 
+        username: ((root_credentials.username))
+        password: ((root_credentials.password))
+      replication_user:
+        username: ((replication_credentials.username))
+        password: ((replication_credentials.password))
+      rewind_user: 
+        username: ((rewind_credentials.username))
+        password: ((rewind_credentials.password))
       admin_users:
       - username: ((service_credentials.username))
         password: ((service_credentials.password))
@@ -166,7 +195,7 @@ instance_groups:
   networks: [{name: default}]
   jobs:
   - name: haproxy
-    release: osb-bosh-haproxy
+    release: haproxy
     custom_provider_definitions:
     - name: haproxy
       type: haproxy
