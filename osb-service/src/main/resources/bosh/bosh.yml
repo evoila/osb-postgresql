@@ -140,6 +140,15 @@ instance_groups:
       replication:
         archive_mode: 'on'
         enabled: true
+      replication_user:
+        username: ((replication_credentials.username))
+        password: ((replication_credentials.password))
+      super_user:
+        username: ((super_credentials.username))
+        password: ((super_credentials.password))
+      rewind_user:
+        username: ((rewind_credentials.username))
+        password: ((rewind_credentials.password))
       admin_users:
       - username: ((service_credentials.username))
         password: ((service_credentials.password))
