@@ -33,6 +33,12 @@ stemcells:
   version: latest
 
 variables:
+- name: replication_credentials
+  type: user
+- name: super_credentials
+  type: user
+- name: rewind_credentials
+  type: user
 - name: transport_ssh
   type: ssh
 - name: pcp_password
