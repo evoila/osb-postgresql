@@ -172,11 +172,11 @@ public class PostgresDeploymentManager extends DeploymentManager {
 
 
             if (planParameters.getCert() != null) {
-                Map<String, Object> sslMap = (Map<String,Object>)getMapProperty(postgres, "postgres","ssl");
+                Map<String, Object> sslMap = (Map<String,Object>)getMapProperty(postgres, "ssl");
                 sslMap.put("ca", (String)sslMap.get("ca") + "((" + planParameters.getCert() + ".ca))");
             }
 
-            List<Map<String, Object>> databases = (ArrayList<Map<String,Object>>)getMapProperty(postgres, "postgres","databases");
+            List<Map<String, Object>> databases = (ArrayList<Map<String,Object>>)getMapProperty(postgres,"databases");
             if (databases == null) {
                 databases = new ArrayList<>();
             }
