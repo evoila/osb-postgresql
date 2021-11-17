@@ -16,8 +16,10 @@ releases:
   version: 1.1.8
   url: https://bosh.io/d/github.com/cloudfoundry/bpm-release?v=1.1.8
   sha1: c956394fce7e74f741e4ae8c256b480904ad5942
-- name: osb-bosh-haproxy
-  version: 0+dev.6
+- name: haproxy
+  version: 11.7.1
+  url: https://github.com/cloudfoundry/haproxy-boshrelease/releases/download/v11.7.1/haproxy-11.7.1.tgz
+  sha1: 8baef53d89139513562d614ce1f303f44405266e
 - name: prometheus
   version: latest
 
@@ -181,7 +183,7 @@ instance_groups:
   networks: [{name: default}]
   jobs:
   - name: haproxy
-    release: osb-bosh-haproxy
+    release: haproxy
     custom_provider_definitions:
     - name: haproxy
       type: haproxy
