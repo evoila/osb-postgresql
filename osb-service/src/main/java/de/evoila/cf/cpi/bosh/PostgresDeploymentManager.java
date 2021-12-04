@@ -129,30 +129,8 @@ public class PostgresDeploymentManager extends DeploymentManager {
 
             List<HashMap<String, Object>> adminUsers = (List<HashMap<String, Object>>) postgres.get("admin_users");
             HashMap<String, Object> userProperties = adminUsers.get(0);
-            UsernamePasswordCredential usernamePasswordCredential = credentialStore.createUser(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
-            userProperties.put("username", usernamePasswordCredential.getUsername());
-            userProperties.put("password", usernamePasswordCredential.getPassword());
-            serviceInstance.setUsername(usernamePasswordCredential.getUsername());
 
-            UsernamePasswordCredential exporterCredential = credentialStore.createUser(serviceInstance,
-                    DefaultCredentialConstants.EXPORTER_CREDENTIALS);
-            postgresExporter.put("datasource_name", "postgresql://" + exporterCredential.getUsername() + ":" + exporterCredential.getPassword() + "@127.0.0.1:5432/postgres?sslmode="+(useSsl?"require":"disable"));
-            HashMap<String, Object> exporterProperties = adminUsers.get(1);
-            exporterProperties.put("username", exporterCredential.getUsername());
-            exporterProperties.put("password", exporterCredential.getPassword());
-
-
-            UsernamePasswordCredential backupAgentUsernamePasswordCredential = credentialStore.createUser(serviceInstance,
-                    DefaultCredentialConstants.BACKUP_AGENT_CREDENTIALS);
-            backupAgent.put("username", backupAgentUsernamePasswordCredential.getUsername());
-            backupAgent.put("password", backupAgentUsernamePasswordCredential.getPassword());
-
-            List<HashMap<String, Object>> backupUsers = (List<HashMap<String, Object>>) postgres.get("backup_users");
-            HashMap<String, Object> backupUserProperties = backupUsers.get(0);
-            UsernamePasswordCredential backupUsernamePasswordCredential = credentialStore.createUser(serviceInstance,
-                    DefaultCredentialConstants.BACKUP_CREDENTIALS);
-            backupUserProperties.put("username", backupUsernamePasswordCredential.getUsername());
-            backupUserProperties.put("password", backupUsernamePasswordCredential.getPassword());
+            postgresExporter.put("datasource_name", "postgresql://((exporter_credentials.username)):((exporter_credentials.password))@127.0.0.1:5432/postgres?sslmode="+(useSsl?"require":"disable"));
 
             List<HashMap<String, Object>> users = (List<HashMap<String, Object>>) postgres.get("users");
             HashMap<String, Object> defaultUserProperties;
