@@ -134,9 +134,19 @@ public class PostgresDeploymentManager extends DeploymentManager {
 
             List<HashMap<String, Object>> users = (List<HashMap<String, Object>>) postgres.get("users");
             HashMap<String, Object> defaultUserProperties;
+        if(users.size()>0){
+            defaultUserProperties = users.get(0);
+        }else{
+            defaultUserProperties = new HashMap<String, Object>();
+            users.add(defaultUserProperties);
+        }
+        UsernamePasswordCredential defaultUsernamePasswordCredential = credentialStore.createUser(serviceInstance,
+                CredentialConstants.USER_CREDENTIALS);
+        defaultUserProperties.put("username", defaultUsernamePasswordCredential.getUsername());
+        defaultUserProperties.put("password", defaultUsernamePasswordCredential.getPassword());
 
             List<String> databaseUsers = new ArrayList<>();
-            databaseUsers.add("((" + CredentialConstants.ROOT_CREDENTIALS + ".username))");
+        databaseUsers.add(defaultUsernamePasswordCredential.getUsername());
 
 
             if (planParameters.getCert() != null) {
