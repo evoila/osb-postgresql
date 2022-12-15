@@ -120,7 +120,6 @@ public class PostgresDeploymentManager extends DeploymentManager {
 
 //        if (!isUpdate) {
             log.debug("Updating Deployment Manifest, replacing parameters");
-            setManifestMetadataFromPlan(manifest, plan);
 
             Map<String, Object> postgresManifestProperties = manifestProperties("postgres", manifest);
 
