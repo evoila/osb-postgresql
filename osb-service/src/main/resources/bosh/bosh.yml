@@ -65,7 +65,7 @@ variables:
     username: exporter
 - name: server_ca
   options:
-    common_name: postgresql_ca
+    common_name: Identity Credentials Intermediate CA
     is_ca: true
   type: certificate
 - name: server_cert
