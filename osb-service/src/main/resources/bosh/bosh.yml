@@ -37,11 +37,6 @@ stemcells:
   version: latest
 
 variables:
-- name: server_ca
-  options:
-    common_name: Identity Credentials Intermediate CA
-    is_ca: true
-  type: certificate
 - name: replication_credentials
   type: user
 - name: root_credentials
@@ -68,11 +63,11 @@ variables:
   type: user
   options:
     username: exporter
-#- name: server_ca
-#  options:
-#    common_name: Identity Credentials Intermediate CA
-#    is_ca: true
-#  type: certificate
+- name: server_ca
+  options:
+    common_name: Identity Credentials Intermediate CA
+    is_ca: true
+  type: certificate
 - name: server_cert
   options:
     ca: server_ca 
