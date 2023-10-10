@@ -35,6 +35,11 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>org.springframework.credhub</groupId>
+                <artifactId>spring-credhub-core</artifactId>
+                <version>3.0.0</version>
+            </dependency>
+            <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
                 <version>${spring-cloud.version}</version>
@@ -46,46 +51,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.openrewrite.maven</groupId>
-                <artifactId>rewrite-maven-plugin</artifactId>
-                <version>5.7.1</version>
-                <configuration>
-                    <activeRecipes>
-                        <recipe>org.openrewrite.java.apache.httpclient5.UpgradeApacheHttpClient_5</recipe>
-                        <recipe>org.openrewrite.java.apache.httpclient5.StatusLine</recipe>
-                        <recipe>org.openrewrite.java.apache.httpclient5.UpgradeApacheHttpClient_5_DeprecatedMethods</recipe>
-                        <recipe>org.openrewrite.java.apache.httpclient5.UpgradeApacheHttpClient_5_ClassMapping</recipe>
-                        <recipe>org.openrewrite.java.spring.cloud2022.UpgradeSpringCloud_2022</recipe>
-                        <recipe>org.openrewrite.java.spring.framework.UpgradeSpringFramework_5_0</recipe>
-                        <recipe>org.openrewrite.java.spring.framework.UpgradeSpringFramework_5_1</recipe>
-                        <recipe>org.openrewrite.java.spring.framework.UpgradeSpringFramework_5_2</recipe>
-                        <recipe>org.openrewrite.java.spring.framework.UpgradeSpringFramework_5_3</recipe>
-                        <recipe>org.openrewrite.java.spring.data.UpgradeSpringData_2_3</recipe>
-                        <recipe>org.openrewrite.java.spring.data.UpgradeSpringData_2_5</recipe>
-                        <recipe>org.openrewrite.java.spring.framework.MigrateWebMvcConfigurerAdapter</recipe>
-                        <recipe>org.openrewrite.java.spring.framework.MigrateHandlerInterceptor</recipe>
-                        <recipe>org.openrewrite.java.spring.security6.UpgradeSpringSecurity_6_0</recipe>
-                        <recipe>org.openrewrite.java.spring.security6.UpgradeSpringSecurity_6_1</recipe>
-                        <recipe>org.openrewrite.java.spring.boot3.SpringBootProperties_3_0</recipe>
-                        <recipe>org.openrewrite.java.spring.boot3.SpringBootProperties_3_1</recipe>
-                        <recipe>org.openrewrite.java.spring.boot3.SpringBatch4To5Migration</recipe>
-                        <recipe>org.openrewrite.java.spring.boot3.MigrateThymeleafDependencies</recipe>
-                        <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0</recipe>
-                        <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_1</recipe>
-                        <recipe>org.openrewrite.java.spring.security6.oauth2.client.OAuth2LoginLambdaDsl</recipe>
-                        <recipe>org.openrewrite.java.spring.security6.oauth2.server.resource.OAuth2ResourceServerLambdaDsl</recipe>
-                        <recipe>org.openrewrite.java.spring.security6.oauth2.client.OAuth2ClientLambdaDsl</recipe>
-                    </activeRecipes>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.openrewrite.recipe</groupId>
-                        <artifactId>rewrite-spring</artifactId>
-                        <version>5.0.10</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
