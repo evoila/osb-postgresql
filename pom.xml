@@ -64,10 +64,6 @@
                     <configuration>
                         <source>${java.version}</source>
                         <target>${java.version}</target>
-                        <compilerArgs>
-                            <arg>--add-exports</arg>
-                            <arg>java.base/sun.security.util=ALL-UNNAMED</arg>
-                        </compilerArgs>
                     </configuration>
                 </plugin>
                 <plugin>
