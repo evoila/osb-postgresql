@@ -64,7 +64,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 		try {
 		    postgresCustomImplementation.dropAllExtensions(postgresDbService);
 		} catch (SQLException e) {
-			log.error(String.format("Extension drop (%s) failed while dropping the database %s", database), e);
+			log.error("Extension drop (%s) failed while dropping the database %s".formatted(database), e);
 		}
 
 		postgresDbService.closeIfConnected();

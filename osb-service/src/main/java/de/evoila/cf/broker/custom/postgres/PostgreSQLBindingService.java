@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 import java.io.IOException;
 import java.sql.Array;
@@ -122,7 +122,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
         if (serviceInstanceBindingRequest.getParameters() != null) {
             String customBindingDatabase = (String) serviceInstanceBindingRequest.getParameters().get("database");
 
-            if (!StringUtils.isEmpty(customBindingDatabase))
+            if (!ObjectUtils.isEmpty(customBindingDatabase))
                 database = customBindingDatabase;
         }
 
@@ -159,7 +159,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
             postgresCustomImplementation.setUpBindingUserPrivileges(jdbcService, usernamePasswordCredential.getUsername(), generalRole);
         } catch (SQLException e) {
-            log.error(String.format("Creating Binding(%s) failed while creating the ne postgres user. Could not update database", bindingId), e);
+            log.error("Creating Binding(%s) failed while creating the ne postgres user. Could not update database".formatted(bindingId), e);
             throw new ServiceBrokerException("Could not update database");
         } finally {
             jdbcService.closeIfConnected();
@@ -180,7 +180,7 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
 
         //Create url with secondary and all Hosts
         String sslParam = ssl ? "&sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory" : "";
-            String dbURL = String.format("postgres://%s:%s@%s/%s?targetServerType=primary&%s", usernamePasswordCredential.getUsername(),
+            String dbURL = "postgres://%s:%s@%s/%s?targetServerType=primary&%s".formatted(usernamePasswordCredential.getUsername(),
                     usernamePasswordCredential.getPassword(), endpoint, database, sslParam);
             credentials.put(URI, dbURL);
 

@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.security.SecureRandom;
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 
 /**
  * @author Marco Hennig, Johannes Hiemer.

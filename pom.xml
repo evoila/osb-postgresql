@@ -12,7 +12,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.0</version>
+        <version>3.1.4</version>
     </parent>
 
     <modules>
@@ -26,7 +26,7 @@
     <properties>
         <resource.dir>${basedir}/../osb-service/src/main/resources</resource.dir>
         <dashboard.module>postgresql</dashboard.module>
-        <spring-cloud.version>2021.0.3</spring-cloud.version>
+        <spring-cloud.version>2022.0.4</spring-cloud.version>
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -34,6 +34,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.springframework.credhub</groupId>
+                <artifactId>spring-credhub-core</artifactId>
+                <version>3.0.0</version>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -59,10 +64,6 @@
                     <configuration>
                         <source>${java.version}</source>
                         <target>${java.version}</target>
-                        <compilerArgs>
-                            <arg>--add-exports</arg>
-                            <arg>java.base/sun.security.util=ALL-UNNAMED</arg>
-                        </compilerArgs>
                     </configuration>
                 </plugin>
                 <plugin>

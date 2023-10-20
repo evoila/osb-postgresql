@@ -59,10 +59,12 @@ public class PostgresCustomImplementation {
 					 "  END LOOP; " +
 					 "END; " +
 					 "$$;";
-		String createTrigger = "CREATE EVENT TRIGGER trg_set_owner " +
-							 "ON ddl_command_end " +
-							 "WHEN tag IN ('CREATE TYPE','CREATE TABLE','CREATE SEQUENCE','CREATE INDEX','CREATE SCHEMA','CREATE FUNCTION','CREATE DOMAIN','CREATE VIEW') " +
-							 "EXECUTE PROCEDURE trg_set_owner();";
+		String createTrigger = """
+                             CREATE EVENT TRIGGER trg_set_owner \
+                             ON ddl_command_end \
+                             WHEN tag IN ('CREATE TYPE','CREATE TABLE','CREATE SEQUENCE','CREATE INDEX','CREATE SCHEMA','CREATE FUNCTION','CREATE DOMAIN','CREATE VIEW') \
+                             EXECUTE PROCEDURE trg_set_owner();\
+                             """;
 
 		jdbcDbService.executeUpdate(createFunction);
 		jdbcDbService.executeUpdate(createTrigger);
