@@ -6,7 +6,7 @@
     <artifactId>osb-postgresql</artifactId>
     <packaging>jar</packaging>
     <name>osb-postgresql</name>
-    <version>1.2.2</version>
+    <version>1.2.30</version>
 
     <parent>
         <groupId>de.evoila.cf.broker</groupId>
