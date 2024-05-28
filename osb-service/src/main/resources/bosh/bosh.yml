@@ -17,9 +17,9 @@ releases:
   url: https://bosh.io/d/github.com/cloudfoundry/bpm-release?v=1.1.15
   sha1: 0d48aa01a65b947b97570234eb2401e821a8bd35
 - name: haproxy
-  version: 11.8.1
-  url: https://github.com/cloudfoundry/haproxy-boshrelease/releases/download/v11.7.1/haproxy-11.7.1.tgz
-  sha1: 191500d1e79e2e054f49e8d0a62194b103c56af8
+  version: 11.10.2
+  url: "https://github.com/cloudfoundry/haproxy-boshrelease/releases/download/v11.10.2/haproxy-11.10.2.tgz"
+  sha1: "2bcfd51a693001e5c3fd140bb4e6dc244b098115"
 - name: prometheus
   version: latest
 
