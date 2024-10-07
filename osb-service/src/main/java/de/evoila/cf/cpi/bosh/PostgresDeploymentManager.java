@@ -92,14 +92,12 @@ public class PostgresDeploymentManager extends DeploymentManager {
                 postgresAliaes.add(new JobV2.Aliases( urlPrefix + "." + dnsEntry));
             }
 
-            Variable serverCert = manifest.getVariables().stream().filter(variable -> {
-                return variable.getName().equals("server_cert");
-            }).findFirst().get();
-            serverCert.getOptions().setAlternativeNames(altNames);
-            if (planParameters.getCert() != null) {
-                serverCert.getOptions().setCa(planParameters.getCert());
-            }
-
+            manifest.getVariables().stream().filter(variable -> variable.getName().equals("server_cert")).findFirst().ifPresent(serverCert -> {
+                    serverCert.getOptions().setAlternativeNames(altNames);
+                    if (planParameters.getCert() != null) {
+                        serverCert.getOptions().setCa(planParameters.getCert());
+                    }
+            });
 
             Features features = new Features();
             features.setUseDnsAddresses(true);

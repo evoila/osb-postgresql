@@ -162,7 +162,9 @@ public class PostgreSQLBindingService extends BindingServiceImpl {
             log.error("Creating Binding(%s) failed while creating the ne postgres user. Could not update database".formatted(bindingId), e);
             throw new ServiceBrokerException("Could not update database");
         } finally {
-            jdbcService.closeIfConnected();
+            if (jdbcService != null) {
+                jdbcService.closeIfConnected();
+            }
         }
 
 

@@ -1,0 +1,540 @@
+spring:
+  credhub:
+    bosh-director: p-bosh
+    url: "https://10.244.20.16:8844"
+    oauth2:
+      registration-id: credhub-client
+  security:
+    oauth2:
+      client:
+        registration:
+          credhub-client:
+            provider: uaa
+            authorization-grant-type: client_credentials
+            client-id: ops_manager
+            client-secret: "p-sM7tJx5NVcq2glZbbxfHm9B8Lre-yj"
+        provider:
+          uaa:
+            token-uri: https://10.244.20.16:8443/oauth/token
+      resourceserver:
+        jwt:
+          issuer-uri: https://uaa.system.tas.lab/oauth/token
+  ssl:
+    acceptselfsigned: true
+    client-auth: NONE
+
+bosh:
+  vip_network: floating
+  recreateManifest: true
+
+config:
+  sb:
+    name: osb-postgresql-test
+    uri: https://osb-postgresql-test.apps.tas.lab
+  site:
+    postfix: ""
+    url: apps.tas.lab
+
+service-keys:
+  enabled: true
+
+endpoints:
+  custom:
+    - identifier: osb-backup-manager
+      url: https://osb-backup-manager.apps.tas.lab
+  # - identifier: osb-log-metric-backend
+  #   url: https://osb-log-metric-dashboard-backend-test.system.cf.hob.local
+  # - identifier: osb-autoscaler-core
+  #   url: https://osb-autoscaler-core-test.system.cf.hob.local
+  default: https://osb-postgresql-test.apps.tas.lab
+
+
+catalog:
+  services:
+    - bindable: true
+      bindings_retrievable: true
+      dashboard:
+        auth_endpoint: https://login.system.tas.lab/oauth
+        url: https://osb-postgresql-test.apps.tas.lab/custom/v2/authentication
+      dashboard_client:
+        id: dashboard-client-osb-postgresql-test
+        secret: dashboardclientpassword
+        redirect_uri: https://osb-postgresql-test.apps.tas.lab/custom/v2/authentication
+      description: PostgreSQL Instances
+      id: B459D6A2-AF75-4C02-8544-C1B976764FFC
+      instances_retrievable: true
+      plan_updateable: true
+      allow_context_updates: true
+      name: osb-postgresql-test
+      metadata:
+        displayName: Postgresql
+        longDescription: Postgresql
+        providerDisplayName: evoila
+        documentationUrl: https://github.com/evoila/osb-docs
+        supportUrl: https://helpdesk.evoila.io
+        imageUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAARFQTFRFv9Tii4yK1dXWqqus9PT1Jicl8fHw7/T4YWJkQH+pgIGDf6nFEF+TqKinMHSiYJS33+rxxcXF39/gQ0RCdnd5lpaYz9/p4uLiUlNQn7/UIGmav8DB1NTTNTYza2xvfX58b3BumpqZoKGiUIqwysrLj7TMYGFf6urqi4yOt7e2r8nbQVZncJ+/tbW3Nzg4DDdREig0UlNWKCknJCUjHB0aLzAwFx0dUVddR0hJICEfIFV5RlZjNlZtG1V8bHd9O1ZqTExKVWt7Ozw8NmqOSktNYmJitMrYxsfHP0BBDy9CkKCsa4CQvr++C1SGFCQsIjM7Xl9dYXaFS1dgTk9SKywrJlV2MjMyVldaAFSMGBkW////aRS63AAAAFt0Uk5T////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////AJz6uLwAAAuISURBVHja7J1ne+PGEYBBEgRJsDexd1KiFOqsiy8Xx47tFDu9N0r4/z8kOhHYAiyArQCdzHw83cPdeTE7MzvYHVje/7lYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIhIxVKWHySAzkN9V2s865NarT65+YEA6Ex2OlUnpLE7dK4dQOXQejYqLV0MjACw2s8ZyM66UgBW7TkjmU6uEEB26r8hsK4MQGf3nLHUOtcE4BD1+41au15/sDTIQ71+qk2jCOpXA6AStv7W6aGiPb48nMIBptW5DgAW/finGoN1eKGFgmzj4RoATKg5tQ3n2DdtTctA2zypCbU7nnHp0CPmDaCt0TFLhZxdJVcAbT0LUnj2RFBoVXIE0FZ/EpIxgRw5PwAnPItD1gWNSUPND+gAgP1/I4cC001DKRZomPEN1v/Gy0E6OCl4yANApZGv/q8zQAQanRwA7PLWnyTQyh7AIX/9X1dBQ9oNWNoWQK4FduwJ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'
+      plans:
+        - description: A shared cluster for dev/test and really small apps
+          free: true
+          id: 2FC323491-858C-41F4-803A-2309C3230
+          metadata:
+            backup:
+              enabled: true
+              instance_group: haproxy
+            connections: 5
+            ingress_instance_group: haproxy
+          name: xs
+          platform: EXISTING_SERVICE
+        - description: A small instance for low requirement apps
+          free: false
+          plan_updateable: true
+          id: 5903CFC3-95C0-4C62-BE6C-DA87664656F4
+          metadata:
+            customParameters: &dnsParameter
+              dns: service.tas.lab
+#              cert: /bosh-test/osb/elasticsearch/ca
+            backup:
+              enabled: true
+              instance_group: postgres
+              platform: bosh
+            ingress_instance_group: postgres
+            instance_group_config:
+              - name: postgres
+                nodes: 1
+                persistent_disk_type: 10GB
+              - name: haproxy
+                nodes: 0
+                persistent_disk_type: 10GB
+            networks:
+              - name: services
+            azs: [az1]
+            vm_type: small # e.g. 8192MB RAM, 2 CPUs
+          name: s
+          platform: BOSH
+          schemas: &schemas
+            service_binding:
+              create:
+                parameters:
+                  properties:
+                    database:
+                      description: Specify the database for the service binding.
+                      type: string
+                    ssl:
+                      type: object
+                      additionalProperties: false
+                      properties:
+                        enabled:
+                          title: ssl enabled
+                          type: boolean
+                          default: true
+                  schema: http://json-schema.org/draft-04/schema#
+                  type: object
+                  additionalProperties: false
+            service_instance:
+              update: &schemaproperties
+                parameters:
+                  properties:
+                    postgres:
+                      properties:
+                        version:
+                          type: string
+                          default: "14"
+                        ssl:
+                          type: object
+                          additionalProperties: false
+                          properties:
+                            enabled:
+                              title: ssl enabled
+                              type: boolean
+                              default: true
+                            min_protocol_version:
+                              title: minimal TLS version
+                              type: string
+                              default: "TLSv1.2"
+                              enums:
+                                - TLSv1
+                                - TLSv1.1
+                                - TLSv1.2
+                                - TLSv1.3
+                                - ""
+                            max_protocol_version:
+                              title: minimal TLS version
+                              type: string
+                              default: "TLSv1.3"
+                              enums:
+                                - TLSv1
+                                - TLSv1.1
+                                - TLSv1.2
+                                - TLSv1.3
+                                - ""
+                        database:
+                          type: object
+                          additionalProperties: false
+                          properties:
+                            extensions:
+                              items:
+                                - type: string
+                                  enums: &extension
+                                    - address_standardizer
+                                    - address_standardizer_data_us
+                                    - adminpack
+                                    - amcheck
+                                    - autoinc
+                                    - bloom
+                                    - bool_plperl
+                                    - bool_plperlu
+                                    - btree_gin
+                                    - btree_gist
+                                    - citext
+                                    - cube
+                                    - dblink
+                                    - dict_int
+                                    - dict_xsyn
+                                    - earthdistance
+                                    - file_fdw
+                                    - fuzzystrmatch
+                                    - hstore
+                                    - hstore_plperl
+                                    - hstore_plperlu
+                                    - hstore_plpython2u
+                                    - hstore_plpython3u
+                                    - hstore_plpythonu
+                                    - insert_username
+                                    - intagg
+                                    - intarray
+                                    - isn
+                                    - jsonb_plperl
+                                    - jsonb_plperlu
+                                    - jsonb_plpython2u
+                                    - jsonb_plpython3u
+                                    - jsonb_plpythonu
+                                    - lo
+                                    - ltree
+                                    - ltree_plpython2u
+                                    - ltree_plpython3u
+                                    - ltree_plpythonu
+                                    - moddatetime
+                                    - old_snapshot
+                                    - pageinspect
+                                    - pg_buffercache
+                                    - pgcrypto
+                                    - pg_freespacemap
+                                    - pg_prewarm
+                                    - pgrowlocks
+                                    - pg_stat_statements
+                                    - pgstattuple
+                                    - pg_surgery
+                                    - pg_trgm
+                                    - pg_visibility
+                                    - plperl
+                                    - plperlu
+                                    - plpgsql
+                                    - plpython3u
+                                    - postgis
+                                    - postgis_raster
+                                    - postgis_sfcgal
+                                    - postgis_tiger_geocoder
+                                    - postgis_topology
+                                    - postgres_fdw
+                                    - refint
+                                    - seg
+                                    - sslinfo
+                                    - tablefunc
+                                    - tcn
+                                    - tsm_system_rows
+                                    - tsm_system_time
+                                    - unaccent
+                                    - uuid-ossp
+                                    - xml2
+                              type: array
+                        config:
+                          properties:
+                            authentication_timeout:
+                              title: Authentication Timeout
+                              type: integer
+                              minimum: 1
+                              default: 30
+                            max_locks_per_transaction:
+                              title: Maximum Locks per Transaction
+                              type: integer
+                              minimum: 10
+                              default: 64
+                            max_pred_locks_per_page:
+                              title: Maximum Predicate Locks per Page
+                              type: integer
+                              minimum: 1
+                              default: 2
+                            max_pred_locks_per_relation:
+                              title: Maximum Predicate Locks per Relation
+                              type: integer
+                              default: -2
+                            max_pred_locks_per_transaction:
+                              title: Maximum Predicate Locks per Transaction
+                              type: integer
+                              minimum: 10
+                              default: 64
+                            max_connections:
+                              title: Maximum number of connections the Server may accept. work_mem has to be adjusted accordingly
+                              type: integer
+                              default: 50
+                              minimum: 2
+                            autovacuum_max_workers:
+                              title: Specifies the maximum number of autovacuum processes. Affects maintenance_work_mem
+                              type: integer
+                              default: 3
+                              minimum: 1
+                            effective_io_concurrency:
+                              title: Number of allowed parallel io-operations
+                              type: integer
+                              default: 1
+                              minimum: 1
+                          required:
+                            - authentication_timeout
+                            - max_locks_per_transaction
+                            - max_pred_locks_per_transaction
+                            - max_pred_locks_per_relation
+                            - max_pred_locks_per_page
+                            - max_connections
+                            - autovacuum_max_workers
+                            - effective_io_concurrency
+                          title: General PostgreSQL Settings
+                          type: object
+                          additionalProperties: false
+                        databases:
+                          items:
+                            - properties:
+                                name:
+                                  pattern: ^[A-Za-z0-9_-]+$
+                                  type: string
+                                users:
+                                  items:
+                                    - type: string
+                                      pattern: '^([A-Za-z0-9_-]+|\(\([A-Za-z0-9._-]+\)\))$'
+                                  type: array
+                                extensions:
+                                  items:
+                                    - type: string
+                                      enums: *extension
+                                  type: array
+                              required:
+                                - name
+                              type: object
+                              additionalProperties: false
+                          type: array
+                        users:
+                          items:
+                            - properties:
+                                admin:
+                                  type: boolean
+                                password:
+                                  type: string
+                                username:
+                                  pattern: '^([A-Za-z0-9_-]+|\(\([A-Za-z0-9._/-]+\)\))$'
+                                  type: string
+                              required:
+                                - username
+                                - password
+                              type: object
+                              additionalProperties: false
+                          type: array
+                        replication:
+                          type: object
+                          additionalProperties: false
+                          title: Write-Ahead Logging (WAL) settings
+                          properties:
+                            max_wal_senders:
+                              type: integer
+                              title: Maximum WAL senders.
+                              default: 10
+                              minimum: 1
+                        resource:
+                          title: Settings for managing resources
+                          type: object
+                          additionalProperties: false
+                          properties:
+                            shared_buffers:
+                              ### CHANGE
+                              title: Amount of memory used for shared memory buffers, 0.25 * RAM recommended.
+                              type: string
+                              pattern: ^[1-9][0-9]*[KMG]B$
+                              default: 2048MB
+                            temp_buffers:
+                              title: Maximum amount of memory used for temporary buffers within each database session
+                              type: string
+                              pattern: ^[1-9][0-9]*[KMG]B$
+                              default: 8MB
+                            effective_cache_size:
+                              ### CHANGE
+                              title: Expected (estimate) memory to be available in the OS and buffer caches, used by query planner. 0.5 * RAM recommended
+                              type: string
+                              pattern: ^[1-9][0-9]*[KMG]B$
+                              default: 4096MB
+                            maintenance_work_mem:
+                              ### CHANGE
+                              title: Maximum amount of memory to be used by maintenance operations, such as VACUUM, CREATE INDEX, and ALTER TABLE ADD FOREIGN KEY.  maintenance_work_mem = 0.1 RAM / autovacuum_max_workers
+                              type: string
+                              pattern: ^[1-9][0-9]*[KMG]B$
+                              default: 256MB
+                            work_mem:
+                              ### CHANGE
+                              title: Maximum amount of memory to be used by a query operation. work_mem = 0.25 * RAM / max_connections
+                              type: string
+                              pattern: ^[1-9][0-9]*[KMG]B$
+                              default: 32MB
+                            min_wal_size:
+                              title: Minimum amount of disk memory reserved for WAL. As long as WAL disk usage stays below this setting, old WAL files are always recycled for future use at a checkpoint, rather than removed
+                              type: string
+                              pattern: ^[1-9][0-9]*[KMG]B$
+                              default: 80MB
+                            max_wal_size:
+                              title: Maximum size to let the WAL grow during automatic checkpoints. This is a soft limit
+                              type: string
+                              pattern: ^[1-9][0-9]*[KMG]B$
+                              default: 1GB
+                            max_parallel_workers_per_gather:
+                              title: Maximum number of workers that can be started by a single Gather or Gather Merge node. Resource limits such as work_mem are applied individually to each worker. Limited by max_parallel_workers
+                              type: integer
+                              default: 2
+                            max_parallel_workers:
+                              title: Maximum number of workers that the system can support for parallel queries
+                              type: integer
+                              default: 8
+                            max_files_per_process:
+                              title: Maximum number of simultaneously open files allowed to each server subprocess
+                              type: integer
+                              default: 1000
+                        logging:
+                          title: Logging
+                          description: Determines how often logs should be created, which also affects the log name
+                          type: object
+                          additionalProperties: false
+                          properties:
+                            filename:
+                              title: The filename used for logs. Uses strftime (%-escapes)
+                              type: string
+                              default: postgresql-%a.log
+                            rotation_age:
+                              title: Time (minutes) until a new log is created
+                              type: integer
+                              default: 1440
+                              minimum: 1
+                            truncate_on_rotation:
+                              title: Truncate (overwrite) existing log files with the same name
+                              type: boolean
+                              default: true
+                      title: ProgreSQL Configuration
+                      type: object
+                      additionalProperties: false
+                  schema: http://json-schema.org/draft-04/schema
+                  type: object
+                  additionalProperties: false
+              create: *schemaproperties
+        - description: A good toolbox providing availability and performance over five
+            nodes
+          free: false
+          plan_updateable: true
+          id: DA183185-701A-41CB-BB0C-9CFC7DD95CB3
+          metadata:
+            customParameters: *dnsParameter
+            backup:
+              enabled: true
+              instance_group: postgres
+              platform: bosh
+            ingress_instance_group: haproxy
+            instance_group_config:
+              - name: postgres
+                nodes: 2
+                persistent_disk_type: 10GB
+                vm_type: small
+              - name: haproxy
+                nodes: 1
+                persistent_disk_type: 10GB
+                vm_type: small
+            networks:
+              - name: services
+          name: l
+          platform: BOSH
+          schemas: *schemas
+        - description: A small instance for low requirement apps
+          plan_updateable: true
+          free: false
+          id: 5903CFE9-95C0-4C62-BE6C-DA87664656F4
+          metadata:
+            backup:
+              enabled: true
+              instance_group: postgres
+              platform: bosh
+            ingress_instance_group: postgres
+            instance_group_config:
+              - name: postgres
+                nodes: 1
+                persistent_disk_type: 10GB
+              - name: haproxy
+                nodes: 0
+                persistent_disk_type: 10GB
+            networks:
+              - name: services
+            vm_type: small
+            properties:
+              postgres:
+                ssl: &ipssl
+                  cakey: ((/bosh-osb/osb-postgresql/postgresql-server-ca.private_key))
+                  ca: ((/bosh-osb/osb-postgresql/postgresql-server-ca.certificate))((/bosh-osb/osb-postgresql/postgresql-server-ca.ca))
+          name: s-ip
+          platform: BOSH
+          schemas: *schemas
+        - description: A good toolbox providing availability and performance over five
+            nodes
+          plan_updateable: true
+          free: false
+          id: DA1833F3-701A-41CB-BB0C-9CFC7DD95CB3
+          metadata:
+            backup:
+              enabled: true
+              instance_group: postgres
+              platform: bosh
+            ingress_instance_group: haproxy
+            instance_group_config:
+              - name: postgres
+                nodes: 2
+                persistent_disk_type: 10GB
+                vm_type: small
+              - name: haproxy
+                nodes: 1
+                persistent_disk_type: 10GB
+                vm_type: small
+            networks:
+              - name: services
+            properties:
+              postgres:
+                ssl: *ipssl
+          name: l-ip
+          platform: BOSH
+          schemas: *schemas
+
+        - description: A small instance with a big disk
+          plan_updateable: true
+          free: false
+          id: 5903CFF0-95C0-4C62-BE6C-DA87664656F4
+          metadata:
+            backup:
+              enabled: true
+              instance_group: postgres
+              platform: bosh
+            ingress_instance_group: postgres
+            instance_group_config:
+              - name: postgres
+                nodes: 1
+                persistent_disk_type: 200GB
+              - name: haproxy
+                nodes: 0
+                persistent_disk_type: 10GB
+            networks:
+              - name: services
+            vm_type: small-high-disk
+            properties:
+              postgres:
+                ssl: *ipssl
+          name: s-high-disk-ip
+          platform: BOSH
+          schemas: *schemas
