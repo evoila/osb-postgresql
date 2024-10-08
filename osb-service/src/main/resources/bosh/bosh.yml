@@ -188,16 +188,6 @@ instance_groups:
   jobs:
   - name: haproxy
     release: haproxy
-    custom_provider_definitions:
-    - name: haproxy
-      type: haproxy
-    - name: haproxy-address
-      type: address
-    provides:
-      haproxy: {}
-      haproxy-address:
-        as: haproxy-address
-        aliases: []
     consumes:
       tcp_backend:
         from: pg-address
@@ -215,6 +205,18 @@ instance_groups:
           option httpchk
           http-check expect status 200
           default-server inter 3s fall 3 rise 2 on-marked-down shutdown-sessions
+  - name: keepalived
+    release: haproxy
+    custom_provider_definitions:
+      - name: haproxy
+        type: haproxy
+      - name: haproxy-address
+        type: address
+    provides:
+      haproxy: { }
+      haproxy-address:
+        as: haproxy-address
+        aliases: []
 - name: pg-bench-and-backup-smoke-tests
   instances: 1
   stemcell: default
