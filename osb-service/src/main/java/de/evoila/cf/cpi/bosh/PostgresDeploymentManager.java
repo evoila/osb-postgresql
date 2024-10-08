@@ -10,6 +10,7 @@ import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
 import de.evoila.cf.broker.util.MapUtils;
 import de.evoila.cf.cpi.CredentialConstants;
 import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
+import de.evoila.cf.cpi.bosh.deployment.manifest.InstanceGroup;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Variable;
 import de.evoila.cf.cpi.bosh.deployment.manifest.features.Features;
@@ -61,7 +62,13 @@ public class PostgresDeploymentManager extends DeploymentManager {
                 deleteMapProperty(properties, "postgres", "database", "extensions");
             }
 
-
+            Object keepalivedVip = getMapProperty(properties, "network", "vip", "address");
+            if (keepalivedVip != null) {
+                String vipAddress = (String) keepalivedVip;
+                JobV2 keepalived = manifest.getInstanceGroup("haproxy").get().getJobs().stream()
+                        .filter(job -> job.getName().equals("keepalived")).findFirst().get();
+                keepalived.setProperties(Map.of("keepalived", vipAddress));
+            }
         }
 
         CustomParameters planParameters = objectMapper.convertValue(plan.getMetadata().getCustomParameters(), CustomParameters.class);
@@ -70,13 +77,14 @@ public class PostgresDeploymentManager extends DeploymentManager {
             JobV2 postgres = manifest.getInstanceGroup("postgres").get().getJobs().stream().findFirst().filter(job -> {
                 return job.getName().equals("postgres");
             }).get();
-            JobV2 haproxy = manifest.getInstanceGroup("haproxy").get().getJobs().stream().findFirst().filter(job -> {
-                return job.getName().equals("haproxy");
-            }).get();
+//            JobV2 haproxy = manifest.getInstanceGroup("haproxy").get().getJobs().stream().findFirst().filter(job -> {
+//                return job.getName().equals("haproxy");
+//            }).get();
+            JobV2 keepalived = manifest.getInstanceGroup("haproxy").get().getJobs().stream()
+                    .filter(job -> job.getName().equals("keepalived")).findFirst().get();
 
             List<JobV2.Aliases> postgresAliaes = postgres.getProvides().get("postgres-address").getAliases();
-            List<JobV2.Aliases>  haproxyAliaes = haproxy.getProvides().get("haproxy-address").getAliases();
-            String dns = planParameters.getDns();
+            List<JobV2.Aliases> haproxyAliaes = keepalived.getProvides().get("haproxy-address").getAliases();
             String urlPrefix = serviceInstance.getId().replace("-", "");
             ArrayList<String> altNames = new ArrayList<String>();
 
@@ -163,14 +171,12 @@ public class PostgresDeploymentManager extends DeploymentManager {
     }
 
     private Map<String, Object> manifestProperties(String instanceGroup, Manifest manifest) {
-        return manifest
-            .getInstanceGroups()
-            .stream()
-            .filter(i -> {
-                if (i.getName().equals(instanceGroup))
-                    return true;
-                return false;
-            }).findFirst().get().getProperties();
+        return manifest.getInstanceGroups()
+                .stream()
+                .filter(i -> i.getName().equals(instanceGroup))
+                .findFirst()
+                .map(InstanceGroup::getProperties)
+                .orElse(null);
     }
 
     private Object getMapProperty(Map<String,Object> map,String ... keys){
