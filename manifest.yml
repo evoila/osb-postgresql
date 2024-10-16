@@ -3,25 +3,12 @@ applications:
   - name: osb-postgresql-test
     # path: osb-postgresql-X.X.X.jar # Is set by pipeline
     env:
-      SPRING_APPLICATION_NAME: osb-postgresql-test
-      SPRING_PROFILES_ACTIVE: postgresql, backend, cloudfoundry, basicauth, bosh-test, oauth2, credhub, acceptselfsigned, backup, evoilalab
+      SPRING_APPLICATION_NAME: osb-evoila-test
+      SPRING_PROFILES_ACTIVE: postgresql, backend, cloudfoundry, basicauth, bosh-test, oauth2, credhub, acceptselfsigned, backup
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 17.+ }}'
       JBP_CONFIG_SPRING_AUTO_RECONFIGURATION: '{enabled: false}'
       SPRING_CONFIG_IMPORT: 'optional:configserver:http://config-server.apps.tas.lab'
       SPRING_CLOUD_CONFIG_URI: http://config-server.apps.tas.lab
       SPRING_CLOUD_CONFIG_USERNAME: evoila
       SPRING_CLOUD_CONFIG_PASSWORD: "f58WuE5XU8iH2q5t"
-      BOSH_HOST: 10.244.20.16
-      BOSH_USERNAME: ops_manager
-      BOSH_PASSWORD: "p-sM7tJx5NVcq2glZbbxfHm9B8Lre-yj"
-      BOSH_STEMCELLVERSION: latest
-      BOSH_STEMCELLOS: ubuntu-jammy
-      BOSH_AUTHENTICATION: OAUTH
-      LOGIN_USERNAME: user1
-      LOGIN_PASSWORD: pwd1
-      LOGIN_ROLE: Admin
-      SPRING_DATA_MONGODB_URI: mongodb://backup:D3O5kSbZ0dKFmPDFp61tkr2YPxrOMv@10.244.40.23:27017,10.244.40.24:27017,10.244.40.25:27017/osb-postgresql-test?authSource=admin
-      SPRING_RABBITMQ_HOST: 10.244.40.48
-      SPRING_RABBITMQ_USERNAME: service
-      SPRING_RABBITMQ_PASSWORD: XG1IXFeBkM0gC1mPsGAQpl5csYx8gJ
 

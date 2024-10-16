@@ -101,7 +101,7 @@ public class PostgresDeploymentManager extends DeploymentManager {
 
             Features features = new Features();
             features.setUseDnsAddresses(true);
-            features.setUseShortDnsAddresses(true);
+            features.setUseShortDnsAddresses(false);
             manifest.setFeatures(features);
 
         }

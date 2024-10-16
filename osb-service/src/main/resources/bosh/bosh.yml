@@ -68,13 +68,13 @@ variables:
   type: certificate
 - name: server_cert
   options:
-    ca: server_ca 
+    ca: server_ca
     common_name: Identity Credentials Intermediate CA
     is_ca: false
     extended_key_usage:
     - server_auth
   consumes:
-    alternative_name: 
+    alternative_name:
       from: postgres-address
       properties: { wildcard: true }
   type: certificate
