@@ -6,22 +6,18 @@ import de.evoila.cf.broker.custom.postgres.CustomParameters;
 import de.evoila.cf.broker.custom.postgres.PostgreSQLUtils;
 import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.model.ServiceInstance;
-import de.evoila.cf.broker.model.credential.UsernamePasswordCredential;
 import de.evoila.cf.broker.util.MapUtils;
 import de.evoila.cf.cpi.CredentialConstants;
 import de.evoila.cf.cpi.bosh.deployment.DeploymentManager;
 import de.evoila.cf.cpi.bosh.deployment.manifest.Manifest;
-import de.evoila.cf.cpi.bosh.deployment.manifest.Variable;
 import de.evoila.cf.cpi.bosh.deployment.manifest.features.Features;
 import de.evoila.cf.cpi.bosh.deployment.manifest.instanceGroup.JobV2;
 import de.evoila.cf.security.credentials.CredentialStore;
-import de.evoila.cf.security.credentials.DefaultCredentialConstants;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.security.SecureRandom;
-import jakarta.xml.bind.DatatypeConverter;
 
 /**
  * @author Marco Hennig, Johannes Hiemer.
@@ -67,29 +63,25 @@ public class PostgresDeploymentManager extends DeploymentManager {
         CustomParameters planParameters = objectMapper.convertValue(plan.getMetadata().getCustomParameters(), CustomParameters.class);
 
         if (planParameters.getDns() != null) {
-            JobV2 postgres = manifest.getInstanceGroup("postgres").get().getJobs().stream().findFirst().filter(job -> {
-                return job.getName().equals("postgres");
-            }).get();
-            JobV2 haproxy = manifest.getInstanceGroup("haproxy").get().getJobs().stream().findFirst().filter(job -> {
-                return job.getName().equals("haproxy");
-            }).get();
+            JobV2 postgres = manifest.getInstanceGroup("postgres").orElseThrow().getJobs().stream().findFirst().filter(job -> job.getName().equals("postgres")).orElseThrow();
+            JobV2 haproxy = manifest.getInstanceGroup("haproxy").orElseThrow().getJobs().stream().findFirst().filter(job -> job.getName().equals("haproxy")).orElseThrow();
 
-            List<JobV2.Aliases> postgresAliaes = postgres.getProvides().get("postgres-address").getAliases();
-            List<JobV2.Aliases>  haproxyAliaes = haproxy.getProvides().get("haproxy-address").getAliases();
+            List<JobV2.Aliases> postgresAliases = postgres.getProvides().get("postgres-address").getAliases();
+            List<JobV2.Aliases>  haproxyAliases = haproxy.getProvides().get("haproxy-address").getAliases();
             String dns = planParameters.getDns();
             String urlPrefix = serviceInstance.getId().replace("-", "");
-            ArrayList<String> altNames = new ArrayList<String>();
+            ArrayList<String> altNames = new ArrayList<>();
 
             String dnsEntry = planParameters.getDns();
             altNames.add(urlPrefix + "." + dnsEntry);
             altNames.add("*.postgres." + urlPrefix + "." + dnsEntry);
             altNames.add("*.haproxy." + urlPrefix + "." + dnsEntry);
-            postgresAliaes.add(new JobV2.Aliases("_.postgres." + urlPrefix + "." + dnsEntry, JobV2.PlaceholderType.UUID));
-            haproxyAliaes.add(new JobV2.Aliases("_.haproxy." + urlPrefix + "." + dnsEntry, JobV2.PlaceholderType.UUID));
+            postgresAliases.add(new JobV2.Aliases("_.postgres." + urlPrefix + "." + dnsEntry, JobV2.PlaceholderType.UUID));
+            haproxyAliases.add(new JobV2.Aliases("_.haproxy." + urlPrefix + "." + dnsEntry, JobV2.PlaceholderType.UUID));
             if (plan.getMetadata().getIngressInstanceGroup().equals("haproxy")){
-                haproxyAliaes.add(new JobV2.Aliases( urlPrefix + "." + dnsEntry));
+                haproxyAliases.add(new JobV2.Aliases( urlPrefix + "." + dnsEntry));
             }else{
-                postgresAliaes.add(new JobV2.Aliases( urlPrefix + "." + dnsEntry));
+                postgresAliases.add(new JobV2.Aliases( urlPrefix + "." + dnsEntry));
             }
 
             manifest.getVariables().stream().filter(variable -> variable.getName().equals("server_cert")).findFirst().ifPresent(serverCert -> {
@@ -99,15 +91,13 @@ public class PostgresDeploymentManager extends DeploymentManager {
                     }
             });
 
-            Features features = new Features();
-            features.setUseDnsAddresses(true);
-            features.setUseShortDnsAddresses(false);
-            manifest.setFeatures(features);
-
+            if (manifest.getFeatures() == null) manifest.setFeatures(new Features());
+            manifest.getFeatures().setUseDnsAddresses(true);
+            manifest.getFeatures().setUseShortDnsAddresses(planParameters.isShortDns());
         }
 
         if (customParameters != null && !customParameters.isEmpty()) {
-            for (Map.Entry parameter : customParameters.entrySet()) {
+            for (Map.Entry<String, Object> parameter : customParameters.entrySet()) {
                 Map<String, Object> manifestProperties = manifestProperties(parameter.getKey().toString(), manifest);
 
                 if (manifestProperties != null)

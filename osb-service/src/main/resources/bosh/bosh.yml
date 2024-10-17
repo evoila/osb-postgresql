@@ -11,7 +11,7 @@ addons:
 
 releases:
 - name: osb-bosh-postgresql
-  version: 1.4.2 # last release was 1.4.1
+  version: 1.4.1 # last release was 1.4.1
 - name: bpm
   version: 1.1.15
   url: https://bosh.io/d/github.com/cloudfoundry/bpm-release?v=1.1.15
@@ -26,8 +26,8 @@ releases:
 update:
   canaries: 1
   max_in_flight: 2
-  canary_watch_time: 1000-30000
-  update_watch_time: 1000-30000
+  canary_watch_time: 15000-60000
+  update_watch_time: 15000-60000
 
 stemcells:
 - alias: default
