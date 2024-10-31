@@ -6,19 +6,19 @@
     <artifactId>osb-postgresql</artifactId>
     <packaging>jar</packaging>
     <name>osb-postgresql</name>
-    <version>1.2.34</version>  <!-- Last released version is 1.2.33 -->
+    <version>1.3.34</version>  <!-- Last released version is 1.2.33 -->
 
     <parent>
         <groupId>de.evoila.cf.broker</groupId>
         <artifactId>repo-parent</artifactId>
         <relativePath>../</relativePath>
-        <version>1.2.0</version>
+        <version>1.3.0</version>
     </parent>
 
     <properties>
-        <core.version>1.2.0</core.version>
-        <deployment.version>1.2.0</deployment.version>
-        <persistence.version>1.2.0</persistence.version>
+        <core.version>1.3.0</core.version>
+        <deployment.version>1.3.0</deployment.version>
+        <persistence.version>1.3.0</persistence.version>
     </properties>
 
 
@@ -58,7 +58,7 @@
         <dependency>
             <groupId>de.evoila.cf.broker</groupId>
             <artifactId>bosh</artifactId>
-            <version>1.2.0</version>
+            <version>1.3.0</version>
         </dependency>
     </dependencies>
 
