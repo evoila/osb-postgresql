@@ -93,9 +93,21 @@ public class PostgresBoshPlatformService extends BoshPlatformService {
 
     @Override
     public void postDeleteInstance(ServiceInstance serviceInstance) {
-        credentialStore.deleteCredentials(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
-        credentialStore.deleteCredentials(serviceInstance, DefaultCredentialConstants.BACKUP_CREDENTIALS);
-        credentialStore.deleteCredentials(serviceInstance, DefaultCredentialConstants.BACKUP_AGENT_CREDENTIALS);
+        try {
+            credentialStore.deleteCredentials(serviceInstance, CredentialConstants.ROOT_CREDENTIALS);
+            credentialStore.deleteCredentials(serviceInstance, DefaultCredentialConstants.BACKUP_CREDENTIALS);
+            credentialStore.deleteCredentials(serviceInstance, DefaultCredentialConstants.BACKUP_AGENT_CREDENTIALS);
+            credentialStore.deleteCredentials(serviceInstance, CredentialConstants.REPLICATION_CREDENTIALS);
+            credentialStore.deleteCredentials(serviceInstance, CredentialConstants.ADMIN_CREDENTIALS);
+            credentialStore.deleteCredentials(serviceInstance, CredentialConstants.REWIND_CREDENTIALS);
+            credentialStore.deleteCredentials(serviceInstance, CredentialConstants.TRANSPORT_SSH);
+            credentialStore.deleteCredentials(serviceInstance, CredentialConstants.PCP_CREDENTIALS);
+            credentialStore.deleteCredentials(serviceInstance, DefaultCredentialConstants.EXPORTER_CREDENTIALS);
+            credentialStore.deleteCertificate(serviceInstance, CredentialConstants.SERVER_CERT);
+            credentialStore.deleteCertificate(serviceInstance, CredentialConstants.SERVER_CA);
+        } catch (Exception ex) {
+            log.warn("Could not delete credential/certificate: {}",ex.getMessage());
+        }
     }
 
     private void executeCommands(Channel channel, List<String> commands, boolean silent){

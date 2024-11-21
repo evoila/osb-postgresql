@@ -68,9 +68,9 @@ public class PostgresDeploymentManager extends DeploymentManager {
 
             List<JobV2.Aliases> postgresAliases = postgres.getProvides().get("postgres-address").getAliases();
             List<JobV2.Aliases>  haproxyAliases = haproxy.getProvides().get("haproxy-address").getAliases();
-            String dns = planParameters.getDns();
             String urlPrefix = serviceInstance.getId().replace("-", "");
             ArrayList<String> altNames = new ArrayList<>();
+            altNames.add("*.haproxy.services.sb-"+serviceInstance.getId()+".bosh"); // required for backup-agent
 
             String dnsEntry = planParameters.getDns();
             altNames.add(urlPrefix + "." + dnsEntry);
