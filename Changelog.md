@@ -1,8 +1,15 @@
 # Changelog
 
+## 28.11.2024
+- OSB-PostgreSQL: 1.5.3
+- Bosh Release: 1.5.3
+
+### Fix
+- Fix Patroni leader election process permissions
+
 ## 21.11.2024
-- OSB-PostgreSQL: 1.5.1
-- Bosh Release: 1.5.1
+- OSB-PostgreSQL: 1.5.2
+- Bosh Release: 1.5.2
 
 ### Features
 - updated PostgreSQL versions to 17.1, 16.5, 15.9, 14.14, 13.17, and 12.21.
