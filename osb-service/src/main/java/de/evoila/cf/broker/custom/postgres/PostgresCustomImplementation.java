@@ -79,7 +79,12 @@ public class PostgresCustomImplementation {
 		setupRoleTrigger(jdbcService, generalRole);
 	}
 
-    public void createExtensions(PostgresDbService jdbcService) throws SQLException {
+    public void createExtensions(PostgresDbService jdbcService, String username) throws SQLException {
+		jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON SCHEMA public TO \"" + username + "\"");
+		jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO \"" + username + "\"");
+		jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public To \"" + username + "\"");
+		jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public To \"" + username + "\"");
+
 		Map<String, String> availableExtensions = jdbcService.executeSelect("SELECT name FROM pg_available_extensions", "name");
 
 /*       List<String> extensionsToInstall = Arrays.asList("fuzzystrmatch", "postgis", "postgis_topology", "address_standardizer", "postgis_tiger_geocoder");
@@ -100,6 +105,7 @@ public class PostgresCustomImplementation {
 	}
 
 	public void setUpBindingUserPrivileges(PostgresDbService jdbcService, String username, String generalRole) throws SQLException {
+		jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON SCHEMA public TO \"" + username + "\"");
 		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO \"" + generalRole + "\"");
 		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO \"" + generalRole + "\"");
 		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON FUNCTIONS TO \"" + generalRole + "\"");
@@ -142,10 +148,6 @@ public class PostgresCustomImplementation {
 			jdbcService.executeUpdate("CREATE ROLE \"" + username + "\" WITH INHERIT LOGIN password '" + password + "' IN ROLE \"" + generalRole + "\"");
 		}
 
-        jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON SCHEMA public TO \"" + username + "\"");
-        jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO \"" + username + "\"");
-        jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public To \"" + username + "\"");
-        jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public To \"" + username + "\"");
     }
 
 	public void unbindRoleFromDatabase(CredentialStore credentialStore,ServiceInstance serviceInstance, Plan plan, PostgresDbService jdbcService, UsernamePasswordCredential usernamePasswordCredential, boolean ssl) throws SQLException {

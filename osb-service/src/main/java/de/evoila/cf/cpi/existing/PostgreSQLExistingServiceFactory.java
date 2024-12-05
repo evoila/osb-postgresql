@@ -127,7 +127,7 @@ public class PostgreSQLExistingServiceFactory extends ExistingServiceFactory {
 			// necessary for installing db specific extensions (as admin)
 			postgresDbService.closeIfConnected();
 			postgresDbService = postgreConnectionHandler.createExtendedRootUserConnection(serviceInstance, plan,database, true);
-			postgresCustomImplementation.createExtensions(postgresDbService);
+			postgresCustomImplementation.createExtensions(postgresDbService,serviceInstanceUsernamePasswordCredential.getUsername());
 		} catch(SQLException | InterruptedException ex) {
             throw new PlatformException(ex);
         }
