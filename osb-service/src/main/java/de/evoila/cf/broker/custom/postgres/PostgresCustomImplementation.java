@@ -46,6 +46,7 @@ public class PostgresCustomImplementation {
 		String createFunction = "CREATE OR REPLACE FUNCTION trg_set_owner() " +
 					 " RETURNS event_trigger " +
 					 " LANGUAGE plpgsql " +
+					 " SECURITY DEFINER " +
 					 "AS $$ " +
 					 "DECLARE " +
 					 "  obj record; " +
@@ -148,6 +149,10 @@ public class PostgresCustomImplementation {
 			jdbcService.executeUpdate("CREATE ROLE \"" + username + "\" WITH INHERIT LOGIN password '" + password + "' IN ROLE \"" + generalRole + "\"");
 		}
 
+        jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON SCHEMA public TO \"" + username + "\"");
+        jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO \"" + username + "\"");
+        jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public To \"" + username + "\"");
+        jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public To \"" + username + "\"");
     }
 
 	public void unbindRoleFromDatabase(CredentialStore credentialStore,ServiceInstance serviceInstance, Plan plan, PostgresDbService jdbcService, UsernamePasswordCredential usernamePasswordCredential, boolean ssl) throws SQLException {
