@@ -77,7 +77,7 @@ public class PostgresCustomImplementation {
 			jdbcService.executeUpdate("GRANT CREATE ON DATABASE \"" + database + "\" TO \"" + generalRole + "\"");
 			jdbcService.executeUpdate("GRANT CONNECT ON DATABASE \"" + database + "\" TO \"" + generalRole + "\"");
 		}
-		setupRoleTrigger(jdbcService, generalRole);
+//		setupRoleTrigger(jdbcService, generalRole);
 	}
 
     public void createExtensions(PostgresDbService jdbcService, String username) throws SQLException {
