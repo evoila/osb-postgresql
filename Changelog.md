@@ -1,5 +1,11 @@
 # Changelog
 
+## 05.12.2024
+- OSB-PostgreSQL: 1.5.4
+
+### Feature
+- Grant public schema CREATE permission to service users
+ 
 ## 28.11.2024
 - OSB-PostgreSQL: 1.5.3
 - Bosh Release: 1.5.3
