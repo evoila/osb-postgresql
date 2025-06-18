@@ -107,9 +107,9 @@ instance_groups:
         as: pg-address
   - name: backup-agent
     release: osb-bosh-postgresql
-#  - name: postgres_exporter
-#    release: prometheus
-#    properties:
+  - name: postgres_exporter
+    release: prometheus
+    properties:
   properties:
     patroni:
       zookeeper:
