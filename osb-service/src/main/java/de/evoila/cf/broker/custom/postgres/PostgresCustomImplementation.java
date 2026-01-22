@@ -107,23 +107,6 @@ public class PostgresCustomImplementation {
 
 	public void setUpBindingUserPrivileges(PostgresDbService jdbcService, String username, String generalRole) throws SQLException {
 		jdbcService.executeUpdate("GRANT ALL PRIVILEGES ON SCHEMA public TO \"" + username + "\"");
-        //// Prüfe den aktuellen Connection-User
-        //Map<String, String> currentUser = jdbcService.executeSelect("SELECT current_user", "current_user");
-        //logger.info("Connected as user: " + currentUser.values());
-//
-        //// Prüfe, ob der Connection-User Owner der Datenbank ist
-        //Map<String, String> dbOwner = jdbcService.executeSelect(
-        //        "SELECT pg_catalog.pg_get_userbyid(d.datdba) as owner FROM pg_catalog.pg_database d WHERE d.datname = '" + generalRole + "'",
-        //        "owner");
-        //logger.info("Database owner: " + dbOwner.values());
-        //jdbcService.executeUpdate("GRANT TEMPORARY ON DATABASE \"" + generalRole + "\" TO \"" + username + "\"");
-        //Map<String, String> currentDb = jdbcService.executeSelect("SELECT current_database()", "current_database");
-        //logger.info("Connected to database: " + currentDb.values());
-        //logger.info("granted temp for user " + username + " on database " + generalRole);
-        //Map<String, String> hasTemp = jdbcService.executeSelect(
-        //        "SELECT has_database_privilege('" + username + "', '" + generalRole + "', 'TEMP') as has_temp",
-        //        "has_temp");
-        //logger.info("User " + username + " has TEMP privilege: " + hasTemp.values());
         jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO \"" + generalRole + "\"");
 		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO \"" + generalRole + "\"");
 		jdbcService.executeUpdate("ALTER DEFAULT PRIVILEGES FOR ROLE \"" + username + "\" IN SCHEMA public GRANT ALL PRIVILEGES ON FUNCTIONS TO \"" + generalRole + "\"");
