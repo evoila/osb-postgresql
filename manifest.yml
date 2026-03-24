@@ -7,8 +7,10 @@ applications:
       SPRING_PROFILES_ACTIVE: postgresql, backend, cloudfoundry, basicauth, bosh-test, oauth2, credhub, acceptselfsigned, backup
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 17.+ }}'
       JBP_CONFIG_SPRING_AUTO_RECONFIGURATION: '{enabled: false}'
-      SPRING_CONFIG_IMPORT: 'optional:configserver:http://config-server.apps.tas.lab'
-      SPRING_CLOUD_CONFIG_URI: http://config-server.apps.tas.lab
+      #SPRING_CONFIG_IMPORT: 'optional:configserver:http://config-server.apps.tas.lab'
+      SPRING_CONFIG_IMPORT: 'optional:configserver:http://config-server.apps.internal:8080'
+      #SPRING_CLOUD_CONFIG_URI: http://config-server.apps.tas.lab
+      SPRING_CLOUD_CONFIG_URI: http://config-server.apps.internal:8080
       SPRING_CLOUD_CONFIG_USERNAME: evoila
       SPRING_CLOUD_CONFIG_PASSWORD: "f58WuE5XU8iH2q5t"
 
